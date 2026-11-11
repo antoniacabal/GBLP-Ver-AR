@@ -2267,7 +2267,7 @@ main
         }
     }
 
-/* Versión de realidad mixta: cómo jugar con gafas (index.html) */
-.gafas-pasos{display:grid;gap:1rem;margin:1.5rem 0 0;padding-left:1.4rem;font-size:var(--tamano-texto);line-height:1.5}
-.gafas-pasos li::marker{color:var(--color-atencion);font-weight:700}
-.gafas-pasos strong{color:var(--color-soporte-oscuro)}
+
+/* Versión MR: el index es solo la pantalla del juego (sin contenido debajo): sin degradado hacia crema al final y fondo oscuro */
+body.pagina-inicio{ background: var(--color-escena); }
+.pagina-inicio .escena::after{ display: none; }

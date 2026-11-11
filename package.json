@@ -1,0 +1,26 @@
+{
+  "name": "grietas-bajo-la-piel-mr",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "dev:gafas": "vite --mode gafas",
+    "build": "vite build",
+    "modelos": "node herramientas/fbx-a-glb.mjs"
+  },
+  "devDependencies": {
+    "@gltf-transform/core": "^4.5.1",
+    "@gltf-transform/extensions": "^4.5.1",
+    "@gltf-transform/functions": "^4.5.1",
+    "@vitejs/plugin-basic-ssl": "^1.2.0",
+    "draco3dgltf": "^1.5.9",
+    "vite": "^6.4.3",
+    "vite-plugin-restart": "^0.4.2"
+  },
+  "dependencies": {
+    "gsap": "^3.15.0",
+    "lil-gui": "^0.21.0",
+    "three": "^0.174.0"
+  }
+}

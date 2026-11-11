@@ -1,0 +1,386 @@
+/* Indice
+
+    0. Base
+    1. Botones del juego
+    2. Mensajes y pistas
+    3. Medidor de respiración
+    4. Fundido y tarjetas
+    5. Pop-ups
+    6. Controles táctiles
+    7. Tarjeta con texto que se escribe
+    8. Pop-up de controles
+    9. Diálogo con personajes
+
+    Tipografías (las mismas del index): Luckiest Guy para los títulos de la narrativa,
+    Dongle para títulos de pop-ups y botones, Outfit para el texto.
+*/
+
+/* 0. Base: contenedor del juego, colores y viñeta de ansiedad */
+.gx{position:fixed;inset:0;pointer-events:none;font-family:'Outfit',sans-serif;color:#E4FFFF;z-index:5;user-select:none;-webkit-user-select:none} /* el texto del juego (diálogos, tarjetas, mensajes) no se puede seleccionar con clics o doble clic */
+.gx>*{position:absolute}
+.gx p,.gx h2,.gx h3,.gx li{color:inherit} /* style.css pinta los textos con --color-texto (oscuro): aquí heredan el color claro del juego */
+.gx-vignette{inset:0;opacity:0;background:radial-gradient(ellipse at center,transparent 35%,rgba(0,0,0,.95) 100%)}
+
+/* 1. Botones del juego: salida rápida, música, pantalla completa y vibración.
+      Van por encima de los pop-ups (z-index 12): se pueden usar también en los finales */
+.gx-btn{pointer-events:auto;background:rgba(32,24,38,.8);color:#E4FFFF;border:1px solid rgba(228,255,255,.4);border-radius:8px;padding:.5rem .9rem;font:inherit;cursor:pointer;transition:background .2s,border-color .2s}
+.gx-btn:hover{background:rgba(32,24,38,.95);border-color:rgba(228,255,255,.75)}
+.gx-btn:focus-visible{outline:3px solid var(--color-acento,#E3D0B5);outline-offset:2px}
+.gx-btn[hidden]{display:none}
+.gx-exit{top:1rem;right:1rem;z-index:12}
+.gx-audio{top:1rem;left:1rem;z-index:12;display:flex;flex-direction:column;align-items:flex-start;gap:.5rem}
+.gx-fila{display:flex;gap:.5rem}
+.gx-full{display:inline-flex;align-items:center;justify-content:center;padding:.5rem .6rem}
+.gx-exit,.gx-audio{transition:opacity .4s,visibility .4s}
+.gx-tarjeta .gx-exit,.gx-tarjeta .gx-audio,.gx-sin-hud .gx-exit,.gx-sin-hud .gx-audio{opacity:0;visibility:hidden} /* no tapan las tarjetas de narrativa ("10 de agosto", "Sismo en Colombia"...) */
+.gx-minijuego .gx-exit{opacity:.35;pointer-events:none} /* durante los minijuegos la salida rápida no se puede usar */
+.gx-full svg{width:1.25rem;height:1.25rem;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+.gx-full-salir,.gx-full--on .gx-full-entrar{display:none}
+.gx-full--on .gx-full-salir{display:block}
+.gx-vibra{display:none}
+body.gx-touch-on.gx-vibra-ok .gx-vibra{display:block} /* solo en celular, y si el navegador permite vibrar */
+
+/* 2. Mensajes: legibles sobre cualquier fondo (claro en calma, oscuro en ansiedad) */
+.gx-msg{top:14%;left:50%;transform:translateX(-50%);width:max-content;max-width:min(90vw,44rem);text-align:center;font-size:1.3rem;line-height:1.35;padding:.6rem 1.3rem;background:rgba(32,24,38,.86);border:1px solid rgba(228,255,255,.25);border-radius:14px;box-shadow:0 4px 14px rgba(0,0,0,.35)}
+.gx-msg:empty{display:none}
+
+/* 3. Medidor de respiración: un círculo que respira (inspirado en los ejercicios de respiración zen).
+      Los halos son decoración; .gx-zone es la franja gris clara (zona correcta); .gx-needle es el aro del ritmo; .gx-fill es tu respiración */
+.gx-breath[hidden]{display:none}
+.gx-breath{bottom:7%;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center}
+.gx-orb{position:relative;width:220px;height:220px}
+.gx-orb-svg{display:block;width:100%;height:100%;overflow:visible}
+.gx-orb-halo{fill:rgba(228,255,255,.05);stroke:rgba(228,255,255,.14);stroke-width:1}
+.gx-zone{fill:none;stroke:rgba(228,255,255,.3)}
+.gx-needle{fill:none;stroke:#e4ffff;stroke-width:2.5;pointer-events:none;filter:drop-shadow(0 0 4px rgba(228,255,255,.7))}
+.gx-fill{filter:drop-shadow(0 0 16px rgba(157,188,176,.6))}
+.gx-orb-borde{transition:stroke .15s,stroke-width .15s}
+.gx-orb-borde--aviso{stroke:var(--color-principal,#F2C063);stroke-width:6;filter:drop-shadow(0 0 12px rgba(242,192,99,.9))} /* aviso de repetición: el círculo grande brilla amarillo */
+.gx-orb-count{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:'Outfit',sans-serif;font-weight:700;font-size:2.6rem;line-height:1;color:#201826;pointer-events:none} /* Outfit: queda centrado de verdad (Dongle se corría hacia arriba) */
+.gx-orb-count:empty{display:none}
+.gx-bar{display:none;width:280px;height:20px;padding:3px;border-radius:999px;background:rgba(32,24,38,.75);border:1px solid rgba(228,255,255,.3)}
+.gx-bar-fill{height:100%;width:0;border-radius:999px;background:linear-gradient(90deg,#6FA86B,#a8d99a);box-shadow:0 0 10px rgba(143,201,128,.6)}
+.gx-breath--barra .gx-orb{display:none}
+.gx-breath--barra .gx-bar{display:block}
+.gx-label{padding:.3rem .85rem;border-radius:999px;background:rgba(32,24,38,.72);color:#E4FFFF;text-align:center;white-space:nowrap;font-family:'Outfit',sans-serif;font-weight:700;font-size:1.65rem;line-height:1.2;margin-bottom:.5rem;pointer-events:none} /* lo primero que se lee: arriba del círculo y grande · Outfit: el texto queda centrado en la cajita (con Dongle quedaba corrido) */
+.gx-timer{margin-top:.5rem;pointer-events:none;padding:.1rem .6rem;border-radius:999px;background:rgba(32,24,38,.72);border:1px solid rgba(228,255,255,.25);font-size:.9rem;font-variant-numeric:tabular-nums;white-space:nowrap} /* reloj del minijuego, debajo del rótulo */
+.gx-timer--poco{color:#FF8A80;border-color:#D01F2A;animation:gx-timer-late .8s ease-in-out infinite}
+@keyframes gx-timer-late{50%{transform:scale(1.12)}}
+@media (prefers-reduced-motion:reduce){.gx-timer--poco{animation:none}}
+.gx-breath-hint{margin-top:1.6rem;pointer-events:none;padding:.25rem .8rem;border-radius:8px;background:rgba(32,24,38,.85);font-size:.95rem;white-space:nowrap;border:1px solid rgba(228,255,255,.25)}
+.gx-breath-hint:empty{visibility:hidden} /* sin texto igual ocupa su lugar: el círculo no salta hacia arriba cuando aparece la indicación */
+.gx-breath-hint{min-height:1.95rem} /* la indicación siempre ocupa su alto */
+.gx-breath-hint[data-action="hold"]{border-color:#7a9a85}
+.gx-breath-hint[data-action="release"]{border-color:#A6869B}
+
+/* 4. Fundido y tarjetas */
+.gx-fade{inset:0;background:#000;opacity:1;pointer-events:none}
+.gx-whisper{inset:auto 0 auto 0;top:50%;transform:translateY(-50%);z-index:2;margin:0;padding:0 10%;text-align:center;font-family:'Outfit',sans-serif;font-size:clamp(1.3rem,3vw,2rem);letter-spacing:.04em;color:#e4ffff;opacity:0;pointer-events:none} /* frases sueltas sobre negro (después del sismo) */
+.gx-card{inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1rem;text-align:center;padding:0 12%;z-index:2;background:rgba(32,24,38,.9)}
+.gx-card[hidden]{display:none}
+.gx-card h2{font-family:'Luckiest Guy',cursive;font-weight:400;font-size:clamp(2.6rem,7vw,4.6rem);line-height:1.05;letter-spacing:.03em;color:var(--color-principal,#F2C063)}
+.gx-card p{font-size:1.2rem;max-width:60ch;line-height:1.5}
+
+/* 5. Pop-ups: controles, cómo se juega, opción del MIO, finales y salida rápida: mismo aspecto que la advertencia del index */
+.gx-modal{inset:0;display:flex;align-items:center;justify-content:center;padding:4.5rem 1rem 1rem;background:rgba(10,5,14,.78);pointer-events:auto;z-index:10;animation:gx-fondo .25s ease-out} /* el padding de arriba deja libres los botones de música y salida */
+@keyframes gx-fondo{from{opacity:0}to{opacity:1}}
+.gx-modal[hidden]{display:none}
+.gx-dialog{width:100%;max-width:min(560px,92vw);max-height:100%;overflow:auto;padding:40px 40px 28px;background:var(--color-soporte-oscuro,#201826);color:var(--color-soporte-claro,#e4ffff);border:1px solid rgba(255,255,255,.12);border-radius:12px;box-shadow:0 24px 64px rgba(0,0,0,.55);display:flex;flex-direction:column;align-items:center;gap:12px}
+.gx-dialog-icon{width:64px;height:auto;aspect-ratio:44/52;fill:var(--color-advertencia-icono,#780A0F)}
+.gx-dialog h2{font-family:'Dongle',sans-serif;font-weight:700;font-size:4.5rem;line-height:.9;text-align:center;color:var(--color-soporte-claro,#e4ffff)}
+.gx-pause h2{color:var(--color-advertencia,#D01F2A)}
+.gx-dialog>p{width:100%;font-family:'Outfit',sans-serif;font-size:.95rem;line-height:1.55}
+.gx-choice .gx-dialog>p,.gx-ending .gx-dialog>p,.gx-controls .gx-dialog>p{text-align:center}
+.gx-sub{width:100%;text-align:center;margin-top:4px;font-family:'Dongle',sans-serif;font-weight:700;font-size:2rem;line-height:.9;color:inherit}
+.gx-list{width:100%;list-style:none;padding:0}
+.gx-list li{display:flex;align-items:flex-start;gap:10px;margin-bottom:8px;font-size:.95rem;line-height:1.35}
+.gx-list li::before{content:"";flex:none;width:8px;height:8px;margin-top:.4em;border-radius:2px;background:var(--color-advertencia,#D01F2A)}
+/* Cómo se juega: tres dibujos en fila con una frase corta (en pantallas angostas, uno debajo del otro) */
+.gx-list.gx-pasos{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.gx-pasos li{flex-direction:column;align-items:center;gap:8px;margin:0;text-align:center}
+.gx-pasos li::before{content:none}
+.gx-paso-img{position:relative;display:block;width:100%;aspect-ratio:4/3;background:#2A2033;border-radius:10px}
+.gx-paso-img>*{position:absolute;inset:8px;width:calc(100% - 16px);height:calc(100% - 16px);object-fit:contain}
+.gx-touch-on .gx-solo-teclado,body:not(.gx-touch-on) .gx-solo-tactil{display:none} /* en celular, flechas en vez de A / D */
+.gx-paso-txt{font-family:'Outfit',sans-serif;font-size:.85rem;line-height:1.3}
+.gx-paso-txt b{display:inline-grid;place-items:center;width:1.4em;height:1.4em;margin-right:2px;border-radius:50%;background:var(--color-principal,#F2C063);color:#201826;font-size:.75rem}
+@media (max-width:480px){.gx-list.gx-pasos{grid-template-columns:1fr}.gx-pasos li{flex-direction:row;text-align:left}.gx-paso-img{width:96px;flex:none}}
+/* Enlace a la página de la técnica (se abre en otra pestaña para no perder la partida) */
+.gx-more{font-family:'Outfit',sans-serif;font-size:.95rem;color:var(--color-principal,#F2C063);text-underline-offset:4px}
+.gx-more:hover{color:var(--color-soporte-claro,#e4ffff)}
+.gx-more:focus-visible{outline:3px solid var(--color-acento,#BF4E24);outline-offset:4px;border-radius:4px}
+.gx-more[hidden]{display:none}
+.gx-actions{display:flex;justify-content:space-between;align-items:center;width:100%;margin-top:16px}
+.gx-choice .gx-actions,.gx-ending .gx-actions{gap:1rem;flex-wrap:wrap;justify-content:center}
+.gx-tutorial .gx-actions,.gx-controls .gx-actions{justify-content:center}
+.gx-act{pointer-events:auto;display:inline-flex;align-items:center;gap:10px;padding:6px 10px;border:none;background:none;cursor:pointer;font-family:'Dongle',sans-serif;font-weight:700;font-size:2.75rem;line-height:1;color:var(--color-soporte-claro,#e4ffff);transition:color .2s}
+.gx-act:hover{color:var(--color-acento,#E3D0B5)}
+.gx-act:focus-visible{outline:3px solid var(--color-acento,#E3D0B5);outline-offset:2px;border-radius:6px}
+.gx-act svg{width:32px;height:32px;fill:none;stroke:var(--color-advertencia-flecha,#A6869B);stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round;transition:transform .2s}
+.gx-act:hover svg:first-child{transform:translateX(-4px)}
+.gx-act:hover svg:last-child{transform:translateX(4px)}
+@media (max-width:768px){.gx-dialog{padding:28px 22px 20px}.gx-dialog h2{font-size:3.5rem}.gx-act{font-size:2.25rem}}
+/* Clic afuera de un pop-up: la caja se sacude (igual que la advertencia) */
+.gx-dialog.sacudir{animation:advertencia-sacudida .45s ease-in-out}
+
+/* 6. Controles táctiles: joystick a la izquierda y botón "Interactuar" a la derecha.
+      Se esconden mientras hay una tarjeta, un pop-up o la pantalla está en negro (ui.updateOverlay pone gx-touch-oculto) */
+.gx-touch{position:fixed;inset:0;pointer-events:none;z-index:6;user-select:none;-webkit-user-select:none;touch-action:none;transition:opacity .25s}
+.gx-touch[hidden]{display:none}
+.gx-touch-oculto .gx-touch{opacity:0;visibility:hidden}
+.gx-joy{pointer-events:auto;position:absolute;left:max(5%,env(safe-area-inset-left));bottom:max(6%,env(safe-area-inset-bottom));width:132px;height:132px;border-radius:50%;background:radial-gradient(circle,rgba(32,24,38,.35) 0 45%,rgba(32,24,38,.6) 70%);border:2px solid rgba(228,255,255,.45);touch-action:none;-webkit-tap-highlight-color:transparent}
+.gx-joy::before{content:"";position:absolute;inset:14px;border-radius:50%;border:1px dashed rgba(228,255,255,.22)}
+.gx-joy-knob{position:absolute;left:50%;top:50%;width:58px;height:58px;margin:-29px 0 0 -29px;border-radius:50%;background:rgba(228,255,255,.82);box-shadow:0 4px 12px rgba(0,0,0,.35);transition:transform .12s ease-out}
+.gx-joy.on .gx-joy-knob{transition:none;background:var(--color-principal,#F2C063)}
+.gx-key{pointer-events:auto;position:absolute;border:1px solid rgba(228,255,255,.45);background:rgba(32,24,38,.65);color:#E4FFFF;display:flex;align-items:center;justify-content:center;touch-action:none;-webkit-tap-highlight-color:transparent}
+.gx-key.on{background:rgba(242,192,99,.8);color:#201826}
+.gx-go{right:max(5%,env(safe-area-inset-right));bottom:max(8%,env(safe-area-inset-bottom));width:86px;height:86px;border-radius:50%;font-family:'Dongle',sans-serif;font-weight:700;font-size:1.3rem;line-height:1}
+.gx-touch-on .gx-breath{bottom:27%}
+.gx-touch-on .gx-orb{width:160px;height:160px}
+
+/* 7. Tarjeta con texto que se escribe: se puede pulsar para completarlo, y trae botón de continuar */
+.gx-card{pointer-events:auto}
+.gx-card-actions{margin-top:.5rem}
+.gx-card-actions[hidden]{display:none}
+
+/* 8. Pop-up de controles: teclas dibujadas. Se muestra la lista de computador o la táctil según el dispositivo */
+.gx-keys{width:100%;list-style:none;padding:0;display:grid;gap:18px} /* más aire entre cada opción */
+.gx-keys li{display:flex;align-items:center;gap:18px;font-size:.95rem;line-height:1.35}
+.gx-keycaps{display:inline-flex;gap:4px;flex:none;min-width:9.5rem}
+.gx-keys kbd{display:inline-flex;align-items:center;justify-content:center;min-width:2.1rem;height:2.1rem;padding:0 .5rem;border-radius:7px;background:var(--color-soporte-claro,#E4FFFF);color:#201826;border-bottom:3px solid var(--color-advertencia-flecha,#A6869B);font-family:'Dongle',sans-serif;font-weight:700;font-size:1.7rem;line-height:1}
+body.gx-touch-on .gx-keys--pc,body:not(.gx-touch-on) .gx-keys--touch{display:none}
+body:not(.gx-vibra-ok) .gx-keys-vibra,body:not(.gx-full-ok) .gx-keys-full{display:none}
+/* Caminar: WASD y flechas en T invertida (la tecla de arriba sobre la del medio) */
+.gx-controls .gx-dialog{width:auto;max-width:min(520px,94vw);padding:32px 36px 22px}
+.gx-controls .gx-keys{width:auto;margin-inline:auto} /* la lista queda centrada en la caja (sin espacio vacío a la derecha) */
+.gx-keys--pc .gx-keycaps{min-width:7rem;justify-content:center} /* el texto de todas las filas empieza a la misma altura */
+.gx-keys-mover .gx-keycaps{align-items:center;gap:10px}
+.gx-cruz{display:grid;grid-template-columns:repeat(3,1.85rem);gap:4px}
+.gx-cruz kbd{min-width:0;padding:0}
+.gx-cruz kbd:first-child{grid-column:2;grid-row:1}
+.gx-cruz kbd:not(:first-child){grid-row:2}
+.gx-o{font-size:.95rem;opacity:.8}
+/* el mouse del clic izquierdo: el botón izquierdo en dorado */
+.gx-keys kbd.gx-kbd-raton{padding:0 .35rem}
+.gx-kbd-raton svg{width:1.3rem;height:1.75rem;fill:none;stroke:#201826;stroke-width:2.2;stroke-linejoin:round}
+.gx-kbd-raton .gx-raton-izq{fill:var(--color-principal,#F2C063);stroke:none}
+.gx-kbd-icono svg{width:1.15rem;height:1.15rem;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
+.gx-kbd-joy{width:2.1rem;padding:0!important;border-radius:50%!important;position:relative}
+.gx-kbd-joy span{width:.9rem;height:.9rem;border-radius:50%;background:#201826}
+@media (max-width:480px){
+    .gx-keys--pc li{flex-direction:column;align-items:flex-start;gap:6px}
+    .gx-keys--touch{gap:10px}
+    .gx-keys--touch li{gap:10px;font-size:.88rem}
+    .gx-keys--touch .gx-keycaps{min-width:6.6rem}
+    .gx-keys--touch kbd{font-size:1.45rem;height:1.9rem}
+}
+body.gx-touch-on.gx-vibra-ok .gx-modal{padding-top:7.4rem} /* en celular hay una fila más de botones arriba (vibración) */
+
+/* 9. Diálogo con personajes (mamá): caja abajo con el nombre arriba; E, Enter o "Continuar" avanzan */
+.gx-talk{left:50%;bottom:6%;transform:translateX(-50%);width:min(92vw,40rem);pointer-events:auto;padding:1.4rem 1.5rem .8rem;background:rgba(32,24,38,.94);border:1px solid rgba(228,255,255,.25);border-radius:14px;box-shadow:0 12px 36px rgba(0,0,0,.5);z-index:8;animation:gx-fondo .25s ease-out}
+.gx-talk[hidden]{display:none}
+/* Saltar diálogos y escenas: abajo a la derecha, discreto; aparece después de un rato (ui.js) */
+.gx-saltar{right:1.2rem;bottom:1.2rem;z-index:10;pointer-events:auto;display:inline-flex;align-items:center;gap:.4rem;padding:.4rem .9rem;border:1px solid rgba(228,255,255,.4);border-radius:999px;background:rgba(32,24,38,.8);color:#E4FFFF;font:inherit;font-size:.95rem;cursor:pointer;animation:gx-fondo .4s ease-out}
+.gx-saltar[hidden]{display:none}
+.gx-saltar svg{width:1rem;height:1rem;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+.gx-saltar:hover{background:var(--color-principal,#F2C063);color:#201826}
+.gx-saltar:focus-visible{outline:3px solid var(--color-acento,#E3D0B5);outline-offset:2px}
+.gx-talk-name{position:absolute;top:-1.15rem;left:1.2rem;padding:.05rem .9rem;background:var(--color-principal,#F2C063);color:#201826;border-radius:8px;font-family:'Dongle',sans-serif;font-weight:700;font-size:2rem;line-height:1.1}
+.gx-talk-text{font-size:1.15rem;line-height:1.5;min-height:3em}
+.gx-talk-actions{display:flex;justify-content:flex-end}
+.gx-talk .gx-act{font-size:2.2rem}
+.gx-aviso{position:absolute;left:50%;bottom:9%;transform:translateX(-50%);max-width:min(86vw,24rem);margin:0;padding:.55rem 1rem;background:rgba(32,24,38,.94);border:1px solid rgba(228,255,255,.25);border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.45);font-size:1rem;line-height:1.4;text-align:center;pointer-events:none;z-index:8;animation:gx-fondo .25s ease-out} /* aviso enano: como un diálogo, pero chiquito y sin botón */
+.gx-aviso[hidden]{display:none}
+.gx-touch-on .gx-aviso{bottom:auto;top:7.6rem}
+.gx-touch-on .gx-talk{bottom:auto;top:7.6rem} /* en celular: debajo de los botones de arriba (música, pantalla completa, vibración) */
+.gx-touch-on .gx-msg{top:7.6rem;font-size:1.1rem}
+/* 10. Minijuegos: colores por fase, botón "?", anuncio grande y categorías mentales rápidas */
+/* Colores del círculo según la fase (los pone ui.updateBreath en data-fase): inhalar verde azulado · sostener dorado · exhalar lila · pausa gris */
+.gx-luz-1,.gx-luz-2{transition:stop-color .5s}
+.gx-breath[data-fase="inhale"] .gx-luz-1{stop-color:#e6fbf6}.gx-breath[data-fase="inhale"] .gx-luz-2{stop-color:#5fb3a2}
+.gx-breath[data-fase="hold"] .gx-luz-1{stop-color:#fff4d6}.gx-breath[data-fase="hold"] .gx-luz-2{stop-color:#e0a83f}
+.gx-breath[data-fase="exhale"] .gx-luz-1{stop-color:#f3e9fa}.gx-breath[data-fase="exhale"] .gx-luz-2{stop-color:#9d7bc2}
+.gx-breath[data-fase="pause"] .gx-luz-1{stop-color:#eeeeee}.gx-breath[data-fase="pause"] .gx-luz-2{stop-color:#8f8f97}
+.gx-needle{transition:stroke .5s}
+.gx-breath[data-fase="inhale"] .gx-needle{stroke:#9ff0de}
+.gx-breath[data-fase="hold"] .gx-needle{stroke:#ffd27a}
+.gx-breath[data-fase="exhale"] .gx-needle{stroke:#d9bdf2}
+.gx-breath[data-fase="inhale"] .gx-label{background:rgba(31,92,82,.85)}
+.gx-breath[data-fase="hold"] .gx-label{background:rgba(120,82,18,.85)}
+.gx-breath[data-fase="exhale"] .gx-label{background:rgba(78,52,110,.85)}
+.gx-breath-hint{margin:.9rem 0 0} /* debajo del reloj, con aire entre los dos (antes quedaban pegados) */
+/* Botón "?": vuelve a abrir la explicación del minijuego */
+.gx-breath{position:absolute}
+.gx-ayuda{pointer-events:auto;position:absolute;top:3.6rem;right:-2.6rem;width:2.1rem;height:2.1rem;border-radius:50%;border:1px solid rgba(228,255,255,.5);background:rgba(32,24,38,.85);color:#E4FFFF;font-family:'Outfit',sans-serif;font-weight:700;font-size:1.05rem;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.gx-ayuda:hover{background:var(--color-principal,#F2C063);color:#201826}
+.gx-ayuda:focus-visible{outline:3px solid var(--color-acento,#E3D0B5);outline-offset:2px}
+/* Anuncio grande con el nombre de la técnica */
+.gx-anuncio{top:34%;left:50%;translate:-50% -50%;z-index:9;display:flex;flex-direction:column;align-items:center;gap:.3rem;padding:1.1rem 2.2rem 1.3rem;max-width:min(92vw,46rem);text-align:center;background:rgba(32,24,38,.92);border:2px solid var(--color-principal,#F2C063);border-radius:18px;box-shadow:0 0 0 6px rgba(242,192,99,.18),0 18px 50px rgba(0,0,0,.55);pointer-events:none}
+.gx-anuncio[hidden]{display:none}
+.gx-anuncio span{font-size:.95rem;letter-spacing:.18em;text-transform:uppercase;color:var(--color-principal,#F2C063)}
+.gx-anuncio strong{font-family:'Luckiest Guy',cursive;font-weight:400;font-size:clamp(1.8rem,4.6vw,3.2rem);line-height:1.05;letter-spacing:.02em;color:#E4FFFF}
+/* Aviso destacado antes de subir al MIO */
+.gx-aviso-mio{width:100%;padding:.75rem 1rem;border-left:4px solid var(--color-advertencia,#D01F2A);background:rgba(208,31,42,.12);border-radius:6px;font-size:.95rem;line-height:1.45;font-weight:700}
+.gx-aviso-mio[hidden]{display:none}
+
+/* Línea de tiempo de la mañana (arriba, al centro) */
+.gx-linea{top:1.1rem;left:50%;translate:-50% 0;z-index:12;display:flex;align-items:center;gap:0;list-style:none;margin:0;padding:.35rem .9rem;background:rgba(32,24,38,.72);border:1px solid rgba(228,255,255,.2);border-radius:999px;pointer-events:none;transition:opacity .4s}
+.gx-linea li{display:flex;align-items:center;gap:.35rem;font-size:.78rem;color:rgba(228,255,255,.55);white-space:nowrap}
+.gx-linea li::before{content:"";width:.6rem;height:.6rem;border-radius:50%;border:2px solid rgba(228,255,255,.45);flex:none}
+.gx-linea li+li{margin-left:.55rem}
+.gx-linea li+li::after{content:none}
+.gx-linea--hecho{color:rgba(228,255,255,.8)!important}
+.gx-linea--hecho::before{background:var(--color-terceario,#799180);border-color:var(--color-terceario,#799180)!important}
+.gx-linea--ahora{color:var(--color-principal,#F2C063)!important;font-weight:700}
+.gx-linea--ahora::before{background:var(--color-principal,#F2C063);border-color:var(--color-principal,#F2C063)!important;box-shadow:0 0 8px rgba(242,192,99,.8)}
+.gx-tarjeta .gx-linea,.gx-sin-hud .gx-linea,.gx-susurro .gx-linea,.gx-negro .gx-linea{opacity:0}
+/* Barra de progreso del camino a la universidad (después del sismo, ya en la calle): una línea de lado a lado en el borde de abajo,
+   con el % encima de la punta. Se esconde en los minijuegos, las tarjetas y las frases sobre negro */
+.gx-progreso{left:0;right:0;bottom:0;height:7px;z-index:12;background:rgba(32,24,38,.65);pointer-events:none;transition:opacity .4s}
+.gx-progreso[hidden]{display:none}
+.gx-progreso-fill{height:100%;width:0;background:var(--color-principal,#F2C063);box-shadow:0 0 10px rgba(242,192,99,.75);transition:width .8s ease}
+.gx-progreso-pct{position:absolute;bottom:13px;left:0;translate:-50% 0;padding:.12rem .55rem;border-radius:999px;background:rgba(32,24,38,.8);border:1px solid rgba(242,192,99,.5);font-family:'Outfit',sans-serif;font-size:.78rem;font-weight:700;font-variant-numeric:tabular-nums;color:var(--color-principal,#F2C063);white-space:nowrap;transition:left .8s ease}
+.gx-tarjeta .gx-progreso,.gx-sin-hud .gx-progreso,.gx-susurro .gx-progreso,.gx-minijuego .gx-progreso{opacity:0}
+@media (max-width:1000px){.gx-linea li span{display:none}.gx-linea li+li{margin-left:.35rem}} /* pantallas angostas: solo los puntos */
+.gx-touch-on .gx-linea{top:3.6rem;left:auto;right:1rem;translate:none} /* celular: debajo de "Salida rápida" (arriba al centro no cabe) */
+.gx-touch-on .gx-linea li span{display:none}
+/* Terremoto en el MIO: la línea de tiempo tiembla, se apaga y se rompe en pedazos (ui.lineaSismo / ui.lineaRompe) */
+.gx-linea li{transition:opacity 2.5s,filter 2.5s}
+.gx-linea--sismo1 .gx-linea--ahora{animation:gx-linea-tiembla .09s linear infinite;opacity:.35;filter:saturate(.2) brightness(.6)}
+.gx-linea--sismo2{animation:gx-linea-tiembla .12s linear infinite;opacity:.7}
+.gx-linea--sismo2 li{filter:saturate(.4) brightness(.75)}
+.gx-linea--rota{visibility:hidden}
+@keyframes gx-linea-tiembla{0%{transform:translate(0,0)}25%{transform:translate(-3px,1px) rotate(-.6deg)}50%{transform:translate(2px,-1px)}75%{transform:translate(-1px,2px) rotate(.5deg)}}
+.gx-linea-pedazos{inset:0;z-index:13;pointer-events:none;overflow:hidden}
+.gx-linea-pedazo{position:absolute;will-change:transform,opacity}
+.gx-linea-cae{visibility:hidden}
+.gx-linea-fuera{display:none} /* después de romperse ya no deja el hueco */ /* "Ir a la Universidad" se soltó: la que cae es una copia */
+.gx-linea-ficha{position:absolute;display:flex;align-items:center;justify-content:center;background:rgba(32,24,38,.72);border:1px solid rgba(228,255,255,.2);border-radius:999px;list-style:none;will-change:transform;opacity:.7} /* igual de transparente que la barra temblando (gx-linea--sismo2) */
+.gx-linea-ficha li{display:flex;align-items:center;gap:.35rem;font-size:.78rem;white-space:nowrap;color:var(--color-principal,#F2C063);font-weight:700;filter:saturate(.4) brightness(.75)}
+.gx-linea-ficha li::before{content:"";width:.6rem;height:.6rem;border-radius:50%;background:var(--color-principal,#F2C063);flex:none}
+@media (prefers-reduced-motion:reduce){.gx-linea--sismo1 .gx-linea--ahora,.gx-linea--sismo2{animation:none}}
+
+/* Salida rápida: botón para volver a ver los controles, debajo de Parar / Seguir */
+/* Respiración: debajo de la frase de la técnica (arriba), un aviso pequeño sobre el brillo del círculo de afuera */
+.gx-respirando .gx-msg:not(:empty)::after{content:"Si el círculo de afuera empieza a brillar, prepárate: puede que debas volver a inhalar.";display:block;margin-top:.35rem;font-size:.78rem;line-height:1.3;opacity:.72}
+.gx-ver-controles{margin:16px auto 0;padding:.25rem 1.3rem;font-size:1.7rem;border:1px solid rgba(228,255,255,.35);border-radius:999px;opacity:.9}
+.gx-ver-controles:hover{opacity:1}
+/* en celular no se explican los controles (los botones están a la vista): sin "Ver los controles" en la salida rápida */
+body.gx-touch-on .gx-ver-controles{display:none}
+/* Conteo de grounding (conteo.js): la mano y tres números grandes. Botones de 76 px como mínimo (más que los 64 px recomendados: en medio
+   del temblor es fácil fallar), sin la espera del doble toque (touch-action) */
+.gx-conteo{top:45%;left:50%;translate:-50% -50%;z-index:7;pointer-events:auto;display:flex;flex-direction:column;align-items:center;gap:1rem;padding:1.2rem 1.6rem 1.4rem;width:max-content;max-width:94vw;background:rgba(32,24,38,.9);border:1px solid rgba(228,255,255,.25);border-radius:18px;box-shadow:0 14px 40px rgba(0,0,0,.5)}
+.gx-conteo[hidden]{display:none}
+.gx-conteo-titulo{margin:0;font-size:1.15rem;letter-spacing:.02em}
+.gx-conteo-mano{width:clamp(130px,26vh,190px);aspect-ratio:684/669;display:flex;align-items:flex-end;justify-content:center;border-radius:50%} /* del tamaño de la mano más grande (684 × 669 px) */
+.gx-conteo-mano img{height:auto;min-width:0;display:block;user-select:none;-webkit-user-drag:none} /* ilustraciones de assets/minijuego */
+.gx-conteo-mano--dos{width:clamp(230px,46vh,330px);aspect-ratio:1368/669;gap:4%} /* dos manos (hasta 10): una al lado de la otra */
+.gx-conteo-ops{display:flex;gap:1rem;justify-content:center}
+.gx-conteo-op{min-width:76px;min-height:76px;padding:0 .6rem;border:none;border-radius:16px;background:#E4FFFF;color:#201826;border-bottom:5px solid var(--color-advertencia-flecha,#A6869B);font-family:'Luckiest Guy',cursive;font-size:2.4rem;line-height:1;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;user-select:none}
+/* errores: tres círculos abajo; cada equivocación pone uno en rojo (al tercero se pierde) */
+.gx-conteo-vidas{display:flex;gap:.5rem;justify-content:center}
+.gx-conteo-vidas i{width:.95rem;height:.95rem;border-radius:50%;background:rgba(255,255,255,.35);border:2px solid #fff;transition:background .2s,transform .2s}
+.gx-conteo-vidas i.gx-conteo-vida--mal{background:#D01F2A;border-color:#FF8A80;transform:scale(1.15)}
+.gx-conteo--horizontal .gx-conteo-vidas{flex-basis:100%}
+.gx-conteo-op:focus-visible{outline:3px solid var(--color-principal,#F2C063);outline-offset:3px}
+/* celular acostado (pantalla baja y ancha): la mano a la izquierda y los números en columna a la derecha */
+.gx-conteo--horizontal{flex-direction:row;flex-wrap:wrap;justify-content:center;column-gap:1.6rem}
+.gx-conteo--horizontal .gx-conteo-titulo{flex-basis:100%;text-align:center}
+.gx-conteo--horizontal .gx-conteo-mano{width:clamp(100px,38vh,180px)}
+.gx-conteo--horizontal .gx-conteo-mano--dos{width:clamp(170px,60vh,260px)}
+.gx-conteo--horizontal .gx-conteo-ops{flex-direction:column;gap:.6rem}
+.gx-conteo--horizontal .gx-conteo-op{min-height:64px;min-width:96px}
+.gx-touch-on .gx-conteo{top:42%}
+/* Reconstruir la gravedad (gravedad.js): un nivel de burbuja abajo; la cámara se acerca a Gabriela */
+.gx-gravedad{top:4.4rem;left:50%;translate:-50% 0;z-index:7;pointer-events:auto;display:flex;flex-direction:column;align-items:center;gap:.5rem;padding:.7rem 1.2rem;width:max-content;max-width:92vw;background:rgba(32,24,38,.82);border:1px solid rgba(228,255,255,.25);border-radius:14px;touch-action:none;user-select:none} /* solo el nivel y la ayuda: lo importante es Gabriela, en el centro */
+.gx-foco{top:44%;left:50%;translate:-50% -50%;z-index:7;pointer-events:auto;display:flex;flex-direction:column;align-items:center;gap:.8rem;padding:1.1rem 1.6rem 1.3rem;width:min(92vw,24rem);background:rgba(32,24,38,.88);border:1px solid rgba(228,255,255,.25);border-radius:18px;box-shadow:0 14px 40px rgba(0,0,0,.5);touch-action:none;user-select:none}
+.gx-gravedad[hidden],.gx-foco[hidden],.gx-foco-velo[hidden]{display:none}
+.gx-foco-titulo{margin:0;font-size:1.15rem}
+.gx-gravedad-ayuda,.gx-foco-ayuda{margin:0;font-size:.9rem;opacity:.85;text-align:center}
+.gx-nivel{position:relative;width:180px;height:26px;border-radius:999px;background:rgba(228,255,255,.12);border:2px solid rgba(228,255,255,.4)}
+.gx-nivel-centro{position:absolute;left:50%;top:3px;bottom:3px;width:26px;margin-left:-13px;border-left:2px solid rgba(228,255,255,.5);border-right:2px solid rgba(228,255,255,.5)}
+.gx-nivel-burbuja{position:absolute;left:50%;top:4px;width:18px;height:14px;margin-left:-9px;border-radius:50%;background:#F2C063;transition:background .2s}
+.gx-nivel-burbuja--recta{background:#9ff0de}
+.gx-gravedad-giro{pointer-events:auto;min-height:56px;padding:0 1.2rem;border:none;border-radius:14px;background:var(--color-principal,#F2C063);color:#201826;font:inherit;font-weight:700;cursor:pointer;touch-action:manipulation}
+/* Foco entre el ruido (foco.js): la pantalla oscurecida, la escala de una radio vieja y un dial grande */
+.gx-foco-velo{inset:0;z-index:0;background:#0a050e;opacity:.72;pointer-events:none}
+.gx-foco-escala{position:relative;display:flex;justify-content:space-between;width:100%;padding:.4rem .6rem;border-radius:8px;background:#201826;border:2px solid #A6869B;font-size:.8rem;color:#F2C063;font-variant-numeric:tabular-nums}
+.gx-foco-aguja{position:absolute;top:2px;bottom:2px;width:3px;margin-left:-1.5px;background:#D01F2A;border-radius:2px}
+.gx-foco-dial{width:clamp(150px,30vh,210px);aspect-ratio:1;cursor:grab;touch-action:none;border-radius:50%}
+.gx-foco-dial:active{cursor:grabbing}
+.gx-foco-dial:focus-visible{outline:3px solid var(--color-principal,#F2C063);outline-offset:4px}
+.gx-foco-dial svg{width:100%;height:100%;display:block}
+.gx-foco-gota{width:22px;height:30px;opacity:0}
+.gx-foco-gota svg{width:100%;height:100%;fill:#9ff0de}
+.gx-touch-on .gx-foco{top:42%}.gx-touch-on .gx-gravedad{top:6.6rem}
+/* Celular, en los minijuegos con panel: sin joystick ni Interactuar (no se usan), el tiempo abajo del todo y el panel del sonido debajo de los
+   botones de arriba, más compacto (antes se montaba sobre "Música" / "Vibración" y su ayuda quedaba encima del tiempo) */
+.gx-touch-on.gx-mini-panel .gx-joy,.gx-touch-on.gx-mini-panel .gx-go{display:none}
+.gx-touch-on.gx-mini-panel .gx-breath{bottom:max(3%,env(safe-area-inset-bottom))}
+.gx-touch-on .gx-foco{top:7.4rem;translate:-50% 0;gap:.55rem;padding:.8rem 1.1rem 1rem}
+.gx-touch-on .gx-foco-dial{width:clamp(120px,24vh,170px)}
+.gx-touch-on .gx-foco-gota{position:absolute;right:1.4rem;top:45%}
+.gx-touch-on .gx-foco .gx-flecha{width:62px;height:62px}
+/* celular acostado: más compactos */
+@media (max-height:560px) and (orientation:landscape){.gx-foco{gap:.5rem;padding:.7rem 1.2rem}.gx-foco-dial{width:clamp(110px,34vh,160px)}}
+/* celular acostado, en los minijuegos con panel: el avance ("0 de 5", la barra, el tiempo y "?") quedaba debajo del panel, que ocupa casi todo
+   el alto. Pasa a una fila arriba, entre los botones de las esquinas, y el panel baja y se compacta para caber debajo */
+@media (max-height:560px) and (orientation:landscape){
+    .gx-touch-on.gx-mini-panel .gx-breath{top:max(10px,env(safe-area-inset-top));bottom:auto;flex-direction:row;gap:.6rem;z-index:8}
+    .gx-touch-on.gx-mini-panel .gx-breath .gx-label{margin-bottom:0;font-size:1.15rem;padding:.15rem .7rem}
+    .gx-touch-on.gx-mini-panel .gx-bar{width:150px;height:14px;padding:2px}
+    .gx-touch-on.gx-mini-panel .gx-timer{margin-top:0}
+    .gx-touch-on.gx-mini-panel .gx-breath-hint{display:none}
+    .gx-touch-on.gx-mini-panel .gx-ayuda{position:static;flex:none;order:9} /* el "?" al final de la fila */
+    .gx-touch-on .gx-conteo{top:calc(50% + 26px);gap:.45rem;padding:.6rem 1.2rem .7rem}
+    .gx-touch-on .gx-conteo-titulo{font-size:1rem}
+    .gx-touch-on .gx-conteo--horizontal .gx-conteo-mano{width:clamp(90px,34vh,150px)}
+    .gx-touch-on .gx-conteo--horizontal .gx-conteo-op{min-height:54px;font-size:2rem}
+    .gx-touch-on .gx-foco{top:3.6rem;gap:.4rem;padding:.55rem 1.1rem .7rem}
+    .gx-touch-on .gx-foco-dial{width:clamp(90px,28vh,130px)}
+    .gx-touch-on .gx-foco .gx-flecha{width:52px;height:52px}
+    /* Reconstruir la gravedad: el panel tapaba a Gabriela (lo que importa ver): baja al borde de abajo, con las flechas y el botón en una fila */
+    .gx-touch-on .gx-gravedad{top:auto;bottom:max(8px,env(safe-area-inset-bottom));flex-direction:row;flex-wrap:wrap;justify-content:center;column-gap:.8rem;row-gap:.35rem;padding:.5rem 1rem;max-width:min(520px,92vw)}
+    .gx-touch-on .gx-gravedad .gx-nivel,.gx-touch-on .gx-gravedad-ayuda{flex-basis:100%}
+    .gx-touch-on .gx-gravedad .gx-nivel{flex-basis:auto;margin:0 calc(50% - 90px)}
+    .gx-touch-on .gx-gravedad .gx-flecha{width:52px;height:52px}
+    .gx-touch-on .gx-gravedad-giro{min-height:52px}
+}
+/* Flechas táctiles de Reconstruir la gravedad y Foco entre el ruido: solo en celular (mantener presionada = A o D) */
+.gx-flechas{display:none;gap:1.2rem;justify-content:center}
+.gx-touch-on .gx-flechas{display:flex}
+.gx-flecha{pointer-events:auto;width:72px;height:72px;border-radius:18px;border:2px solid rgba(228,255,255,.5);background:rgba(228,255,255,.12);color:#E4FFFF;display:flex;align-items:center;justify-content:center;touch-action:none;-webkit-tap-highlight-color:transparent;cursor:pointer}
+.gx-flecha svg{width:34px;height:34px;fill:none;stroke:currentColor;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+.gx-flecha.on{background:var(--color-principal,#F2C063);color:#201826;border-color:var(--color-principal,#F2C063)}
+
+/* ============================================================
+   Realidad mixta (mr/): pantalla de inicio, vista previa y controles de las gafas
+   ============================================================ */
+/* controles: en las gafas, los de las gafas; en la vista previa, los del computador */
+.gx-keys--xr,.gx-keys--sim{display:none}
+body.gx-mr-on .gx-keys--pc,body.gx-mr-on .gx-keys--touch{display:none}
+body.gx-mr-on:not(.gx-mr-sim) .gx-keys--xr,body.gx-mr-sim .gx-keys--sim{display:grid}
+.gx-keys--xr .gx-keycaps,.gx-keys--sim .gx-keycaps{min-width:7.4rem;justify-content:center}
+.gx-keys--xr kbd,.gx-keys--sim kbd{font-size:1.45rem}
+/* vista previa: la interfaz HTML no se ve (se dibuja en el panel 3D, como en las gafas) y el filtro de la ansiedad no tapa el panel */
+body.gx-mr-sim .gx{opacity:0}
+body.gx-mr-on canvas.webgl{filter:none!important}
+body.gx-mr-sim .gx-touch{display:none}
+.mr-atrapador{position:fixed;inset:0;z-index:5;cursor:crosshair;touch-action:none}
+
+/* pantalla de inicio: elegir cómo jugar */
+.mr-inicio{position:fixed;inset:0;z-index:20;display:flex;align-items:center;justify-content:center;padding:1.5rem;background:radial-gradient(ellipse at center,rgba(32,24,38,.92),rgba(10,5,14,.98));color:#E4FFFF;font-family:'Outfit',sans-serif}
+.mr-inicio[hidden]{display:none}
+.mr-inicio-caja{max-width:34rem;display:flex;flex-direction:column;align-items:center;gap:1.1rem;text-align:center}
+.mr-inicio h2{margin:0;font-size:clamp(2.4rem,7vw,3.6rem);line-height:1}
+.mr-inicio p{color:#E4FFFF;font-family:inherit} /* (style.css pinta los párrafos de oscuro) */
+.mr-inicio-texto{margin:0;font-size:1.1rem;line-height:1.45}
+.mr-estado{margin:0;min-height:1.4em;font-size:.95rem;opacity:.75}
+.mr-inicio-acciones{display:flex;flex-direction:column;gap:.75rem;width:min(100%,22rem);opacity:0;transition:opacity .3s}
+.mr-inicio--listo .mr-inicio-acciones{opacity:1}
+.mr-boton{font:inherit;font-size:1.05rem;padding:.85rem 1.2rem;border-radius:12px;border:1px solid rgba(228,255,255,.45);background:rgba(32,24,38,.8);color:#E4FFFF;cursor:pointer;transition:background .2s,transform .1s}
+.mr-boton:hover{background:rgba(113,112,138,.55)}
+.mr-boton:active{transform:scale(.97)}
+.mr-boton--principal{background:#F2C063;color:#201826;border-color:#F2C063;font-weight:700}
+.mr-boton--principal:hover{background:#f6d18b}
+.mr-boton[hidden]{display:none}

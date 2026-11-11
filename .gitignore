@@ -1,0 +1,6 @@
+# Archivos que no se suben al repo
+.claude/
+node_modules/
+dist/
+.env
+*.zip

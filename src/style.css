@@ -1,0 +1,2273 @@
+/* Indice
+
+    0. Generales / Colores
+    1. Tipografias
+    2. Header / Cabecera
+        2.1 Menú
+    3. Enlaces / Botones
+        3.1 Botón inicio
+    4. Body
+        4.1 Scroll
+        4.2 Página del juego (narrativa.html)
+    5. Main
+        5.1 Titulos
+        5.2 Escena
+        5.3 Contenido
+        5.4 Animación
+        5.5 Articulos
+        5.6 Mapa de apoyo
+        5.7 Recursos
+            5.7.1 Imagenes
+            5.7.2 Videos
+        5.8 Tarjetas
+        5.9 Teléfonos
+        5.10 Avisos
+        5.11 Linea de ayuda
+        5.12 Advertencia
+        5.13 Brigada Topos
+        5.14 Página de respiración
+        5.15 Organización Mundial de la Salud
+        5.16 Página de prevención
+        5.17 Mapa
+    6. Footer
+    7. Reactive
+
+*/
+
+/* 0. Generales / colores ----------------- */
+*{
+    margin: 0px;
+    padding: 0px;
+    box-sizing: border-box;
+}
+
+:root {
+    --padding-pagina: max(8%, calc((100% - 1400px) / 2)); /* Margen lateral de las secciones: 8% y el contenido nunca pasa de 1400px (5% en mobile) */
+    --tamano-texto: 1.15rem; /* Tamaño de todos los párrafos y listas */
+    --color-principal: #F2C063; /* Secciones principales, botones, tarjetas, elementos de navegación, ilustraciones */
+    --color-acento: #E3D0B5; /* Fondos y algunos titulos */
+    --color-terceario: #799180; /* Decoraciones */
+    --color-soporte-oscuro: #201826; /* Algunos textos, encabezado/pie de página, iconos, fuerte contraste */
+    --color-soporte-claro: #e4ffff; /* Cuadros informativos/fondos tranquilos */
+    --color-tarjeta-sombra: #DE924A; /* Caja de atrás de todas las tarjetas, teléfonos y avisos (naranja claro) */
+    --color-scroll-pista: #DABE9E; /* Franja del scroll sobre fondo crema (crema un poco más oscuro) */
+    --color-atencion: #BF4E24; /* Color extra para llamar la atencion/alertas, también el pedazo y las flechas del scroll sobre fondo crema */
+    --color-texto: #101720; /* Color negro para textos que no es negro puro */
+    --color-escena: rgb(10, 5, 14); /* Fondo de la sección del juego (muestra del index y narrativa) y del techo que se rompe (script.js lo lee de aquí) */
+    --color-advertencia: #D01F2A; /* Título de la ventana de advertencia */
+    --color-advertencia-icono: #780A0F; /* Triángulo de advertencia */
+    --color-advertencia-flecha: #A6869B; /* Flechas de Volver / Seguir */
+}
+
+/* 1. Tipografias ----------------- */
+/* Fuentes de terremoto para el nombre del proyecto ("Grietas bajo la piel"), en todas las páginas: */
+@font-face { font-family: "Broken Drive"; src: url("./fuentes/broken-drive.otf") format("opentype"); font-display: block; }
+@font-face { font-family: "Crashcourse BB"; src: url("./fuentes/crashcourse-bb.otf") format("opentype"); font-display: block; }
+
+/* Nombre del proyecto. En el header va en una sola línea ("Grietas" un poco más grande) */
+.titulo-marca{
+    font-family: "Broken Drive", "Luckiest Guy", cursive;
+    letter-spacing: 0.02em;
+    line-height: 1;
+    white-space: nowrap;
+}
+.titulo-marca .titulo-grietas{
+    font-family: "Crashcourse BB", "Luckiest Guy", cursive;
+    font-size: 1.5em;
+    letter-spacing: 0.01em;
+}
+/* .titulo-principal */
+.titulo-marca .titulo-resto{ font-family: "Broken Drive", "Luckiest Guy", cursive; }
+
+.titulo-marca--apilado{
+    display: inline-flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.06em;
+    letter-spacing: 0;
+}
+
+.titulo-marca--apilado{ align-self: stretch; }
+.titulo-marca--apilado .titulo-grietas{ font-size: calc(100cqw / 2.62); line-height: 0.9; letter-spacing: 0; }
+.titulo-marca--apilado .titulo-resto{ font-size: calc(100cqw / 4.77); line-height: 0.9; letter-spacing: 0; text-align: center; }
+
+.titulo-principal{
+    font-family: "Luckiest Guy", cursive;
+    font-weight: 400;
+    font-style: normal;
+    font-size: 32px; 
+}
+
+.titulo{
+    font-family: "Dongle", sans-serif;
+    font-weight: 700;
+    font-style: normal;
+    font-size: 46px;
+    line-height: 0.9;
+    color: var(--color-atencion);
+}
+
+.subtitulo{
+    font-family: "Dongle", sans-serif;
+    font-weight: 400;
+    font-style: normal;
+    font-size: 38px;
+    line-height: 0.9;
+}
+
+p{
+    font-family: "Outfit", sans-serif;
+    font-size: var(--tamano-texto);
+    font-optical-sizing: auto;
+    font-weight: 400;
+    font-style: normal;
+    color: var(--color-texto);
+}
+
+/* 2. Header / Cabecera ----------------- */
+/* en el index no va el header: la escena del juego ocupa la pantalla desde arriba */
+/* ...pero cuando la escena ya no se ve (al bajar a los recursos), vuelve fijo arriba, del mismo morado de la escena y sin borde,
+   así se funde con el techo roto del derrumbe (por encima de su lienzo). Ver script.js 7.2 */
+.pagina-inicio #cabecera-principal{ position: fixed; top: 0; left: 0; right: 0; z-index: 1150; background: var(--color-escena); border-bottom: 0; transform: translateY(-100%); visibility: hidden; transition: transform 0.35s ease, visibility 0.35s; }
+.pagina-inicio.cabecera-ver #cabecera-principal{ transform: none; visibility: visible; }
+.pagina-inicio #recursos{ scroll-margin-top: 90px; } /* (la flecha baja hasta aquí: que el header no tape el título) */
+#cabecera-principal{
+    padding: 20px 2% 15px 2%;
+    display: flex;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    gap: 22px;
+    align-items: center;
+    border-bottom: 3px solid var(--color-terceario);
+    background: var(--color-soporte-oscuro);
+}
+
+#cabecera-principal a{
+    text-decoration: none;
+}
+
+#titulo-header{
+    font-size: 26px; /* más grande: "bajo la piel" se lee mejor */
+    text-decoration: none;
+}
+
+#titulo-header .titulo-resto{
+    font-size: 1.33em; /* "bajo la piel" tan alto como "Grietas" (de borde a borde de las letras) */
+    position: relative;
+    top: 0.03em;
+    margin-left: 0.1em; /* el espacio entre "Grietas" y "bajo" queda igual al de entre "bajo" y "la" */
+}
+
+    /* 2.1 Menú */
+    #cabecera-principal
+    {
+        position: relative;
+        z-index: 30;
+    }
+
+    #cabecera-principal .menu
+    {
+        margin-left: auto;
+        display: flex;
+    }
+
+    .menu-boton
+    {
+        display: inline-flex;
+        align-items: center;
+        gap: 14px;
+        padding: 6px 2px;
+        border: 0;
+        background: none;
+        color: var(--color-soporte-claro);
+        font-family: "Outfit", sans-serif;
+        font-size: 1rem;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        cursor: pointer;
+        transition: color 0.2s ease;
+    }
+
+    .menu-boton:hover,.menu-boton--abierto
+    {
+        color: var(--color-principal);
+    }
+
+    .menu-boton:focus-visible,.menu-panel a:focus-visible
+    {
+        outline: 3px solid var(--color-acento);
+        outline-offset: 4px;
+        border-radius: 4px;
+    }
+
+    .menu-boton-icono
+    {
+        position: relative;
+        width: 36px;
+        height: 26px;
+    }
+
+    .menu-boton-icono span
+    {
+        position: absolute;
+        left: 0;
+        top: 11px;
+        width: 100%;
+        height: 4px;
+        border-radius: 4px;
+        background: currentColor;
+        transition:
+            transform 0.3s cubic-bezier(0.65, 0, 0.35, 1),
+            top 0.26s cubic-bezier(0.65, 0, 0.35, 1) 0.28s,
+            opacity 0.05s linear 0.28s;
+    }
+
+    .menu-boton-icono span:nth-child(1) { top: 0; }
+    .menu-boton-icono span:nth-child(3) { top: 22px; }
+
+    .menu-boton--abierto .menu-boton-icono span
+    {
+        transition:
+            top 0.26s cubic-bezier(0.65, 0, 0.35, 1),
+            transform 0.3s cubic-bezier(0.65, 0, 0.35, 1) 0.26s,
+            opacity 0.05s linear 0.26s;
+    }
+
+    .menu-boton--abierto .menu-boton-icono span:nth-child(1) { top: 11px; transform: rotate(45deg); }
+    .menu-boton--abierto .menu-boton-icono span:nth-child(2) { opacity: 0; }
+    .menu-boton--abierto .menu-boton-icono span:nth-child(3) { top: 11px; transform: rotate(-45deg); }
+
+    .menu-panel
+    {
+        position: absolute;
+        top: 100%;
+        right: 0;
+        z-index: 40;
+        width: min(600px, 94vw);
+        max-height: calc(100vh - 90px);
+        overflow-y: auto;
+        padding: 24px 28px 14px;
+        border-bottom: 3px solid var(--color-terceario);
+        border-left: 3px solid var(--color-terceario);
+        border-radius: 0 0 0 14px;
+        background: var(--color-soporte-oscuro);
+        box-shadow: 0 24px 48px rgba(0, 0, 0, 0.45);
+    }
+
+    .menu-panel[hidden]
+    {
+        display: none;
+    }
+
+    @keyframes menu-entra
+    {
+        from { opacity: 0; transform: translateY(-8px); }
+        to { opacity: 1; transform: none; }
+    }
+
+    .menu-panel
+    {
+        animation: menu-entra 0.25s ease-out;
+    }
+
+    .menu-lista
+    {
+        list-style: none;
+        column-count: 2;
+        column-gap: 36px;
+    }
+
+    .menu-grupo
+    {
+        break-inside: avoid;
+        margin-bottom: 18px;
+    }
+
+    .menu-grupo ul
+    {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        margin-top: 4px;
+        list-style: none;
+    }
+
+    #cabecera-principal .menu-enlace
+    {
+        display: inline-block;
+        font-family: "Outfit", sans-serif;
+        font-size: 0.95rem;
+        color: var(--color-soporte-claro);
+        padding: 3px 0;
+    }
+
+    #cabecera-principal .menu-enlace--principal
+    {
+        font-family: "Dongle", sans-serif;
+        font-weight: 700;
+        font-size: 34px;
+        line-height: 1;
+        color: var(--color-principal);
+    }
+
+    #cabecera-principal .menu-enlace:hover
+    {
+        color: var(--color-acento);
+        text-decoration: underline;
+    }
+
+    #cabecera-principal .menu-enlace[aria-current="page"]
+    {
+        text-decoration: underline;
+        text-underline-offset: 4px;
+    }
+
+/* 3. Enlaces / Botones */
+.enlaces {
+    font-family: "Outfit", sans-serif;
+    color: var(--color-terceario);
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.enlaces:hover {
+    color: var(--color-atencion);
+}
+
+    /* 3.1 Botón inicio */
+    .boton
+    {
+        pointer-events: auto;
+        display: inline-block;
+        text-align: center;
+        text-decoration: none;
+        font-family: "Outfit", sans-serif;
+        padding: 12px 32px;
+        background: var(--color-principal);
+        color: var(--color-soporte-oscuro);
+        border: 1px solid var(--color-soporte-claro);
+        border-radius: 999px;
+        font-size: 16px;
+        cursor: pointer;
+        transition: background 0.3s, color 0.3s;
+    }
+    .boton:hover
+    {
+        background: var(--color-atencion);
+        color: var(--color-soporte-claro);
+    }
+
+        .escena-contenido .boton
+    {
+        align-self: center;
+    }
+
+/* 4. Body */
+body{
+    background: var(--color-acento);
+}
+
+body
+{
+    display: flex;
+    flex-direction: column;
+}
+
+html, body
+{
+    min-height: 100vh;
+}
+
+html{
+    max-width: 100%;
+    overflow-x: hidden;
+}
+
+body{
+    max-width: 100%;
+    overflow-x: clip; /* clip y no hidden: con hidden el body se volvía otro contenedor con scroll (aparecía una segunda barra y un espacio debajo del footer) */
+}
+
+html
+{
+    overscroll-behavior: none; /* sin el "rebote" de Mac / Safari. Solo en html: si se pone también en body, la rueda del mouse deja de bajar la página (body no puede pasarle el scroll a la ventana) */
+}
+
+html
+{
+    background: var(--color-soporte-oscuro); /* si algún navegador viejo igual rebota, lo que asoma es del color del header y el footer */
+}
+
+    /* 4.1 Scroll */
+    @property --scroll-pista
+    {
+        syntax: "<color>";
+        inherits: true;
+        initial-value: #DABE9E;
+    }
+
+    @property --scroll-pulgar
+    {
+        syntax: "<color>";
+        inherits: true;
+        initial-value: #BF4E24;
+    }
+
+    html{
+        --scroll-pista: var(--color-scroll-pista);
+        --scroll-pulgar: var(--color-atencion);
+        scrollbar-color: var(--scroll-pulgar) var(--scroll-pista);
+        transition: --scroll-pista 0.4s ease, --scroll-pulgar 0.4s ease;
+    }
+
+    html.scroll-oscuro{
+        --scroll-pista: var(--color-escena);
+        --scroll-pulgar: var(--color-principal);
+    }
+
+    html::-webkit-scrollbar{ width: 12px; }
+    html::-webkit-scrollbar-track{ background: var(--scroll-pista); }
+    html::-webkit-scrollbar-thumb{ background: var(--scroll-pulgar); border-radius: 6px; border: 2px solid var(--scroll-pista); }
+
+/* 4.2 Página del juego (narrativa.html) */
+
+html.sin-scroll, body.sin-scroll
+{
+    height: 100%;
+    overflow: hidden;
+    overscroll-behavior: none;
+}
+
+body.pagina-narrativa
+{
+    background: var(--color-escena);
+    user-select: none; /* en el juego nada se selecciona: hacer clic o doble clic para respirar no pinta el texto */
+    -webkit-user-select: none;
+}
+
+.webgl--narrativa
+{
+    position: fixed;
+    inset: 0;
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+.webgl-nitida /* la protagonista nítida encima del mundo borroso (nivel 3 de ansiedad) */
+{
+    position: fixed;
+    inset: 0;
+    display: block;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+/* 5. Main ----------------- */
+main
+{
+    flex: 1;
+}
+
+    /* 5.1 Titulos */
+    .titulo-principal{
+        margin: 0;
+        color: var(--color-soporte-claro);
+        text-align: center;
+        user-select: none;
+    }
+
+    .decoracion-titulo{
+        position: relative;
+        width: 100%;
+        height: 400px;
+        overflow: hidden;
+    }
+
+    .fondo-titulo{
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: center 20%;
+
+        background: var(--color-principal);
+    }
+
+    .fondo-titulo--respiracion{
+        object-position: 70% 10%;
+    }
+
+    .fondo-titulo-fade{
+        position: absolute;
+        inset: 0;
+        z-index: 1;
+        pointer-events: none;
+        background: linear-gradient(to right, transparent, var(--color-acento));
+    }
+
+    .fondo-titulo-fade--abajo{
+        background: linear-gradient(to bottom, transparent, var(--color-acento));
+    }
+
+    #titulo-pagina{
+        position: absolute;
+        top: 50%;
+        left: var(--padding-pagina);
+        transform: translateY(-50%);
+        color: var(--color-soporte-claro);
+        font-size: 3.5rem;
+        z-index: 2;
+        max-width: 90%;
+        text-align: left;
+    }
+
+    /* 5.2 Escena */
+    .escena-contenido .titulo-principal{
+        font-size: clamp(4.6rem, 8vw, 7.2rem);
+        text-align: left;
+    }
+
+    .escena-parrafo{
+        margin: 0;
+        color: var(--color-soporte-claro);
+        text-align: left;
+        user-select: none;
+    }
+
+    .escena-parrafo + .escena-parrafo
+    {
+        margin-top: 5px;
+    }
+
+    .escena
+    {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 32px; 
+        width: 100%;
+        height: clamp(640px, 100vh, 1000px);
+        padding: 0 var(--padding-pagina);
+        overflow: hidden;
+        background: var(--color-escena);
+    }
+
+    .escena-canvas
+    {
+        position: relative;
+        flex: 1 1 62%;
+        max-width: none;
+        height: 92%; /* más espacio para la muestra */
+        min-width: 0;
+    }
+
+    .escena .webgl
+    {
+        position: absolute;
+        top: 0;
+        left: 0;
+        display: block;
+        width: 100%;
+        height: 100%;
+    }
+
+
+    /* Imagen de respaldo de la muestra: se ve mientras carga el 3D (y se queda si el equipo no tiene WebGL o lo pierde);
+       cuando el cuarto y Gabriela ya cargaron, la muestra aparece encima con un fundido */
+    .muestra-respaldo { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; pointer-events: none; user-select: none; transition: opacity 0.6s; }
+    .escena-canvas canvas.webgl { opacity: 0; transition: opacity 0.6s; }
+    .muestra-lista canvas.webgl { opacity: 1; }
+    .muestra-lista .muestra-respaldo { opacity: 0; }
+    .muestra-sin-3d canvas.webgl { display: none; }
+    .muestra-sin-3d .muestra-respaldo { opacity: 1; }
+
+    .escena-contenido
+    {
+        position: relative;
+        z-index: 1;
+        flex: 1 1 38%;
+        max-width: 620px;
+        container-type: inline-size; /* el título se mide con el ancho de esta columna */
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        justify-content: center;
+        gap: 24px;
+    }
+
+    .escena::after
+    {
+        content: "";
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 75px;
+        background: linear-gradient(to bottom, transparent, var(--color-acento));
+        pointer-events: none;
+        z-index: 2;
+    }
+
+    /* 5.3 Contenido */
+    .contenido
+    {
+        display: flex;
+        flex-direction: column;
+        gap: 48px;
+        padding: 48px var(--padding-pagina);
+    }
+
+    /* 5.4 Animación: techo que se derrumba con el scroll (index). Debajo de la muestra la página sigue oscura; (script.js, sección 7) */
+    .pagina-inicio { --color-velo: var(--color-escena); } /* el techo es del color de la escena: sin franja entre los dos */
+    .escena-mas { display: none; } /* (solo en celular, ver 5.2) */
+    .derrumbe-espacio { height: 60vh; flex: none; margin-top: -2px; } /* -1px: se monta sobre la escena (sin rendija entre las dos) */ /* espacio extra para ver el derrumbe antes de los recursos (el alto exacto lo pone script.js) */
+    .derrumbe { position: fixed; top: 0; left: 0; z-index: 1100; pointer-events: none; }
+    .derrumbe-activo .pagina-inicio .escena::after { display: none; } /* la escena sigue de largo en el techo: sin degradado (dejaba una línea en la unión) */
+    .pagina-inicio .contenido { padding-top: 0px; } /* los recursos empiezan justo debajo del hueco del derrumbe */
+
+    /* Flecha hacia abajo (script.js, 7.1): aparece si la persona se queda quieta antes de llegar a los recursos y da un saltito */
+    .flecha-abajo { position: fixed; left: 50%; translate: -50% 0; bottom: 22px; z-index: 1200; display: inline-flex; align-items: center; gap: 6px; height: 46px; padding: 0 14px 0 20px; border: 2px solid var(--color-principal); border-radius: 999px; font-family: 'Outfit', sans-serif; font-size: 1rem; white-space: nowrap; background: rgba(32, 24, 38, 0.75); color: var(--color-principal); cursor: pointer; opacity: 0; visibility: hidden; transition: opacity 0.5s, visibility 0.5s; }
+    .flecha-abajo svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; margin-top: 2px; }
+    .flecha-abajo--ver { opacity: 1; visibility: visible; animation: flecha-salto 1.6s ease-in-out infinite; }
+    .flecha-abajo:focus-visible { outline: 3px solid var(--color-acento); outline-offset: 3px; }
+    /* la página entera salta con la flecha (el header, el main y el footer; no el body, para no mover lo que va fijo en pantalla) */
+    .pagina-salta #cabecera-principal, .pagina-salta main, .pagina-salta .footer { animation: pagina-salto 1.6s ease-in-out infinite; }
+    @keyframes pagina-salto { 0%, 60%, 100% { transform: translateY(0); } 20% { transform: translateY(-9px); } 40% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
+    @media (prefers-reduced-motion: reduce) { .pagina-salta #cabecera-principal, .pagina-salta main, .pagina-salta .footer, .flecha-abajo--ver { animation: none; } }
+    @keyframes flecha-salto { 0%, 60%, 100% { transform: translateY(0); } 20% { transform: translateY(-12px); } 40% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+
+    /* 5.5 Articulos */
+    .articulo-recursos
+    {
+        text-align: center;
+    }
+
+    .articulo-recursos > p
+    {
+        text-align: left;
+        max-width: 900px;
+        margin: 0 auto;
+    }
+
+    .recursos-grid
+    {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 32px;
+        margin-top: 20px;
+        max-width: 900px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .recurso-caja
+    {
+        position: relative;
+        aspect-ratio: 4 / 3;
+        border-radius: 8px;
+        overflow: hidden;
+        transition: transform 0.25s ease, box-shadow 0.25s ease;
+    }
+
+    .recurso-caja:hover
+    {
+        transform: translateY(-4px);
+        box-shadow: 0 10px 24px rgba(32, 24, 38, 0.35);
+    }
+
+    .recurso-caja a
+    {
+        display: block;
+        position: relative;
+        width: 100%;
+        height: 100%;
+        color: var(--color-soporte-claro);
+        text-decoration: none;
+    }
+
+    .recurso-imagen
+    {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: center top;
+        background: var(--color-acento);
+        transition: transform 0.35s ease, filter 0.5s ease;
+    }
+
+    .recurso-caja:hover .recurso-imagen
+    {
+        transform: scale(1.06);
+    }
+
+    .recurso-caja h3
+    {
+        position: absolute;
+        inset: 0;
+        z-index: 1;
+        margin: 0;
+        display: flex;
+        align-items: flex-end;
+        justify-content: center;
+        padding: 22px;
+        text-align: center;
+        color: var(--color-soporte-claro);
+        line-height: 0.85;
+        background: linear-gradient(to top, rgba(32, 24, 38, 0.8), rgba(32, 24, 38, 0.15) 55%, transparent);
+    }
+
+    .context, .carusel, main > article
+    {
+        padding-left: var(--padding-pagina);
+        padding-right: var(--padding-pagina);
+    }
+
+    .context
+    {
+        display: flex;
+        flex-direction: column;
+        gap: 48px;
+        padding-top: 48px;
+        padding-bottom: 24px;
+    }
+
+    .context .articulo-texto
+    {
+        flex: 1 1 0;
+        min-width: 0;
+        text-align: left;
+    }
+
+    .context ul
+    {
+        margin-top: 4px;
+        padding-left: 1.4rem;
+    }
+
+    .context li
+    {
+        font-family: "Outfit", sans-serif;
+        font-size: var(--tamano-texto);
+        color: var(--color-texto);
+    }
+
+    .context li + li
+    {
+        margin-top: 8px;
+    }
+
+    /* 5.6 Mapa de apoyo */
+    .articulo-mapa
+    {
+        --tipo-psicologica: #A6869B;
+        --tipo-emergencia: #BF4E24;
+        --tipo-hospital: #799180;
+        --tipo-desastres: #F2C063;
+        --tipo-apoyo: #8296B7;
+    }
+
+    .articulo-mapa [data-tipo="psicologica"] { --tipo: var(--tipo-psicologica); }
+    .articulo-mapa [data-tipo="emergencia"] { --tipo: var(--tipo-emergencia); }
+    .articulo-mapa [data-tipo="hospital"] { --tipo: var(--tipo-hospital); }
+    .articulo-mapa [data-tipo="desastres"] { --tipo: var(--tipo-desastres); }
+    .articulo-mapa [data-tipo="apoyo"] { --tipo: var(--tipo-apoyo); }
+    .articulo-mapa .mapa-linea[data-franja="verde"] { --tipo: var(--color-terceario); }
+
+/* 5.7 Recursos */
+
+    main > article /* menos espacio entre artículos (antes 44px arriba y abajo: quedaba un hueco grande) */
+    {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        padding-top: 22px;
+        padding-bottom: 22px;
+    }
+
+    .decoracion-titulo + article
+    {
+        padding-top: 40px;
+    }
+
+    main > article:last-of-type
+    {
+        padding-bottom: 64px;
+    }
+
+    .recurso-cabecera
+    {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .recurso-subseccion
+    {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .recurso-subseccion + .recurso-subseccion
+    {
+        margin-top: 12px;
+    }
+
+    .recurso-texto
+    {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        max-width: 80ch;
+    }
+
+    .recurso-nota
+    {
+        max-width: 80ch;
+    }
+
+    .recurso-split
+    {
+        display: grid;
+        grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+        gap: 40px;
+        align-items: stretch;
+    }
+
+    .recurso-split-contenido
+    {
+        display: flex;
+        flex-direction: column;
+        gap: 28px;
+        min-width: 0;
+    }
+
+    .recurso-split-contenido .recurso-texto
+    {
+        max-width: none;
+    }
+
+        /* 5.7.1 Imagenes */
+        .imagen-apoyo
+        {
+            position: relative;
+            min-height: 260px;
+            border-radius: 8px;
+            overflow: hidden;
+            background: var(--color-principal);
+        }
+
+        .imagen-apoyo img
+        {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* 5.7.2 Videos de las técnicas (anclaje, grounding, meditación caminando) */
+        .recurso-video { width: 100%; max-width: 980px; margin: 24px auto 8px; } /* más grandes y centrados */
+        .recurso-video video { display: block; width: 100%; aspect-ratio: 16 / 9; border-radius: 12px; background: #000; box-shadow: 0 10px 28px rgba(0, 0, 0, 0.18); }
+        .recurso-video figcaption { margin-top: 10px; font-family: "Outfit", sans-serif; font-size: 0.95rem; text-align: center; opacity: 0.8; }
+
+    /* 5.8 Tarjetas */
+    .tarjetas
+    {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 28px;
+        list-style: none;
+    }
+
+    .tarjetas--tres
+    {
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    }
+
+    .tarjetas--cinco
+    {
+        grid-template-columns: repeat(5, 1fr);
+    }
+
+    .tarjeta
+    {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        padding: 18px 20px 20px;
+        border: 1.5px solid var(--color-soporte-oscuro);
+        border-radius: 12px;
+        background: var(--color-soporte-claro);
+    }
+
+    .tarjeta::before
+    {
+        content: "";
+        position: absolute;
+        inset: 7px -7px -7px 7px;
+        z-index: -1;
+        border-radius: 12px;
+        background: var(--color-tarjeta-sombra);
+    }
+
+    .tarjeta--verde::before,
+    .tarjeta--alerta::before
+    {
+        background: var(--color-tarjeta-sombra);
+    }
+
+    .tarjeta .subtitulo
+    {
+        font-size: 32px;
+        font-weight: 700;
+    }
+
+    .tarjeta ul
+    {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        padding-left: 1.2rem;
+    }
+
+    .tarjeta li
+    {
+        font-family: "Outfit", sans-serif;
+        font-size: var(--tamano-texto);
+        color: var(--color-texto);
+    }
+
+    .tarjeta li::marker
+    {
+        color: var(--color-atencion);
+    }
+
+    .tarjeta-numero
+    {
+        display: grid;
+        place-items: center;
+        flex: none;
+        width: 34px;
+        height: 34px;
+        border: 1.5px solid var(--color-soporte-oscuro);
+        border-radius: 50%;
+        background: var(--color-principal);
+        color: var(--color-soporte-oscuro);
+        font-family: "Luckiest Guy", cursive;
+        font-size: 1.05rem;
+        line-height: 1;
+    }
+
+    /* 5.9 Teléfonos */
+    .telefonos
+    {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 20px;
+        align-content: start;
+        list-style: none;
+    }
+
+    .telefono
+    {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        padding: 12px 16px 14px;
+        border: 1.5px solid var(--color-soporte-oscuro);
+        border-radius: 10px;
+        background: var(--color-soporte-claro);
+    }
+
+    .telefono::before
+    {
+        content: "";
+        position: absolute;
+        inset: 5px -5px -5px 5px;
+        z-index: -1;
+        border-radius: 10px;
+        background: var(--color-tarjeta-sombra);
+    }
+
+    .telefono-numero
+    {
+        font-family: "Dongle", sans-serif;
+        font-weight: 700;
+        font-size: 44px;
+        line-height: 0.85;
+        color: var(--color-atencion);
+    }
+
+    .telefono p
+    {
+        font-size: 1rem;
+        line-height: 1.3;
+    }
+
+    .recurso-split--telefonos
+    {
+        grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+    }
+
+    /* 5.10 Avisos */
+    .aviso
+    {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        padding: 20px 24px 22px;
+        border: 1.5px solid var(--color-soporte-oscuro);
+        border-radius: 12px;
+        background: var(--color-soporte-claro);
+    }
+
+    .aviso::before
+    {
+        content: "";
+        position: absolute;
+        inset: 7px -7px -7px 7px;
+        z-index: -1;
+        border-radius: 12px;
+        background: var(--color-tarjeta-sombra);
+    }
+
+    .aviso ul
+    {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        padding-left: 1.2rem;
+    }
+
+    .aviso li
+    {
+        font-family: "Outfit", sans-serif;
+        font-size: var(--tamano-texto);
+        color: var(--color-texto);
+    }
+
+    .aviso li::marker
+    {
+        color: var(--color-atencion);
+    }
+
+    /* 5.11 Linea de ayuda */
+    .linea-ayuda
+    {
+        display: flex;
+        align-items: center;
+        gap: 24px;
+        padding: 20px 28px;
+        border-radius: 12px;
+        background: var(--color-soporte-oscuro);
+    }
+
+    .linea-ayuda p
+    {
+        color: var(--color-soporte-claro);
+    }
+
+    .linea-numero
+    {
+        flex: none;
+        font-family: "Luckiest Guy", cursive;
+        font-size: 3.5rem;
+        line-height: 1;
+        color: var(--color-principal);
+    }
+
+    /* 5.12 Advertencia */
+    html.modal-abierto
+    {
+        overflow: hidden;
+        scrollbar-gutter: stable;
+    }
+
+    .advertencia
+    {
+        margin: auto;
+        padding: 0;
+        width: 100%;
+        max-width: min(680px, 92vw);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 12px;
+        background: var(--color-soporte-oscuro);
+        color: var(--color-soporte-claro);
+        box-shadow: 0 24px 64px rgba(0, 0, 0, 0.55);
+    }
+
+    .advertencia::backdrop
+    {
+        background: rgba(10, 5, 14, 0.78);
+    }
+
+    .advertencia[open]::backdrop
+    {
+        animation: advertencia-fondo 0.25s ease-out;
+    }
+
+    @keyframes advertencia-fondo
+    {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+
+    .advertencia.sacudir
+    {
+        animation: advertencia-sacudida 0.45s ease-in-out;
+    }
+
+    @keyframes advertencia-sacudida
+    {
+        0%   { transform: translateX(0); border-color: var(--color-advertencia); }
+        15%  { transform: translateX(-12px); }
+        30%  { transform: translateX(10px); }
+        45%  { transform: translateX(-8px); }
+        60%  { transform: translateX(6px); }
+        75%  { transform: translateX(-3px); }
+        100% { transform: translateX(0); border-color: rgba(255, 255, 255, 0.12); }
+    }
+
+    @keyframes advertencia-destello
+    {
+        0%, 100% 
+            { 
+                border-color: rgba(255, 255, 255, 0.12); 
+                box-shadow: 0 24px 64px rgba(0, 0, 0, 0.55); 
+            }
+        30%, 70% 
+            { 
+                border-color: var(--color-advertencia); 
+                box-shadow: 0 0 0 4px rgba(208, 31, 42, 0.45), 0 24px 64px rgba(0, 0, 0, 0.55); 
+            }
+    }
+
+    .advertencia-caja
+    {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 12px;
+        padding: 40px 40px 28px;
+    }
+
+    .advertencia-icono
+    {
+        width: 88px;
+        height: auto;
+        color: var(--color-advertencia-icono);
+    }
+
+    .advertencia-icono .exclamacion
+    {
+        fill: var(--color-soporte-oscuro);
+    }
+
+    .advertencia-titulo
+    {
+        font-size: 4.5rem;
+        line-height: 0.9;
+        text-align: center;
+        color: var(--color-advertencia);
+    }
+
+    .advertencia-texto
+    {
+        width: 100%;
+        font-size: 0.95rem;
+        line-height: 1.55;
+        color: var(--color-soporte-claro);
+    }
+
+    .advertencia-subtitulo
+    {
+        width: 100%;
+        margin-top: 4px;
+        font-size: 2rem;
+        line-height: 0.9;
+        color: var(--color-soporte-claro);
+    }
+
+    .advertencia-lista
+    {
+        column-count: 2;
+        column-width: 15rem;
+        column-gap: 32px;
+        width: 100%;
+        list-style: none;
+    }
+
+    .advertencia-lista li
+    {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        margin-bottom: 8px;
+        break-inside: avoid;
+        font-family: "Outfit", sans-serif;
+        font-size: 0.95rem;
+        line-height: 1.35;
+        color: var(--color-soporte-claro);
+    }
+
+    .advertencia-lista li::before
+    {
+        content: "";
+        flex: none;
+        width: 8px;
+        height: 8px;
+        margin-top: 0.4em;
+        border-radius: 2px;
+        background: var(--color-advertencia);
+    }
+
+    .advertencia-aviso
+    {
+        display: none;
+        width: 100%;
+        padding: 12px 16px;
+        border-left: 4px solid var(--color-acento);
+        border-radius: 6px;
+        background: rgba(242, 192, 99, 0.12);
+    }
+
+    .advertencia-aviso-titulo
+    {
+        font-size: 1.9rem;
+        line-height: 0.9;
+        color: var(--color-acento);
+    }
+
+    .advertencia-aviso p
+    {
+        margin-top: 4px;
+        font-size: 0.9rem;
+        line-height: 1.5;
+        color: var(--color-soporte-claro);
+    }
+
+    .advertencia-acciones
+    {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        width: 100%;
+        margin-top: 16px;
+    }
+
+    .advertencia-accion
+    {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        padding: 6px 10px;
+        border: none;
+        background: none;
+        cursor: pointer;
+        font-family: "Dongle", sans-serif;
+        font-weight: 700;
+        font-size: 2.75rem;
+        line-height: 1;
+        text-decoration: none;
+        transition: color 0.2s;
+    }
+
+    .advertencia-accion--volver { color: var(--color-soporte-claro); }
+    .advertencia-accion--seguir { color: var(--color-soporte-claro); }
+
+    .advertencia-accion:hover
+    {
+        color: var(--color-acento);
+    }
+
+    .advertencia-accion:focus-visible
+    {
+        outline: 3px solid var(--color-acento);
+        outline-offset: 2px;
+        border-radius: 6px;
+    }
+
+    .advertencia-accion svg
+    {
+        width: 32px;
+        height: 32px;
+        color: var(--color-advertencia-flecha);
+        transition: transform 0.2s;
+    }
+
+    .advertencia-accion--volver:hover svg { transform: translateX(-4px); }
+    .advertencia-accion--seguir:hover svg { transform: translateX(4px); }
+
+    /* 5.13 Brigada Topos */
+    .seccion-topos
+    {
+        --topos-rojo: #D10A0A;       /* rojo intenso de la franja y los botones de topos.mx */
+        --topos-coral: #D9423B;      /* rojo coral del pie de página de topos.mx */
+        --topos-carbon: #121212;     /* negro de la sección de operativos */
+        --topos-texto: #FF6A5F;      /* rojo claro para textos sobre negro (el rojo puro casi no se lee) */
+        position: relative;
+        margin-top: 40px; /* mismo aire que la sección de Headspace antes del patrocinador */
+        color: var(--color-soporte-claro);
+        background: var(--topos-carbon);
+        box-shadow: 0 0 0 100vmax var(--topos-carbon); /* fondo de borde a borde aunque el artículo tenga margen lateral */
+        clip-path: inset(0 -100vmax);
+        border-top: 8px solid var(--topos-rojo);
+        border-bottom: 8px solid var(--topos-coral);
+    }
+
+    .seccion-topos .recurso-nota { color: var(--color-soporte-claro); }
+
+    .topos-cabecera
+    {
+        display: flex;
+        align-items: center;
+        gap: 24px;
+    }
+
+    .topos-logo
+    {
+        width: clamp(80px, 12vw, 120px);
+        height: auto;
+        padding: 14px;
+        border-radius: 50%;
+        background: var(--topos-rojo);
+        flex-shrink: 0;
+    }
+
+    .topos-etiqueta
+    {
+        font-family: "Outfit", sans-serif;
+        font-size: 0.85rem;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--topos-texto);
+    }
+
+    .seccion-topos .topos-titulo { color: var(--color-soporte-claro); }
+
+    .tarjeta--topos
+    {
+        border-color: var(--topos-rojo);
+        background: #1C1C1C;
+        color: var(--color-soporte-claro);
+    }
+
+    .tarjeta--topos::before { background: var(--topos-coral); }
+    .tarjeta--topos .subtitulo { color: var(--topos-texto); }
+    .tarjeta--topos p { color: var(--color-soporte-claro); }
+
+    .topos-acciones
+    {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 16px;
+    }
+
+    .topos-boton
+    {
+        display: inline-block;
+        padding: 10px 22px;
+        border: 2px solid var(--topos-rojo);
+        border-radius: 999px;
+        background: var(--topos-rojo);
+        color: #fff;
+        font-family: "Outfit", sans-serif;
+        font-weight: 600;
+        text-decoration: none;
+        transition: background 0.25s ease, color 0.25s ease;
+    }
+
+    .topos-boton--claro { background: transparent; color: var(--topos-texto); border-color: var(--topos-texto); }
+    .topos-boton:hover { background: var(--topos-coral); color: #fff; border-color: var(--topos-coral); }
+    .topos-boton:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
+
+    @media (max-width: 768px)
+    {
+        .topos-cabecera { flex-direction: column; align-items: flex-start; }
+    }
+
+    /* 5.14 Página de técnicas de respiración */
+    :root:has(body.pagina-respiracion)
+    {
+        --color-acento: color-mix(in srgb, var(--color-terceario) 22%, white);
+        --color-tarjeta-sombra: var(--color-terceario); 
+        --color-scroll-pista: color-mix(in srgb, var(--color-terceario) 40%, white);
+        --respiracion-titulo: #1C7A6E;
+    }
+
+    :root:has(body.pagina-respiracion):not(.scroll-oscuro) { --scroll-pulgar: color-mix(in srgb, var(--color-terceario) 75%, black); }
+
+    body.pagina-respiracion .tarjeta { background: color-mix(in srgb, var(--color-terceario) 6%, white); }
+    body.pagina-respiracion .titulo { color: var(--respiracion-titulo); }
+    body.pagina-respiracion .tarjeta-numero { background: color-mix(in srgb, var(--color-terceario) 45%, white); } 
+    body.pagina-respiracion .aviso li::marker { color: var(--color-terceario); } 
+    body.pagina-respiracion #titulo-pagina { color: #F4FBF9; text-shadow: 0 2px 16px color-mix(in srgb, var(--respiracion-titulo) 85%, transparent), 0 0 4px color-mix(in srgb, var(--respiracion-titulo) 45%, transparent); } 
+
+    /* 5.15 Organización Mundial de la Salud */
+    .seccion-headspace
+    {
+        --hs-naranja: #F47D31; 
+        --hs-oscuro: #3D2A1E; 
+        --hs-fondo: #FFF5EC;
+        background: var(--hs-fondo);
+        box-shadow: 0 0 0 100vmax var(--hs-fondo); 
+        clip-path: inset(0 -100vmax);
+        border-top: 8px solid var(--hs-naranja);
+        border-bottom: 8px solid var(--hs-naranja); 
+        margin-top: 40px; 
+        color: var(--hs-oscuro);
+    }
+
+    .seccion-headspace .recurso-nota { color: var(--hs-oscuro); }
+
+    .headspace-cabecera
+    {
+        display: flex;
+        align-items: center;
+        gap: 24px;
+    }
+
+    .headspace-logo
+    {
+        width: clamp(160px, 22vw, 240px);
+        height: auto;
+        padding: 12px 18px;
+        border-radius: 12px;
+        background: #fff;
+        box-shadow: 0 6px 18px rgba(10, 61, 98, 0.12);
+        flex-shrink: 0;
+    }
+
+    .headspace-etiqueta
+    {
+        font-family: "Outfit", sans-serif;
+        font-size: 0.85rem;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--hs-naranja);
+    }
+
+    body.pagina-respiracion .headspace-titulo { color: var(--hs-oscuro); }
+
+    body .seccion-headspace .tarjeta--headspace { border-color: var(--hs-naranja); background: #fff; } 
+    .tarjeta--headspace::before { background: var(--hs-naranja); }
+    .tarjeta--headspace .subtitulo { color: var(--hs-oscuro); }
+
+    .headspace-acciones
+    {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 16px;
+    }
+
+    .headspace-boton
+    {
+        display: inline-block;
+        padding: 10px 22px;
+        border: 2px solid var(--hs-naranja);
+        border-radius: 999px;
+        background: var(--hs-naranja);
+        color: #fff;
+        font-family: "Outfit", sans-serif;
+        font-weight: 600;
+        text-decoration: none;
+        transition: background 0.25s ease, color 0.25s ease, border-color 0.25s ease;
+    }
+
+    .headspace-boton--claro { background: transparent; color: var(--hs-oscuro); border-color: var(--hs-oscuro); }
+    .headspace-boton:hover { background: var(--hs-oscuro); border-color: var(--hs-oscuro); color: #fff; }
+    .headspace-boton:focus-visible { outline: 3px solid var(--hs-oscuro); outline-offset: 3px; }
+
+    @media (max-width: 768px)
+    {
+        .headspace-cabecera { flex-direction: column; align-items: flex-start; }
+    }
+
+    /* 5.16 Página de recursos de prevención */
+    :root:has(body.pagina-prevencion)
+    {
+        --color-acento: #F3DFDA;    
+        --color-tarjeta-sombra: #D9423B; 
+        --color-scroll-pista: #E8C6C0;
+    }
+
+    :root:has(body.pagina-prevencion):not(.scroll-oscuro) { --scroll-pulgar: #B3140F; } 
+    body.pagina-prevencion .tarjeta:not(.tarjeta--topos),
+    body.pagina-prevencion .telefono { background: #FFF7F5; }
+    body.pagina-prevencion main > article:not(.seccion-topos) .titulo { color: #A3150F; } 
+    body.pagina-prevencion .tarjeta-numero { background: #F2A59C; }
+    body.pagina-prevencion .telefono-numero { color: #B3140F; }
+    body.pagina-prevencion #titulo-pagina { color: #FFF3EF; text-shadow: 0 2px 14px rgba(90, 12, 8, 0.55); }
+
+    /* 5.17 Mapa: filtros, mapa interactivo, ficha de cada lugar y líneas telefónicas (src/mapa/) */
+    .mapa-filtros
+    {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 22px;
+    }
+
+    .mapa-filtro
+    {
+        font-family: "Outfit", sans-serif;
+        font-size: 1rem;
+        padding: 8px 18px;
+        border: 1.5px solid var(--color-soporte-oscuro);
+        border-radius: 999px;
+        background: var(--color-soporte-claro);
+        color: var(--color-soporte-oscuro);
+        cursor: pointer;
+        transition: background 0.2s, color 0.2s, transform 0.2s;
+    }
+
+    .mapa-filtro:hover
+    {
+        transform: translateY(-2px);
+    }
+
+    .mapa-filtro[aria-pressed="true"]
+    {
+        background: var(--color-soporte-oscuro);
+        color: var(--color-principal);
+    }
+
+    .mapa-filtro:focus-visible,
+    .mapa-pin:focus-visible
+    {
+        outline: 3px solid var(--color-atencion);
+        outline-offset: 3px;
+    }
+
+    .mapa-pin:focus-visible
+    {
+        border-radius: 50%;
+    }
+
+    .mapa-contenedor
+    {
+        position: relative;
+        width: 100%;
+        height: 460px;
+        margin-top: 18px;
+        border: 1.5px solid var(--color-soporte-oscuro);
+        border-radius: 12px;
+        background: #f1e6d4;
+        isolation: isolate;
+    }
+
+    .mapa-contenedor::before
+    {
+        content: "";
+        position: absolute;
+        inset: 8px -8px -8px 8px;
+        z-index: -1;
+        border-radius: 12px;
+        background: var(--color-tarjeta-sombra);
+    }
+
+    .mapa-lienzo
+    {
+        position: absolute;
+        inset: 0;
+        overflow: hidden;
+        border-radius: 11px;
+        background: #f1e6d4;
+        font-family: "Outfit", sans-serif;
+    }
+
+    .mapa-lienzo .leaflet-tile-pane
+    {
+        filter: saturate(0.45) sepia(0.3) brightness(1.04) contrast(0.95);
+    }
+
+    .mapa-lienzo .leaflet-control-zoom a
+    {
+        color: var(--color-soporte-oscuro);
+    }
+
+    .mapa-lienzo .leaflet-control-attribution
+    {
+        font-size: 11px;
+        background: rgba(241, 230, 212, 0.85);
+    }
+
+    .mapa-pin
+    {
+        background: none;
+        border: 0;
+    }
+
+    .mapa-marcador
+    {
+        display: grid;
+        place-items: center;
+        width: 100%;
+        height: 100%;
+        border: 2px solid var(--color-soporte-oscuro);
+        border-radius: 50%;
+        background: var(--tipo);
+        box-shadow: 3px 3px 0 var(--color-soporte-oscuro);
+        font-size: 20px;
+        line-height: 1;
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .mapa-pin:hover .mapa-marcador,
+    .mapa-pin:focus-visible .mapa-marcador
+    {
+        transform: scale(1.15);
+    }
+
+    .mapa-pin--activo
+    {
+        z-index: 1000 !important;
+    }
+
+    .mapa-pin--activo .mapa-marcador
+    {
+        transform: scale(1.25);
+        box-shadow: 0 0 0 5px rgba(242, 192, 99, 0.75), 3px 3px 0 var(--color-soporte-oscuro);
+    }
+
+    /* Tarjeta de detalle: flota sobre el mapa */
+    .mapa-ficha
+    {
+        position: absolute;
+        top: 16px;
+        left: 16px;
+        z-index: 1001;
+        width: min(360px, calc(100% - 32px));
+        max-height: calc(100% - 32px);
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        padding: 18px 20px 16px;
+        border: 1.5px solid var(--color-soporte-oscuro);
+        border-radius: 12px;
+        background: var(--color-soporte-claro);
+        box-shadow: 6px 6px 0 var(--color-tarjeta-sombra);
+        font-family: "Outfit", sans-serif;
+        color: var(--color-texto);
+    }
+
+    .mapa-ficha[hidden]
+    {
+        display: none;
+    }
+
+    .mapa-ficha-cerrar
+    {
+        position: absolute;
+        top: 8px;
+        right: 10px;
+        width: 32px;
+        height: 32px;
+        border: none;
+        border-radius: 50%;
+        background: transparent;
+        font-size: 26px;
+        line-height: 1;
+        color: var(--color-soporte-oscuro);
+        cursor: pointer;
+    }
+
+    .mapa-ficha-cerrar:hover
+    {
+        background: var(--color-acento);
+    }
+
+    .mapa-ficha-tipo
+    {
+        align-self: flex-start;
+        padding: 3px 12px;
+        border: 1.5px solid var(--color-soporte-oscuro);
+        border-radius: 999px;
+        background: var(--tipo);
+        font-size: 0.85rem;
+        color: var(--color-soporte-oscuro);
+    }
+
+    .mapa-ficha-nombre
+    {
+        font-family: "Dongle", sans-serif;
+        font-weight: 700;
+        font-size: 34px;
+        line-height: 0.9;
+        padding-right: 28px;
+        color: var(--color-soporte-oscuro);
+        outline: none;
+    }
+
+    .mapa-ficha-aviso
+    {
+        padding: 8px 12px;
+        border: 1.5px solid var(--color-atencion);
+        border-radius: 8px;
+        background: rgba(242, 192, 99, 0.35);
+        font-size: 0.88rem;
+        line-height: 1.35;
+    }
+
+    .mapa-ficha-nota
+    {
+        font-size: 0.95rem;
+        line-height: 1.35;
+    }
+
+    .mapa-ficha dl
+    {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .mapa-ficha dt
+    {
+        font-size: 0.75rem;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--color-terceario);
+    }
+
+    .mapa-ficha dd
+    {
+        font-size: 0.95rem;
+        line-height: 1.35;
+    }
+
+    .mapa-ficha a
+    {
+        color: var(--color-atencion);
+    }
+
+    .mapa-ficha-pendiente
+    {
+        font-style: italic;
+        color: var(--color-terceario);
+    }
+
+    .mapa-ficha-acciones
+    {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 4px;
+    }
+
+    .mapa-ficha .mapa-ficha-boton
+    {
+        padding: 7px 16px;
+        border: 1.5px solid var(--color-soporte-oscuro);
+        border-radius: 999px;
+        background: var(--color-principal);
+        color: var(--color-soporte-oscuro);
+        font-size: 0.9rem;
+        text-decoration: none;
+        transition: background 0.2s, color 0.2s;
+    }
+
+    .mapa-ficha .mapa-ficha-boton--claro
+    {
+        background: transparent;
+    }
+
+    .mapa-ficha .mapa-ficha-boton:hover
+    {
+        background: var(--color-atencion);
+        color: var(--color-soporte-claro);
+    }
+
+    .mapa-ficha-fuente
+    {
+        font-size: 0.75rem;
+        color: var(--color-terceario);
+    }
+
+    .mapa-ficha .mapa-ficha-fuente a
+    {
+        color: inherit;
+    }
+
+    /* Líneas telefónicas debajo del mapa */
+    .mapa-lineas-titulo
+    {
+        margin-top: 44px;
+    }
+
+    .mapa-lineas
+    {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+        gap: 18px;
+        margin-top: 14px;
+        list-style: none;
+    }
+
+    .mapa-linea
+    {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        padding: 12px 16px 14px;
+        border: 1.5px solid var(--color-soporte-oscuro);
+        border-left: 8px solid var(--tipo);
+        border-radius: 10px;
+        background: var(--color-soporte-claro);
+        font-family: "Outfit", sans-serif;
+    }
+
+    .mapa-linea[hidden],
+    .mapa-lineas[hidden],
+    .mapa-lineas-titulo[hidden]
+    {
+        display: none;
+    }
+
+    .mapa-linea-numero
+    {
+        font-family: "Dongle", sans-serif;
+        font-weight: 700;
+        font-size: 44px;
+        line-height: 0.85;
+        color: var(--color-atencion);
+        text-decoration: none;
+    }
+
+    .mapa-linea-numero:hover
+    {
+        text-decoration: underline;
+    }
+
+    .mapa-linea-nombre
+    {
+        font-weight: 700;
+    }
+
+    .mapa-linea p
+    {
+        font-size: 0.95rem;
+        line-height: 1.3;
+    }
+
+    .mapa-linea a:not(.mapa-linea-numero)
+    {
+        color: var(--color-atencion);
+    }
+
+    .mapa-nota
+    {
+        margin-top: 24px;
+        font-size: 0.95rem;
+        color: var(--color-soporte-oscuro);
+    }
+
+/* 6. Footer ----------------- */
+.footer {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 32px;
+    padding: 32px var(--padding-pagina) 60px;
+    background: var(--color-soporte-oscuro);
+}
+
+.patrocinadores
+{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+}
+
+.patrocinadores-titulo
+{
+    color: var(--color-soporte-claro);
+    font-family: "Outfit", sans-serif; 
+    font-size: 14px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    opacity: 0.8;
+}
+
+.patrocinadores-lista
+{
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 150px)); /* columnas iguales: el logo del medio queda justo en el centro (antes el ancho de cada logo lo corría) */
+    justify-content: center;
+    justify-items: center;
+    align-items: center;
+    gap: 22px;
+    padding: 0;
+    list-style: none;
+}
+
+.patrocinadores-lista li
+{
+    display: flex;
+    justify-content: center;
+    max-width: 100%;
+}
+
+.patrocinadores-lista a
+{
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 0;
+    text-decoration: none;
+    transition: transform 0.2s;
+}
+
+.patrocinadores-lista a:hover
+{
+    transform: scale(1.05);
+}
+
+.patrocinador-logo
+{
+    height: 64px;
+    width: auto;
+    max-width: 100%;
+    object-fit: contain;
+    display: block;
+}
+
+/* 7. Reactive -----------------
+   Mismo orden que el resto del archivo: cada bloque lleva el número de la sección que adapta.
+   Celular = max-width: 768px · Tablet = entre 769px y 1000px */
+
+    /* 0. Generales / Colores */
+    @media (max-width: 768px)
+    {
+        :root { --padding-pagina: 5%; --tamano-texto: 1rem; } /* en celular el texto de 1.15rem se veía muy grande */
+    }
+
+    /* 2. Header / Cabecera */
+    @media (max-width: 768px)
+    {
+        #titulo-header { font-size: 15px; }
+        #cabecera-principal { padding: 14px 4% 11px; }
+    }
+
+    /* 2.1 Menú */
+    @media (max-width: 768px)
+    {
+        .menu-lista
+        {
+            column-count: 1;
+        }
+
+        .menu-panel
+        {
+            padding: 20px 20px 8px;
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce)
+    {
+        .menu-boton-icono span,
+        .menu-boton--abierto .menu-boton-icono span
+        {
+            transition: none;
+        }
+
+        .menu-panel
+        {
+            animation: none;
+        }
+    }
+
+    /* 4.1 Scroll */
+    @media (prefers-reduced-motion: reduce)
+    {
+        html{ transition: none; }
+    }
+
+    /* 5.1 Titulos */
+    @media (max-width: 768px)
+    {
+        #titulo-pagina
+        {
+            font-size: 2.5rem;
+        }
+
+        .escena-contenido .titulo-principal
+        {
+            font-size: clamp(3rem, 17vw, 4.4rem);
+        }
+    }
+
+    /* 5.2 Escena: en celular la sección crece con su contenido. Antes tenía alto fijo con overflow oculto:
+       el título quedaba cortado arriba y la muestra 3D abajo (de ahí la línea rara sobre el fundido) */
+    @media (max-width: 768px)
+    {
+        .derrumbe-espacio { height: 26vh; } /* menos espacio vacío antes de los recursos (antes 42vh: quedaba un pedazo oscuro sin nada) */
+        .escena-contenido .boton { margin-top: 18px; } /* el botón Iniciar más separado del último párrafo */
+
+        /* aviso debajo de la muestra: hay más información abajo (con la flecha que salta) */
+        .escena-mas
+        {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            align-self: center;
+            margin-top: 64px; /* bien separado de la muestra (antes 8px: quedaba pegado) */
+            padding: 8px 16px;
+            border: 2px solid var(--color-principal);
+            border-radius: 999px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.95rem;
+            color: var(--color-principal);
+            text-decoration: none;
+        }
+        .escena-mas svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; animation: flecha-salto 1.6s ease-in-out infinite; }
+
+        .escena
+        {
+            flex-direction: column;
+            justify-content: flex-start;
+            gap: 20px;
+            height: auto;
+            min-height: calc(100svh - 60px);
+            padding: 36px 5% 48px; /* (abajo 48px, antes 96: menos espacio vacío antes del derrumbe) */
+        }
+
+        .escena-contenido
+        {
+            flex: 0 0 auto;
+            width: 100%; /* ancho fijo: la columna mide su propio ancho para el título (container-type) y sin esto se encogía casi a cero */
+            max-width: 100%;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .escena-contenido .titulo-principal,
+        .escena-parrafo
+        {
+            text-align: center;
+        }
+
+        .escena-parrafo
+        {
+            font-size: 0.98rem;
+            line-height: 1.45;
+        }
+
+        .escena-canvas
+        {
+            flex: 0 0 auto;
+            margin-top: 28px; /* la muestra un poco más abajo: no queda pegada al botón Iniciar */
+            width: 100%;
+            max-width: none;
+            height: clamp(240px, 42svh, 360px);
+        }
+    }
+
+    /* 5.5 Articulos */
+    @media (max-width: 768px)
+    {
+        .recursos-grid
+        {
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+
+        .recurso-caja
+        {
+            aspect-ratio: 16 / 9; /* en celular las fotos en 4:3 quedaban muy altas */
+        }
+    }
+
+    @media (hover: hover) /* las fotos de las cajas de recursos se ven en gris hasta pasar el mouse */
+    {
+        .recurso-imagen
+        {
+            filter: grayscale(1);
+        }
+
+        .recurso-caja:hover .recurso-imagen,
+        .recurso-caja a:focus-visible .recurso-imagen
+        {
+            filter: grayscale(0);
+        }
+    }
+
+    /* 5.7 Recursos */
+    @media (max-width: 768px)
+    {
+        .recurso-split,
+        .recurso-split--telefonos
+        {
+            grid-template-columns: 1fr;
+            gap: 36px;
+        }
+    }
+
+    @media (max-width: 1000px) and (min-width: 769px)
+    {
+        .recurso-split,
+        .recurso-split--telefonos
+        {
+            grid-template-columns: 1fr;
+        }
+    }
+
+        /* 5.7.1 Imagenes */
+        @media (max-width: 768px)
+        {
+            .imagen-apoyo
+            {
+                min-height: 220px;
+            }
+        }
+
+        @media (max-width: 1000px) and (min-width: 769px)
+        {
+            .imagen-apoyo
+            {
+                min-height: 320px;
+            }
+        }
+
+    /* 5.8 Tarjetas */
+    /* Filas de 4 en computador y tablet (técnicas de respiración); en celular, una columna como las demás */
+    @media (min-width: 769px)
+    {
+        .tarjetas--cuatro { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    }
+
+    /* 5.9 Teléfonos */
+    @media (max-width: 768px)
+    {
+        .telefonos
+        {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+
+    /* 5.11 Linea de ayuda */
+    @media (max-width: 768px)
+    {
+        .linea-ayuda
+        {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 8px;
+        }
+    }
+
+    /* 5.12 Advertencia */
+    @media (max-width: 768px)
+    {
+        .advertencia-caja
+        {
+            padding: 28px 22px 20px;
+        }
+
+        .advertencia-icono
+        {
+            width: 72px;
+        }
+
+        .advertencia-titulo
+        {
+            font-size: 3.5rem;
+        }
+
+        .advertencia-texto,
+        .advertencia-lista li
+        {
+            font-size: 0.9rem;
+        }
+
+        .advertencia-subtitulo
+        {
+            font-size: 1.75rem;
+        }
+
+        .advertencia-accion
+        {
+            font-size: 2.25rem;
+        }
+    }
+
+    @media (max-width: 768px), (pointer: coarse) /* aviso de "pensada para computador" en celulares y pantallas táctiles */
+    {
+        .advertencia-aviso
+        {
+            display: block;
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce)
+    {
+        .advertencia[open]::backdrop { animation: none; }
+        .advertencia.sacudir { animation: advertencia-destello 0.6s ease-out; }
+        .advertencia-accion svg { transition: none; }
+    }
+
+    /* 5.17 Mapa */
+    @media (min-width: 769px) /* líneas de ayuda: filas de 4 en computador y tablet */
+    {
+        .mapa-lineas { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    }
+
+    @media (max-width: 768px)
+    {
+        .mapa-contenedor
+        {
+            height: 420px;
+        }
+
+        .mapa-filtros
+        {
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            padding-bottom: 6px;
+        }
+
+        .mapa-filtro
+        {
+            flex: none;
+        }
+
+        /* La tarjeta pasa a ser una hoja desde abajo */
+        .mapa-ficha
+        {
+            top: auto;
+            bottom: 12px;
+            left: 12px;
+            width: calc(100% - 24px);
+            max-height: 70%;
+        }
+    }
+
+    /* 6. Footer */
+    @media (max-width: 768px)
+    {
+        .patrocinadores-lista
+        {
+            grid-template-columns: minmax(0, 150px); /* uno debajo del otro, centrados */
+            gap: 28px;
+        }
+    }
+
+/* Versión de realidad mixta: cómo jugar con gafas (index.html) */
+.gafas-pasos{display:grid;gap:1rem;margin:1.5rem 0 0;padding-left:1.4rem;font-size:var(--tamano-texto);line-height:1.5}
+.gafas-pasos li::marker{color:var(--color-atencion);font-weight:700}
+.gafas-pasos strong{color:var(--color-soporte-oscuro)}

@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="es">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Grietas bajo la piel</title>
+        <link rel="icon" href="favicon.svg" type="image/svg+xml"> <!-- (sin ícono, el navegador pedía favicon.ico y salía un error 404 en la consola) -->
+        <meta name="description" content="Después de un terremoto, las grietas también pueden quedar bajo la piel. Conocé cómo afrontar, aceptar y superar las emociones y efectos psicológicos que deja un desastre natural.">
+        <meta name="robots" content="index, follow">
+
+        <!-- Links --> 
+        <link rel="stylesheet" href="./style.css">
+
+        <!-- Fuentes de Google -->
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Dongle:wght@400;700&family=Luckiest+Guy&family=Outfit&display=swap" rel="stylesheet">
+    </head>
+
+    <body class="pagina-inicio">
+        <header id="cabecera-principal">
+            <a href="index.html" aria-label="Ir a la página de inicio de Grietas bajo la piel">
+                <h1 class="titulo-principal titulo-marca" id="titulo-header"><span class="titulo-grietas">Grietas</span> <span class="titulo-resto">bajo la piel</span></h1>
+            </a>
+            <nav class="menu" aria-label="Navegación principal">
+                <button class="menu-boton" type="button" aria-label="Menú" aria-expanded="false" aria-controls="menu-panel">
+                    <span class="menu-boton-icono" aria-hidden="true"><span></span><span></span><span></span></span>
+                </button>
+                <div class="menu-panel" id="menu-panel" hidden>
+                    <ul class="menu-lista">
+                        <li class="menu-grupo">
+                            <a class="menu-enlace menu-enlace--principal" href="index.html" aria-current="page">Inicio</a>
+                        </li>
+                        <li class="menu-grupo">
+                            <a class="menu-enlace menu-enlace--principal" href="respiracion-consciente.html">Técnicas de respiración</a>
+                            <ul>
+                                <li><a class="menu-enlace" href="respiracion-consciente.html#suelo">El suelo ya no se mueve</a></li>
+                                <li><a class="menu-enlace" href="respiracion-consciente.html#mapea">Mapea lo que sientes</a></li>
+                                <li><a class="menu-enlace" href="respiracion-consciente.html#anclaje">Anclaje al presente</a></li>
+                                <li><a class="menu-enlace" href="respiracion-consciente.html#respira">Pausa y respira</a></li>
+                                <li><a class="menu-enlace" href="respiracion-consciente.html#zen">La respiración en el zen</a></li>
+                                <li><a class="menu-enlace" href="respiracion-consciente.html#pap">Primeros auxilios psicológicos</a></li>
+                                <li><a class="menu-enlace" href="respiracion-consciente.html#ayuda">Redes de apoyo</a></li>
+                                <li><a class="menu-enlace" href="respiracion-consciente.html#headspace">Más técnicas con Headspace</a></li>
+                            </ul>
+                        </li>
+                        <li class="menu-grupo">
+                            <a class="menu-enlace menu-enlace--principal" href="herramientas-prevencion.html">Recursos de prevención</a>
+                            <ul>
+                                <li><a class="menu-enlace" href="herramientas-prevencion.html#desastre">De fenómeno a desastre</a></li>
+                                <li><a class="menu-enlace" href="herramientas-prevencion.html#protocolo">Protocolo en crisis</a></li>
+                                <li><a class="menu-enlace" href="herramientas-prevencion.html#primeros-auxilios">Primeros auxilios</a></li>
+                                <li><a class="menu-enlace" href="herramientas-prevencion.html#mascotas">Mascotas</a></li>
+                                <li><a class="menu-enlace" href="herramientas-prevencion.html#telefonos">Números de emergencia</a></li>
+                                <li><a class="menu-enlace" href="herramientas-prevencion.html#topos">Brigada Topos</a></li>
+                            </ul>
+                        </li>
+                        <li class="menu-grupo">
+                            <a class="menu-enlace menu-enlace--principal" href="index.html#como-jugar">Cómo jugar con gafas</a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+        </header>
+    
+        <main role="main">
+
+            <!-- Sección del juego -->
+            <section class="escena">
+                <div class="escena-contenido">
+                    <h1 class="titulo-principal titulo-marca titulo-marca--apilado"><span class="titulo-grietas">Grietas</span> <span class="titulo-resto">bajo la piel</span></h1>
+                    <p class="escena-parrafo">
+                        La ciudad parece haber vuelto a la normalidad. Gabriela también intenta hacerlo.
+                    </p>
+                    <p class="escena-parrafo">
+                        Camina por las mismas calles, repite los mismos pasos y vuelve a enfrentarse a una rutina que antes parecía sencilla. Pero algo ha cambiado. Un sonido, una vibración, el movimiento de un objeto… cualquier pequeño detalle puede devolverla, por un instante, a ese momento que todavía permanece bajo su piel.
+                    </p>
+                    <p class="escena-parrafo">
+                        Ahora tendrás que acompañarla mientras atraviesa esos recuerdos y aprende a distinguir entre el peligro que ya pasó y el miedo que aún permanece.
+                    </p>
+                    <p class="escena-parrafo">
+                        No tienes que detener el miedo. Solo encontrar la forma de atravesarlo.
+                    </p>
+                    <button type="button" class="boton" id="boton-iniciar" aria-haspopup="dialog">Ponte las gafas</button>
+                </div>
+                <div class="escena-canvas">
+                    <!-- imagen de la muestra: se ve mientras carga el 3D y se queda si el equipo no tiene WebGL (script.js 3) -->
+                    <img class="muestra-respaldo" src="./media/muestra.webp" alt="" aria-hidden="true" decoding="async">
+                    <canvas class="webgl" aria-label="Muestra del juego: el cuarto de Gabriela, girando"></canvas>
+                </div>
+                <!-- (celular) aviso de que hay más información abajo: debajo de la muestra quedaba un espacio oscuro sin nada -->
+                <a class="escena-mas" href="#como-jugar">Cómo jugar con gafas <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 9 L12 16 L19 9"/></svg></a>
+            </section>
+
+            <!-- Advertencia previa al juego -->
+            <dialog class="advertencia" id="advertencia" role="alertdialog" aria-labelledby="advertencia-titulo" aria-describedby="advertencia-texto">
+                <div class="advertencia-caja">
+                    <svg class="advertencia-icono" viewBox="0 0 24 22" aria-hidden="true" focusable="false">
+                        <path d="M12 2.5 L21.5 19 H2.5 Z" fill="currentColor" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/>
+                        <rect class="exclamacion" x="11" y="8" width="2" height="5.6" rx="1"/>
+                        <circle class="exclamacion" cx="12" cy="16.4" r="1.15"/>
+                    </svg>
+                    <h2 class="titulo advertencia-titulo" id="advertencia-titulo">Advertencia</h2>
+
+                    <!-- Aviso de compatibilidad -->
+                    <div class="advertencia-aviso">
+                        <h3 class="titulo advertencia-aviso-titulo">Pensada para gafas de realidad mixta</h3>
+                        <p>
+                            Esta versión se juega con gafas de realidad mixta (como Meta Quest 3 o 3S), desde su navegador. El juego aparece como una maqueta sobre una mesa de tu cuarto. Antes de empezar, despeja el espacio a tu alrededor: se juega sentado o de pie, sin caminar. Si no tienes gafas, puedes ver una vista previa en esta pantalla.
+                        </p>
+                    </div>
+
+                    <p class="advertencia-texto" id="advertencia-texto">
+                        Esta experiencia aborda las emociones y los efectos psicológicos que deja un terremoto. Algunas escenas pueden resultar sensibles para quienes hayan vivido un desastre natural o una pérdida. Si en algún momento surge malestar o mareo, es válido detenerse, quitarse las gafas y buscar apoyo.
+                    </p>
+
+                    <h3 class="titulo advertencia-subtitulo">Esta experiencia incluye:</h3>
+                    <ul class="advertencia-lista">
+                        <li>Sonidos fuertes y vibración en los controles</li>
+                        <li>Luces parpadeantes</li>
+                        <li>Imaginería traumática</li>
+                        <li>Situaciones de pánico y emergencia</li>
+                        <li>Temas de duelo y pérdida</li>
+                    </ul>
+
+                    <div class="advertencia-acciones">
+                        <button type="button" class="advertencia-accion advertencia-accion--volver" data-volver>
+                            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 5 L5 12 L12 19 M20 5 L13 12 L20 19" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                            Volver
+                        </button>
+                        <a class="advertencia-accion advertencia-accion--seguir" href="narrativa.html">
+                            Seguir
+                            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 5 L19 12 L12 19 M4 5 L11 12 L4 19" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        </a>
+                    </div>
+                </div>
+            </dialog>
+
+
+            <!-- Sección del contenido -->
+            <section class="contenido">
+
+                <!-- Cómo jugar con gafas de realidad mixta -->
+                <article role="article" class="articulo-recursos articulo-gafas" id="como-jugar">
+                    <h2 class="titulo"> Cómo jugar con gafas </h2>
+                    <p>
+                        Grietas bajo la piel ahora sale de la pantalla: la ciudad de Gabriela aparece como una maqueta sobre una mesa real de tu cuarto. Las gafas reconocen las superficies que te rodean (mesas, piso, paredes y muebles) para poner la maqueta en un lugar firme y avisarte si estás muy cerca de algo.
+                    </p>
+                    <ol class="gafas-pasos">
+                        <li><strong>Prepara el espacio.</strong> Busca una mesa despejada o un pedazo de piso libre y una buena luz. No hace falta caminar: puedes jugar sentado o de pie.</li>
+                        <li><strong>Abre esta página en las gafas.</strong> Desde el navegador de tus gafas (por ejemplo, Meta Quest 3 o 3S), pulsa «Ponte las gafas» y después «Entrar en realidad mixta».</li>
+                        <li><strong>Pon la maqueta.</strong> Apunta con el control a la mesa: cuando el aro se vea dorado, pulsa el gatillo. Con el botón X puedes moverla a otro lugar cuando quieras.</li>
+                        <li><strong>Acompaña a Gabriela.</strong> Con el stick izquierdo (o agarrando el mapa con el botón lateral) la mueves: ella se queda en el centro y la ciudad se desliza debajo de ella. Con el gatillo interactúas y respiras.</li>
+                    </ol>
+                </article>
+
+                <!-- Cuidarse mientras se juega -->
+                <article role="article" class="articulo-recursos articulo-gafas" id="cuidarte">
+                    <h2 class="titulo"> Juega a tu ritmo </h2>
+                    <p>
+                        La experiencia está pensada para que el cuerpo no se maree: tu vista nunca se mueve sola y los temblores se sienten en la maqueta, no a tu alrededor. Aun así, cada persona es distinta. Haz pausas, juega en sesiones cortas y, si sientes mareo, náuseas o malestar, quítate las gafas: el juego te espera. Con los botones B o Y abres la salida rápida en cualquier momento.
+                    </p>
+                </article>
+
+                <!-- Recursos de ayuda y prevención (se reorganizarán para esta versión) -->
+                <article role="article" class="articulo-recursos" id="recursos">
+                    <h2 class="titulo"> Recursos de ayuda y prevención </h2>
+                    <p>
+                        Si el juego removió algo, no tienes que atravesarlo solo. Aquí encuentras ejercicios de respiración consciente y recursos de prevención. Sentir miedo o angustia es normal, y buscar apoyo es un paso válido.
+                    </p>
+                    <div class="recursos-grid">
+                        <div class="recurso-caja">
+                            <a href="respiracion-consciente.html" aria-label="Ir a la página sobre las técnicas de respiración consciente">
+                                <img class="recurso-imagen" src="./media/salud-mental-1.jpg" alt="Foto de una mujer meditando en un campo con el sol a sus espaldas">
+                                <h3 class="subtitulo"> Técnicas de respiración consciente </h3>
+                            </a>
+                        </div>
+                        <div class="recurso-caja">
+                            <a href="herramientas-prevencion.html" aria-label="Ir a la página sobre los recursos de prevención">
+                                <img class="recurso-imagen" src="./media/prevencion-1.jpg" alt="Imagen de los recursos de prevención">
+                                <h3 class="subtitulo"> Recursos de prevención </h3>
+                            </a>
+                        </div>
+                    </div>
+                </article>
+
+            </section>
+        </main>
+
+        <footer class="footer" role="contentinfo">
+            <div class="patrocinadores">
+                <h2 class="patrocinadores-titulo"> Patrocinadores </h2>
+                <ul class="patrocinadores-lista">
+                    <li><a href="https://www.topos.mx/" target="_blank" rel="noopener noreferrer">
+                        <img class="patrocinador-logo" src="./media/logo-topos-tlaltelolco.webp" alt="Logo de la brigada de rescate Topos tlaltelolco">
+                    </a></li>
+                    <li><a href="https://www.headspace.com/" target="_blank" rel="noopener noreferrer">
+                        <img class="patrocinador-logo" src="./media/headspace-symbol.png" alt="Logo de Headspace">
+                    </a></li>
+                    <li><a href="https://www.uao.edu.co/" target="_blank" rel="noopener noreferrer">
+                        <img class="patrocinador-logo" src="./media/logo-uao.png" alt="Logo de la Universidad Autónoma de Occidente ">
+                    </a></li>
+                </ul>
+            </div>
+        </footer>
+
+        <script type="module" src="./script.js"></script>
+    </body>
+</html>

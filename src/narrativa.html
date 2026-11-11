@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="es" class="sin-scroll">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title> Grietas bajo la piel </title>
+        <link rel="icon" href="favicon.svg" type="image/svg+xml"> <!-- (sin ícono, el navegador pedía favicon.ico y salía un error 404 en la consola) -->
+        <meta name="description" content="Una experiencia interactiva sobre las grietas que llevamos por dentro.">
+        <meta name="robots" content="index, follow">
+
+        <!-- Links -->
+        <link rel="stylesheet" href="./style.css">
+        <link rel="stylesheet" href="./game/game.css"> <!-- desde el principio: si llegaba después (con el JS), los botones del juego se veían un instante antes de "10 de agosto" -->
+
+        <!-- Fuentes de Google (las mismas del index) -->
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Dongle:wght@400;700&family=Luckiest+Guy&family=Outfit&display=swap" rel="stylesheet">
+    </head>
+
+    <body class="sin-scroll pagina-narrativa gx-sin-hud">
+        <main role="main">
+            <!-- El juego -->
+            <canvas class="webgl webgl--narrativa" aria-label="Juego Grietas bajo la piel"></canvas>
+        </main>
+
+        <!-- ============================================================
+            Interfaz del juego (ui.js la controla; aquí solo vive el HTML)
+            Indice
+                1. Viñeta, botones y mensajes
+                2. Medidor de respiración
+                3. Fundido y tarjetas de narrativa
+                4. Diálogo con personajes
+                5. Pop-up: controles (inicio)
+                6. Pop-up: cómo se juega (minijuegos)
+                7. Pop-up: opción del MIO
+                8. Pop-up: finales
+                9. Pop-up: salida rápida
+            ============================================================ -->
+        <div class="gx">
+
+            <!-- 1. Viñeta, botones y mensajes -->
+            <div class="gx-vignette"></div>
+            <button type="button" class="gx-btn gx-exit" aria-haspopup="dialog">Salida rápida</button>
+            <div class="gx-audio">
+                <div class="gx-fila">
+                    <button type="button" class="gx-btn" data-a="music">Música: ON</button>
+                    <!-- Pantalla completa: flechas hacia afuera para entrar, hacia adentro para salir (ui.js cambia la clase gx-full--on) -->
+                    <button type="button" class="gx-btn gx-full" aria-label="Pantalla completa" title="Pantalla completa">
+                        <svg class="gx-full-entrar" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M4 4l6 6M20 9V4h-5M20 4l-6 6M4 15v5h5M4 20l6-6M20 15v5h-5M20 20l-6-6"/></svg>
+                        <svg class="gx-full-salir" viewBox="0 0 24 24" aria-hidden="true"><path d="M10 5v5H5M10 10L4 4M14 5v5h5M14 10l6-6M10 19v-5H5M10 14l-6 6M14 19v-5h5M14 14l6 6"/></svg>
+                    </button>
+                </div>
+                <!-- Vibración: solo en celulares que la permiten -->
+                <button type="button" class="gx-btn gx-vibra" data-a="vibra">Vibración: ON</button>
+            </div>
+            <!-- Línea de tiempo: en qué parte de la mañana vas (ui.timeline) -->
+            <ol class="gx-linea" aria-label="Progreso de la mañana"></ol>
+            <p class="gx-msg" aria-live="polite"></p>
+            <!-- Progreso del juego: solo después del sismo, para saber cuánto falta (ui.progress) -->
+            <div class="gx-progreso" role="progressbar" aria-label="Camino a la universidad" aria-valuemin="0" aria-valuemax="100" hidden>
+                <div class="gx-progreso-fill"></div>
+                <span class="gx-progreso-pct">0 %</span>
+            </div>
+
+            <!-- 2. Medidor de respiración: un círculo que crece al inhalar y se encoge al exhalar (ui.js lo mueve).
+                    El aro claro es el ritmo a seguir (con su franja gris clara) y el círculo de adentro es tu respiración -->
+            <div class="gx-breath" hidden>
+                <!-- Orden: qué hacer (Inhalar / Sostener / Exhalar, grande) → círculo → tiempo → cómo usar el clic. El botón "?" vuelve a mostrar cómo se juega -->
+                <div class="gx-label">Respirar</div>
+                <button type="button" class="gx-ayuda" aria-label="Ver otra vez cómo se juega" title="Cómo se juega">?</button>
+                <div class="gx-orb">
+                    <svg class="gx-orb-svg" viewBox="0 0 300 300" aria-hidden="true">
+                        <defs>
+                            <radialGradient id="gx-orb-luz" cx="50%" cy="38%" r="65%">
+                                <stop class="gx-luz-1" offset="0" stop-color="#f2fbf8"/>
+                                <stop class="gx-luz-2" offset="1" stop-color="#9dbcb0"/>
+                            </radialGradient>
+                        </defs>
+                        <circle class="gx-orb-halo gx-orb-borde" cx="150" cy="150" r="146"/>
+                        <circle class="gx-orb-halo" cx="150" cy="150" r="128"/>
+                        <circle class="gx-orb-halo" cx="150" cy="150" r="110"/>
+                        <circle class="gx-zone" cx="150" cy="150" r="60"/>
+                        <circle class="gx-fill" cx="150" cy="150" r="40" fill="url(#gx-orb-luz)"/>
+                        <circle class="gx-needle" cx="150" cy="150" r="60"/>
+                    </svg>
+                    <span class="gx-orb-count" aria-live="polite"></span> <!-- cuenta 3, 2, 1 en el centro del círculo -->
+                </div>
+                <!-- Earthing: en vez del círculo, una barra que se llena con el tiempo sobre el pasto -->
+                <div class="gx-bar"><div class="gx-bar-fill"></div></div>
+                <p class="gx-timer" aria-live="off"></p>
+                <p class="gx-breath-hint" aria-live="polite"></p>
+            </div>
+
+            <!-- Anuncio grande del minijuego que empieza (ui.announce) -->
+            <div class="gx-anuncio" aria-live="assertive" hidden><span>Autorregulación</span><strong></strong></div>
+
+            <!-- 3. Fundido y tarjetas de narrativa -->
+            <div class="gx-fade"></div>
+            <p class="gx-whisper" aria-live="polite"></p>
+            <div class="gx-card" hidden>
+                <h2></h2>
+                <p></p>
+                <div class="gx-card-actions" hidden>
+                    <button type="button" class="gx-act" data-act="next">
+                        <span>Continuar</span>
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5 L19 12 L12 19 M4 5 L11 12 L4 19"/></svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Saltar: aparece después de un rato en los diálogos, las tarjetas y las frases sobre negro (ui.js) -->
+            <button type="button" class="gx-saltar" hidden>Saltar <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5 L19 12 L12 19 M4 5 L11 12 L4 19"/></svg></button>
+
+            <!-- Aviso enano: un bloquecito como los diálogos, que se va solo (ui.aviso; p. ej. si intentas salir sin hablar con mamá) -->
+            <p class="gx-aviso" aria-live="polite" hidden></p>
+
+            <!-- 4. Diálogo con personajes (mamá) -->
+            <div class="gx-talk" role="dialog" aria-label="Diálogo" hidden>
+                <span class="gx-talk-name"></span>
+                <p class="gx-talk-text" aria-live="polite"></p>
+                <div class="gx-talk-actions">
+                    <button type="button" class="gx-act" data-act="talk-next">
+                        <span>Continuar</span>
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5 L19 12 L12 19 M4 5 L11 12 L4 19"/></svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 5. Pop-up: controles (aparece al inicio, antes de poder mover a Gabriela) -->
+            <div class="gx-modal gx-controls" hidden>
+                <div class="gx-dialog" role="dialog" aria-modal="true" aria-labelledby="gx-ctrl-t">
+                    <h2 id="gx-ctrl-t">Controles</h2>
+                    <p>Acompaña a Gabriela en su mañana. Así puedes moverte por el juego:</p>
+                    <ul class="gx-keys gx-keys--pc">
+                        <!-- Caminar: WASD en forma de T invertida, como en el teclado -->
+                        <li class="gx-keys-mover"><span class="gx-keycaps"><span class="gx-cruz"><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd></span></span><span>para caminar.</span></li>
+                        <!-- Clic izquierdo: un mouse con el botón izquierdo pintado -->
+                        <li><span class="gx-keycaps"><kbd class="gx-kbd-raton" aria-label="Clic izquierdo"><svg viewBox="0 0 24 32" aria-hidden="true"><rect x="2" y="2" width="20" height="28" rx="10"/><path class="gx-raton-izq" d="M12 2 V13 H2 V12 A10 10 0 0 1 12 2 Z"/><path d="M12 2 V13 M2 13 H22"/></svg></kbd></span><span>clic izquierdo para interactuar y saltar los diálogos.</span></li>
+                        <li><span class="gx-keycaps"><kbd>Espacio</kbd></span><span>sostenido en los minijuegos de respiración.</span></li>
+                        <li><span class="gx-keycaps"><kbd>F11</kbd></span><span>para entrar o salir de pantalla completa.</span></li>
+                    </ul>
+                    <!-- En las gafas (mr/controles.js) -->
+                    <ul class="gx-keys gx-keys--xr">
+                        <li><span class="gx-keycaps"><kbd>Stick izq.</kbd></span><span>para caminar: Gabriela se queda en el centro y el mapa se mueve debajo de ella.</span></li>
+                        <li><span class="gx-keycaps"><kbd>Agarre</kbd></span><span>sostenido sobre la maqueta: arrastra el mapa y Gabriela camina hacia donde lo lleves.</span></li>
+                        <li><span class="gx-keycaps"><kbd>Gatillo</kbd></span><span>para interactuar, avanzar los diálogos y pulsar botones. Sostenido para respirar.</span></li>
+                        <li><span class="gx-keycaps"><kbd>Stick der.</kbd></span><span>gira la maqueta (de lado) y la acerca o aleja (arriba y abajo).</span></li>
+                        <li><span class="gx-keycaps"><kbd>X</kbd></span><span>pone la maqueta en otra mesa o superficie.</span></li>
+                        <li><span class="gx-keycaps"><kbd>B / Y</kbd></span><span>abre la salida rápida.</span></li>
+                    </ul>
+                    <!-- Vista previa en el computador -->
+                    <ul class="gx-keys gx-keys--sim">
+                        <li class="gx-keys-mover"><span class="gx-keycaps"><span class="gx-cruz"><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd></span></span><span>para caminar (relativo a la vista).</span></li>
+                        <li><span class="gx-keycaps"><kbd>Clic</kbd></span><span>sobre la interfaz pulsa botones; en cualquier otra parte, interactúa y avanza los diálogos.</span></li>
+                        <li><span class="gx-keycaps"><kbd>Espacio</kbd></span><span>sostenido en los minijuegos de respiración.</span></li>
+                        <li><span class="gx-keycaps"><kbd>Clic der.</kbd></span><span>arrastrar para mirar la maqueta desde otro lado. La rueda acerca o aleja.</span></li>
+                    </ul>
+                    <ul class="gx-keys gx-keys--touch">
+                        <li><span class="gx-keycaps"><kbd class="gx-kbd-joy" aria-label="Joystick"><span></span></kbd></span><span>arrastra el joystick de la izquierda para caminar.</span></li>
+                        <li><span class="gx-keycaps"><kbd>Interactuar</kbd></span><span>el botón de la derecha para interactuar con objetos y personas.</span></li>
+                        <li><span class="gx-keycaps"><kbd>Interactuar</kbd></span><span>sostenido para respirar: mantén para inhalar y retener, suelta para exhalar.</span></li>
+                        <li><span class="gx-keycaps"><kbd>Toca</kbd></span><span>la pantalla o el botón Interactuar para acelerar los diálogos.</span></li>
+                        <li class="gx-keys-full"><span class="gx-keycaps"><kbd class="gx-kbd-icono" aria-label="Botón de pantalla completa"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M4 4l6 6M20 9V4h-5M20 4l-6 6M4 15v5h5M4 20l6-6M20 15v5h-5M20 20l-6-6"/></svg></kbd></span><span>pone el juego en pantalla completa.</span></li>
+                        <li class="gx-keys-vibra"><span class="gx-keycaps"><kbd>Vibración</kbd></span><span>apaga o enciende la vibración del celular.</span></li>
+                        <li><span class="gx-keycaps"><kbd>Salida</kbd></span><span>el botón de arriba pausa el juego.</span></li>
+                    </ul>
+                    <div class="gx-actions">
+                        <button type="button" class="gx-act" data-act="start">
+                            <span>Empezar</span>
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5 L19 12 L12 19 M4 5 L11 12 L4 19"/></svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 6. Pop-up: cómo se juega (primera vez que aparece cada minijuego; la lista la llena ui.js) -->
+            <div class="gx-modal gx-tutorial" hidden>
+                <div class="gx-dialog" role="dialog" aria-modal="true" aria-labelledby="gx-tut-t">
+                    <h2 id="gx-tut-t">Cómo se juega</h2>
+                    <p>Cuando la ansiedad sube, el juego te propone una técnica real para calmarte. Así funciona:</p>
+                    <h3 class="gx-sub"></h3>
+                    <ul class="gx-list"></ul>
+                    <a class="gx-more" href="respiracion-consciente.html" target="_blank" rel="noopener" hidden>Conoce más sobre estas técnicas</a>
+                    <div class="gx-actions">
+                        <button type="button" class="gx-act" data-act="start">
+                            <span>Empezar</span>
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5 L19 12 L12 19 M4 5 L11 12 L4 19"/></svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 7. Pop-up: opción del MIO (los botones los pone ui.choice) -->
+            <div class="gx-modal gx-choice" hidden>
+                <div class="gx-dialog" role="dialog" aria-modal="true">
+                    <h2></h2>
+                    <p></p>
+                    <p class="gx-aviso-mio" hidden></p> <!-- aviso destacado (antes de subir al MIO) -->
+                    <div class="gx-actions"></div>
+                </div>
+            </div>
+
+            <!-- 8. Pop-up: finales -->
+            <div class="gx-modal gx-ending" hidden>
+                <div class="gx-dialog" role="dialog" aria-modal="true">
+                    <h2></h2>
+                    <p></p>
+                    <a class="gx-more" href="respiracion-consciente.html" target="_blank" rel="noopener">Practica estas técnicas fuera del juego</a>
+                    <div class="gx-actions">
+                        <button type="button" class="gx-act" data-act="restart">
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5 L5 12 L12 19 M20 5 L13 12 L20 19"/></svg>
+                            <span>Volver a jugar</span>
+                        </button>
+                        <button type="button" class="gx-act" data-act="home">
+                            <span>Ir a la página principal</span>
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5 L19 12 L12 19 M4 5 L11 12 L4 19"/></svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 9. Pop-up: salida rápida -->
+            <div class="gx-modal gx-pause" hidden>
+                <div class="gx-dialog" role="alertdialog" aria-modal="true" aria-labelledby="gx-pause-t" aria-describedby="gx-pause-d">
+                    <svg class="gx-dialog-icon" viewBox="0 0 44 52" aria-hidden="true"><rect x="0" y="0" width="16" height="52" rx="6"/><rect x="28" y="0" width="16" height="52" rx="6"/></svg>
+                    <h2 id="gx-pause-t">Salida rápida</h2>
+                    <p id="gx-pause-d">El juego está en pausa. Puedes detenerte cuando lo necesites. Si sientes malestar, es válido buscar apoyo en la sección de <a class="gx-more" href="respiracion-consciente.html#ayuda" target="_blank" rel="noopener">recursos de ayuda</a>. Si tienes puestas las gafas, también puedes quitártelas: el juego te espera.</p>
+                    <h3 class="gx-sub">¿Qué quieres hacer?</h3>
+                    <div class="gx-actions">
+                        <button type="button" class="gx-act" data-act="stop">
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5 L5 12 L12 19 M20 5 L13 12 L20 19"/></svg>
+                            <span>Parar</span>
+                        </button>
+                        <button type="button" class="gx-act" data-act="go">
+                            <span>Seguir</span>
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5 L19 12 L12 19 M4 5 L11 12 L4 19"/></svg>
+                        </button>
+                    </div>
+                    <!-- volver a ver los controles sin salir de la pausa (ui.js) -->
+                    <button type="button" class="gx-act gx-ver-controles" data-act="controls"><span>Ver los controles</span></button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Inicio: cómo jugar (mr/index.js). Entrar a las gafas necesita un clic: el navegador no deja abrirlas solo -->
+        <div class="mr-inicio" role="dialog" aria-modal="true" aria-labelledby="mr-inicio-t">
+            <div class="mr-inicio-caja">
+                <h2 id="mr-inicio-t" class="titulo-marca"><span class="titulo-grietas">Grietas</span> <span class="titulo-resto">bajo la piel</span></h2>
+                <p class="mr-inicio-texto">El juego aparece como una maqueta sobre una mesa de tu cuarto. Las gafas detectan las superficies que te rodean: busca un lugar despejado, siéntate o quédate de pie, y no necesitas caminar.</p>
+                <p class="mr-estado" aria-live="polite">Buscando las gafas…</p>
+                <div class="mr-inicio-acciones">
+                    <button type="button" class="mr-boton mr-boton--principal" data-mr="ar" hidden>Entrar en realidad mixta</button>
+                    <button type="button" class="mr-boton mr-boton--principal" data-mr="vr" hidden>Entrar en realidad virtual</button>
+                    <button type="button" class="mr-boton" data-mr="sim">Vista previa en esta pantalla</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Controles táctiles (touch.js decide si se muestran): joystick a la izquierda, Interactuar a la derecha -->
+        <div class="gx-touch" hidden>
+            <div class="gx-joy" role="application" aria-label="Joystick para caminar"><div class="gx-joy-knob"></div></div>
+            <button type="button" class="gx-key gx-go" data-k="KeyE">Interactuar</button>
+        </div>
+
+        <script type="module" src="./script.js"></script>
+    </body>
+</html>

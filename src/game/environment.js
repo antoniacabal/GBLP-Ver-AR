@@ -367,7 +367,7 @@ export const DOORS = {
 // cuarto: al volver de la sala aparece sobre la flecha de salida (por donde se entra), no en medio del cuarto
 export const SPAWN = { cuarto: { x: R0.x + 236 * SH, z: 281 * SH }, subir: { x: S0.x + 880 * SH, z: -2.3 }, calle: { x: S0.x + 860 * SH, z: 2.42 + SALA_EXTRA * SH } } // siempre fuera de los muebles y de la flecha
 export const SPACE_ZOOM = { HOUSE: 1.45, HOME: 0.89 }   // el cuarto es pequeño: la cámara se acerca · la sala es ancha: se aleja un poco para que no se corte
-export const BED_LIE = { x: R0.x + 242 * SH, y: 1.05, z: -0.3 }  // acostada sobre el colchón, con la cabeza en las almohadas (hacia -z)
+export const BED_LIE = { x: R0.x + 242 * SH, y: 0.9, z: -0.3 }  // (antes 1.05: en la maqueta se veía flotando 14 cm sobre el colchón) acostada sobre el colchón, con la cabeza en las almohadas (hacia -z)
 
 into('HOUSE')
 const wardrobe = piece(/^Armario$/), bag = piece(/^Maleta/)

@@ -383,3 +383,6 @@ body.gx-mr-on canvas.webgl{filter:none!important}
 .mr-boton--principal{background:#F2C063;color:#201826;border-color:#F2C063;font-weight:700}
 .mr-boton--principal:hover{background:#f6d18b}
 .mr-boton[hidden]{display:none}
+/* Música, pantalla completa y vibración: dentro de la salida rápida (antes flotaban arriba a la izquierda sobre el juego) */
+.gx-pause .gx-audio{position:static;flex-direction:row;flex-wrap:wrap;justify-content:center;align-items:center;margin:.2rem 0 1rem;opacity:1!important;visibility:visible!important}
+body.gx-mr-on .gx-full{display:none!important} /* en las gafas (y su vista previa) no hay pantalla completa */

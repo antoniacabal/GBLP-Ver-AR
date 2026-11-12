@@ -51,10 +51,10 @@ const vineta = (() => {
     const m = new THREE.Mesh(new THREE.PlaneGeometry(0.62, 0.62), new THREE.MeshBasicMaterial({ map: t, transparent: true, opacity: 0, depthTest: false, depthWrite: false }))
     m.position.z = -0.25; m.renderOrder = 6; m.frustumCulled = false; camaraMR.add(m); return m
 })()
-// Fondo oscuro con los textos: cuando sale una tarjeta, un diálogo, un pop-up, una frase sobre negro o el anuncio de un minijuego, todo lo
+// Fondo morado oscuro (el de la interfaz del juego, #201826) con los textos: cuando sale una tarjeta, un diálogo, un pop-up, una frase sobre negro o el anuncio de un minijuego, todo lo
 // de alrededor (el cuarto real) se oscurece y solo quedan la maqueta y el texto: así quien juega entra en la escena.
 // Es una esfera grande alrededor de la cabeza que sí respeta la profundidad: la maqueta está más cerca, así que no la tapa
-const velo = new THREE.Mesh(new THREE.SphereGeometry(6, 32, 16), new THREE.MeshBasicMaterial({ color: 0x0a050e, side: THREE.BackSide, transparent: true, opacity: 0, depthWrite: false }))
+const velo = new THREE.Mesh(new THREE.SphereGeometry(6, 32, 16), new THREE.MeshBasicMaterial({ color: 0x201826, side: THREE.BackSide, transparent: true, opacity: 0, depthWrite: false }))
 velo.renderOrder = 4; velo.frustumCulled = false; velo.visible = false; camaraMR.add(velo)
 const TEXTOS = '.gx-card:not([hidden]), .gx-talk:not([hidden]), .gx-modal:not([hidden]), .gx-anuncio:not([hidden]), .gx-aviso:not([hidden])'
 const elSusurro = document.querySelector('.gx-whisper')
@@ -240,7 +240,7 @@ function entrarSim() {
     camaraMR.fov = 50; camaraMR.aspect = innerWidth / innerHeight; camaraMR.updateProjectionMatrix() // (las gafas dejan su propia proyección)
     mr.modo = 'sim'; mr.domOverlay = false; mr.ancla.p.set(0, 0.75, 0); mr.ancla.yaw = THREE.MathUtils.degToRad(45) - sim.az; mr.giro = 0; mr.ancla.puesta = true
     modoCuerpo()
-    if (window.juego) Object.assign(window.juego, { mr, recuadro, rig }) // (?debug: para revisar desde la consola)
+    if (window.juego) Object.assign(window.juego, { mr, recuadro, rig, spaces }) // (?debug: para revisar desde la consola)
     if (atrapador) return
     // una capa transparente encima de la página: el mouse apunta al panel 3D (como el rayo de un control)
     atrapador = document.createElement('div'); atrapador.className = 'mr-atrapador'; document.body.append(atrapador); usarAtrapador(atrapador)

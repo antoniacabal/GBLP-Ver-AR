@@ -42,18 +42,6 @@
             <!-- 1. Viñeta, botones y mensajes -->
             <div class="gx-vignette"></div>
             <button type="button" class="gx-btn gx-exit" aria-haspopup="dialog">Salida rápida</button>
-            <div class="gx-audio">
-                <div class="gx-fila">
-                    <button type="button" class="gx-btn" data-a="music">Música: ON</button>
-                    <!-- Pantalla completa: flechas hacia afuera para entrar, hacia adentro para salir (ui.js cambia la clase gx-full--on) -->
-                    <button type="button" class="gx-btn gx-full" aria-label="Pantalla completa" title="Pantalla completa">
-                        <svg class="gx-full-entrar" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M4 4l6 6M20 9V4h-5M20 4l-6 6M4 15v5h5M4 20l6-6M20 15v5h-5M20 20l-6-6"/></svg>
-                        <svg class="gx-full-salir" viewBox="0 0 24 24" aria-hidden="true"><path d="M10 5v5H5M10 10L4 4M14 5v5h5M14 10l6-6M10 19v-5H5M10 14l-6 6M14 19v-5h5M14 14l6 6"/></svg>
-                    </button>
-                </div>
-                <!-- Vibración: solo en celulares que la permiten -->
-                <button type="button" class="gx-btn gx-vibra" data-a="vibra">Vibración: ON</button>
-            </div>
             <!-- Línea de tiempo: en qué parte de la mañana vas (ui.timeline) -->
             <ol class="gx-linea" aria-label="Progreso de la mañana"></ol>
             <p class="gx-msg" aria-live="polite"></p>
@@ -227,6 +215,19 @@
                     <h2 id="gx-pause-t">Salida rápida</h2>
                     <p id="gx-pause-d">El juego está en pausa. Puedes detenerte cuando lo necesites. Si sientes malestar, es válido buscar apoyo en la sección de <a class="gx-more" href="respiracion-consciente.html#ayuda" target="_blank" rel="noopener">recursos de ayuda</a>. Si tienes puestas las gafas, también puedes quitártelas: el juego te espera.</p>
                     <h3 class="gx-sub">¿Qué quieres hacer?</h3>
+                    <!-- Música, pantalla completa y vibración: ya no van encima del juego, solo aquí en la pausa (en las gafas sin pantalla completa) -->
+            <div class="gx-audio">
+                <div class="gx-fila">
+                    <button type="button" class="gx-btn" data-a="music">Música: ON</button>
+                    <!-- Pantalla completa: flechas hacia afuera para entrar, hacia adentro para salir (ui.js cambia la clase gx-full--on) -->
+                    <button type="button" class="gx-btn gx-full" aria-label="Pantalla completa" title="Pantalla completa">
+                        <svg class="gx-full-entrar" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M4 4l6 6M20 9V4h-5M20 4l-6 6M4 15v5h5M4 20l6-6M20 15v5h-5M20 20l-6-6"/></svg>
+                        <svg class="gx-full-salir" viewBox="0 0 24 24" aria-hidden="true"><path d="M10 5v5H5M10 10L4 4M14 5v5h5M14 10l6-6M10 19v-5H5M10 14l-6 6M14 19v-5h5M14 14l6 6"/></svg>
+                    </button>
+                </div>
+                <!-- Vibración: solo en celulares que la permiten -->
+                <button type="button" class="gx-btn gx-vibra" data-a="vibra">Vibración: ON</button>
+            </div>
                     <div class="gx-actions">
                         <button type="button" class="gx-act" data-act="stop">
                             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5 L5 12 L12 19 M20 5 L13 12 L20 19"/></svg>

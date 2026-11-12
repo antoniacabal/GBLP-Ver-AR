@@ -55,6 +55,9 @@
                                 <li><a class="menu-enlace" href="herramientas-prevencion.html#topos">Brigada Topos</a></li>
                             </ul>
                         </li>
+                        <li class="menu-grupo">
+                            <a class="menu-enlace menu-enlace--principal" href="index.html#como-jugar">Cómo jugar con gafas</a>
+                        </li>
                     </ul>
                 </div>
             </nav>
@@ -85,6 +88,8 @@
                     <img class="muestra-respaldo" src="./media/muestra.webp" alt="" aria-hidden="true" decoding="async">
                     <canvas class="webgl" aria-label="Muestra del juego: el cuarto de Gabriela, girando"></canvas>
                 </div>
+                <!-- (celular) aviso de que hay más información abajo: debajo de la muestra quedaba un espacio oscuro sin nada -->
+                <a class="escena-mas" href="#como-jugar">Cómo jugar con gafas <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 9 L12 16 L19 9"/></svg></a>
             </section>
 
             <!-- Advertencia previa al juego -->
@@ -132,8 +137,72 @@
             </dialog>
 
 
+            <!-- Sección del contenido -->
+            <section class="contenido">
+
+                <!-- Cómo jugar con gafas Meta Quest de realidad aumentada -->
+                <article role="article" class="articulo-recursos articulo-gafas" id="como-jugar">
+                    <h2 class="titulo"> Cómo jugar con gafas </h2>
+                    <p>
+                        Grietas bajo la piel ahora sale de la pantalla: la ciudad de Gabriela aparece como una maqueta sobre una mesa real de tu cuarto. Las gafas reconocen las superficies que te rodean (mesas, piso, paredes y muebles) para poner la maqueta en un lugar firme y avisarte si estás muy cerca de algo.
+                    </p>
+                    <ol class="gafas-pasos">
+                        <li><strong>Prepara el espacio.</strong> Busca una mesa despejada o un pedazo de piso libre y una buena luz. No hace falta caminar: puedes jugar sentado o de pie.</li>
+                        <li><strong>Abre esta página en las gafas.</strong> Desde el navegador de tus gafas (por ejemplo, Meta Quest 3 o 3S), pulsa «Empezar» y después «Entrar en realidad aumentada».</li>
+                        <li><strong>Pon la maqueta.</strong> Apunta con el control a la mesa: cuando el aro se vea dorado, pulsa el gatillo. Con el botón X puedes moverla a otro lugar cuando quieras.</li>
+                        <li><strong>Acompaña a Gabriela.</strong> Con el stick izquierdo (o agarrando el mapa con el botón lateral) la mueves: ella se queda en el centro y la ciudad se desliza debajo de ella. Con el gatillo interactúas y respiras.</li>
+                    </ol>
+                </article>
+
+                <!-- Cuidarse mientras se juega -->
+                <article role="article" class="articulo-recursos articulo-gafas" id="cuidarte">
+                    <h2 class="titulo"> Juega a tu ritmo </h2>
+                    <p>
+                        La experiencia está pensada para que el cuerpo no se maree: tu vista nunca se mueve sola y los temblores se sienten en la maqueta, no a tu alrededor. Aun así, cada persona es distinta. Haz pausas, juega en sesiones cortas y, si sientes mareo, náuseas o malestar, quítate las gafas: el juego te espera. Con los botones B o Y abres la salida rápida en cualquier momento.
+                    </p>
+                </article>
+
+                <!-- Recursos de ayuda y prevención (se reorganizarán para esta versión) -->
+                <article role="article" class="articulo-recursos" id="recursos">
+                    <h2 class="titulo"> Recursos de ayuda y prevención </h2>
+                    <p>
+                        Si el juego removió algo, no tienes que atravesarlo solo. Aquí encuentras ejercicios de respiración consciente y recursos de prevención. Sentir miedo o angustia es normal, y buscar apoyo es un paso válido.
+                    </p>
+                    <div class="recursos-grid">
+                        <div class="recurso-caja">
+                            <a href="respiracion-consciente.html" aria-label="Ir a la página sobre las técnicas de respiración consciente">
+                                <img class="recurso-imagen" src="./media/salud-mental-1.jpg" alt="Foto de una mujer meditando en un campo con el sol a sus espaldas">
+                                <h3 class="subtitulo"> Técnicas de respiración consciente </h3>
+                            </a>
+                        </div>
+                        <div class="recurso-caja">
+                            <a href="herramientas-prevencion.html" aria-label="Ir a la página sobre los recursos de prevención">
+                                <img class="recurso-imagen" src="./media/prevencion-1.jpg" alt="Imagen de los recursos de prevención">
+                                <h3 class="subtitulo"> Recursos de prevención </h3>
+                            </a>
+                        </div>
+                    </div>
+                </article>
+
+            </section>
         </main>
 
+        <footer class="footer" role="contentinfo">
+            <div class="patrocinadores">
+                <h2 class="patrocinadores-titulo"> Patrocinadores </h2>
+                <ul class="patrocinadores-lista">
+                    <li><a href="https://www.topos.mx/" target="_blank" rel="noopener noreferrer">
+                        <img class="patrocinador-logo" src="./media/logo-topos-tlaltelolco.webp" alt="Logo de la brigada de rescate Topos tlaltelolco">
+                    </a></li>
+                    <li><a href="https://www.headspace.com/" target="_blank" rel="noopener noreferrer">
+                        <img class="patrocinador-logo" src="./media/headspace-symbol.png" alt="Logo de Headspace">
+                    </a></li>
+                    <li><a href="https://www.uao.edu.co/" target="_blank" rel="noopener noreferrer">
+                        <img class="patrocinador-logo" src="./media/logo-uao.png" alt="Logo de la Universidad Autónoma de Occidente ">
+                    </a></li>
+                </ul>
+            </div>
+        </footer>
 
         <script type="module" src="./script.js"></script>
     </body>

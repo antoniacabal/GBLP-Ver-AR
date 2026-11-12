@@ -70,6 +70,9 @@ function apretar(m) {
     if (mr.colocando) return void mr.alColocar?.()
     const p = m.panel, el = p && bajo(p.x, p.y)
     if (el) { m.objetivo = { el, x: p.x, y: p.y }; evento('pointerover', el, p.x, p.y, 0); evento('pointerdown', el, p.x, p.y, 1); return }
+    // con las manos, pellizcar solo selecciona en el panel: interactuar es el botón de la mesa (manos.js) y el pellizco también agarra
+    // el joystick, gira el dial... si además fuera la tecla E, cada gesto interactuaría sin querer
+    if (m.src?.hand) { m.objetivo = null; return }
     m.objetivo = 'teclas'; tecla('keydown', 'KeyE'); tecla('keydown', 'Space')
 }
 function soltar(m) {
@@ -90,7 +93,7 @@ function arrastrar(m) { // con el gatillo apretado sobre un control de la interf
 // 3. Caminar. El juego mueve a Gabriela con runtime.joyX / joyY (el joystick táctil), relativo a CONFIG.camera.azimuth: index.js pone
 //    ahí hacia dónde está quien juega, así "adelante" siempre es hacia el fondo de la maqueta, se mire desde donde se mire
 const mundo = new THREE.Vector3(), real = new THREE.Vector3()
-function haciaJoy(vx, vz) { // dirección en el mundo del juego → joystick (lo inverso de player.js)
+export function haciaJoy(vx, vz) { // dirección en el mundo del juego → joystick (lo inverso de player.js)
     const a = THREE.MathUtils.degToRad(CONFIG.camera.azimuth)
     return [vx * Math.cos(a) - vz * Math.sin(a), -vx * Math.sin(a) - vz * Math.cos(a)]
 }

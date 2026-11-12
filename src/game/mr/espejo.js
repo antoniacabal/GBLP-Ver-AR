@@ -118,18 +118,28 @@ function svg(el, r, a) {
         else if (f.tagName === 'path') p = new Path2D(f.getAttribute('d') || '')
         else { const pts = f.getAttribute('points') || ''; p = new Path2D('M' + pts.trim().replace(/\s+/g, ' L') + (f.tagName === 'polygon' ? 'Z' : '')) }
         const relleno = cs.fill.startsWith('url') ? RELLENO_URL : cs.fill, trazo = cs.stroke.startsWith('url') ? RELLENO_URL : cs.stroke
-        figuras.push({ p, relleno, trazo, ancho: parseFloat(cs.strokeWidth) || 1, op: parseFloat(cs.opacity || 1), opR: parseFloat(cs.fillOpacity || 1), opT: parseFloat(cs.strokeOpacity || 1), cap: cs.strokeLinecap, join: cs.strokeLinejoin })
-        partes.push('s', f.getAttribute('d')?.length || 0, cs.r, relleno, trazo, cs.opacity)
+        // de la figura a la pantalla, con todo lo que la mueve: el viewBox y las rotaciones de CSS o GSAP de sus grupos (la perilla del
+        // dial de Foco entre el ruido gira así: sin esto, en el panel de las gafas la perilla se veía siempre quieta)
+        const m = f.getScreenCTM?.()
+        figuras.push({ p, m, relleno, trazo, ancho: parseFloat(cs.strokeWidth) || 1, op: parseFloat(cs.opacity || 1) * opacidadGrupo(f, el), opR: parseFloat(cs.fillOpacity || 1), opT: parseFloat(cs.strokeOpacity || 1), cap: cs.strokeLinecap, join: cs.strokeLinejoin })
+        partes.push('s', f.getAttribute('d')?.length || 0, cs.r, relleno, trazo, cs.opacity, m ? `${m.a.toFixed(3)},${m.b.toFixed(3)},${m.e | 0},${m.f | 0}` : '')
     })
     partes.push('v', r.left | 0, r.top | 0, r.width | 0, (a * 20) | 0)
     ops.push(() => {
-        ctx.save(); ctx.translate(ox, oy); ctx.scale(sc, sc)
         figuras.forEach(f => {
+            ctx.save()
+            if (f.m) ctx.transform(f.m.a, f.m.b, f.m.c, f.m.d, f.m.e, f.m.f) // (el lienzo ya está en píxeles de la página)
+            else { ctx.translate(ox, oy); ctx.scale(sc, sc) }
             if (f.relleno && f.relleno !== 'none') { ctx.globalAlpha = a * f.op * f.opR; ctx.fillStyle = f.relleno; ctx.fill(f.p) }
             if (f.trazo && f.trazo !== 'none') { ctx.globalAlpha = a * f.op * f.opT; ctx.strokeStyle = f.trazo; ctx.lineWidth = f.ancho; ctx.lineCap = f.cap; ctx.lineJoin = f.join; ctx.stroke(f.p) }
+            ctx.restore()
         })
-        ctx.restore()
     })
+}
+function opacidadGrupo(f, svgRaiz) { // la opacidad de los grupos <g> que la contienen (las marcas del dial van al 60 %)
+    let o = 1
+    for (let g = f.parentElement; g && g !== svgRaiz; g = g.parentElement) o *= parseFloat(getComputedStyle(g).opacity || 1)
+    return o
 }
 
 // 3. API pública

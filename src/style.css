@@ -2268,7 +2268,6 @@ main
     }
 
 
-/* Versión de realidad aumentada: cómo jugar con gafas (index.html) */
-.gafas-pasos{display:grid;gap:1rem;margin:1.5rem 0 0;padding-left:1.4rem;font-size:var(--tamano-texto);line-height:1.5}
-.gafas-pasos li::marker{color:var(--color-atencion);font-weight:700}
-.gafas-pasos strong{color:var(--color-soporte-oscuro)}
+
+/* Versión AR: debajo de la escena solo van los patrocinadores (sin el degradado crema que unía la escena con las secciones que se quitaron) */
+.pagina-inicio .escena::after{ display: none; }

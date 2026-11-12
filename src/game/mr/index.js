@@ -31,6 +31,7 @@ import { escenaMR, rig, camaraMR, planos, actualizarDiorama, olvidarCajas, recua
 import { espejo, textura } from './espejo.js'
 import { entorno, prepararHitTest } from './entorno.js'
 import { controles, registrarPanel, usarAtrapador } from './controles.js'
+import { gestos } from './manos.js'
 export { mr }
 
 // 1. Panel: la interfaz del juego, como una pantalla grande y transparente a 1 m (se acomoda despacio hacia donde miras)
@@ -56,7 +57,8 @@ const vineta = (() => {
 // Es una esfera grande alrededor de la cabeza que sí respeta la profundidad: la maqueta está más cerca, así que no la tapa
 const velo = new THREE.Mesh(new THREE.SphereGeometry(6, 32, 16), new THREE.MeshBasicMaterial({ color: 0x201826, side: THREE.BackSide, transparent: true, opacity: 0, depthWrite: false }))
 velo.renderOrder = 4; velo.frustumCulled = false; velo.visible = false; camaraMR.add(velo)
-const TEXTOS = '.gx-card:not([hidden]), .gx-talk:not([hidden]), .gx-modal:not([hidden]), .gx-anuncio:not([hidden]), .gx-aviso:not([hidden])'
+// solo los textos grandes (tarjetas, pop-ups, frases sobre negro, el anuncio del minijuego): los diálogos con mamá y los avisos chiquitos no
+const TEXTOS = '.gx-card:not([hidden]), .gx-modal:not([hidden]), .gx-anuncio:not([hidden])'
 const elSusurro = document.querySelector('.gx-whisper')
 const hayTexto = () => !!document.querySelector(TEXTOS) || (!!elSusurro.textContent.trim() && parseFloat(getComputedStyle(elSusurro).opacity) > 0.05)
 let veloT = 0
@@ -158,6 +160,7 @@ export function dibujarMR() {
     } else cabezaSim()
     actualizarDiorama(dt, t) // (con la pose de la maqueta del cuadro: los rayos y el panel ya la usan)
     controles.actualizar(dt)
+    if (mr.xr) gestos.actualizar(frame, mr.espacio, dt) // el juego con las manos: joystick, botón y gestos (manos.js)
     azimut(); ponerPanel(dt); fundidos(); oscurecer(dt)
     if (mr.modo === 'sim') controles.mando() // (vista previa en el navegador de las gafas: los controles llegan como un mando)
     // la interfaz se vuelve a copiar unas 24 veces por segundo (40 en los minijuegos, que se mueven más)
@@ -231,7 +234,7 @@ async function entrarXR(tipo) {
     if (tipo === 'ar') { await prepararHitTest(sesion); empezarColocacion() }
     modoCuerpo()
     sesion.addEventListener('end', () => { // al quitarte las gafas (o salir desde el menú) el juego sigue en la vista previa
-        controles.soltarTodo(); entorno.reiniciar(); mr.sesion = null; mr.espacio = null; terminarColocacion()
+        controles.soltarTodo(); gestos.soltar(); entorno.reiniciar(); mr.sesion = null; mr.espacio = null; terminarColocacion()
         renderer.setClearColor(0x000000, 1); entrarSim()
     })
 }

@@ -99,6 +99,9 @@ export const EXPRESIONES = { // [fila, columna] en la hoja
 export function hojaDe(url, w, h, cw, ch, celdas) {
     const tex = new THREE.TextureLoader().load(encodeURI(url))
     tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 4; tex.repeat.set(cw / w, ch / h)
+    // sin mipmaps: en la maqueta la cara se ve pequeña y las versiones reducidas de la hoja mezclaban las expresiones vecinas (un ojo
+    // cerrado, una ceja en la mejilla). Así cada expresión se lee solo de su propio pedazo
+    tex.generateMipmaps = false; tex.minFilter = THREE.LinearFilter
     return { tex, w, h, cw, ch, celdas }
 }
 const HOJA_GABRIELA = hojaDe('assets/protagonista/Caras-transparente_Mesa de trabajo 1.png', 840, 842, 210, 140,

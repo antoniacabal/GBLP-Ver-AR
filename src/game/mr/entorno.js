@@ -174,7 +174,7 @@ export const entorno = {
         const { min, que } = distanciaSegura()
         tAviso = Math.max(0, tAviso - dt)
         if (min < AVISO_CERCA) { mr.aviso = `Cuidado: tienes ${que === 'wall' ? 'una pared' : 'un mueble'} muy cerca`; if (!tAviso) { tAviso = 2; this.alAviso?.() } }
-        else if (mr.colocando) mr.aviso = ultimoHit ? (ultimoBueno ? `${NOMBRES[sobre] ? NOMBRES[sobre] + ' detectada' + (sobre === 'floor' ? 'o' : '') + ' · ' : ''}Pulsa el gatillo para poner la maqueta aquí` : 'Apunta a una superficie plana (una mesa o el piso)') : 'Buscando superficies… mira o apunta a una mesa o al piso'
+        else if (mr.colocando) mr.aviso = ultimoHit ? (ultimoBueno ? `${NOMBRES[sobre] ? NOMBRES[sobre] + ' detectada' + (sobre === 'floor' ? 'o' : '') + ' · ' : ''}Pellizca (o pulsa el gatillo) para poner la maqueta aquí` : 'Apunta a una superficie plana (una mesa o el piso)') : 'Buscando superficies… mira o apunta a una mesa o al piso'
         else mr.aviso = ''
     },
     get puedePoner() { return !!ultimoHit && ultimoBueno },

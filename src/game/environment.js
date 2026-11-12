@@ -403,7 +403,7 @@ const phone = new THREE.Group(); phone.position.set(R0.x - 290 * SH, 0.995 + 39 
 const PANTALLA = '#E4FFFF'
 suelto(phone, [['assets/casa/celular/Cel.fbx', 'assets/casa/celular/CelOsc.fbx']], 0.00036, { Material: '#BF4E24', 'Material.001': '#D8C8AE', 'Material.002': '#BF895A' }, /./,
     (o) => o.traverse(c => { if (c.isMesh) [c.material].flat().forEach(m => { if (m.name === 'Material.001') { m.emissive.set(PANTALLA); m.emissiveIntensity = 0.35 } }) }))
-{ const luz = new THREE.PointLight(PANTALLA, 0.6, 1.5, 2); luz.position.set(0, 0.25, 0); phone.add(luz) }
+{ const luz = new THREE.PointLight(PANTALLA, 0.18, 0.9, 2); luz.position.set(0, 0.25, 0); phone.add(luz) } // (antes 0.6 y 1.5 m: en la maqueta alumbraba demasiado el escritorio)
 
 // 8. Planta baja: cocina al fondo, comedor a la izquierda, sala con sofá y televisor a la derecha
 into('HOME')

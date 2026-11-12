@@ -18,7 +18,7 @@
 import * as THREE from 'three'
 import { CONFIG, runtime, CAPA_PROTA } from '../config.js'
 import { player } from '../player.js'
-import { spaces } from '../environment.js'
+import { spaces, SEATS } from '../environment.js'
 import { mr, COMODIDAD } from './estado.js'
 
 // 1. Escena de la realidad mixta: todo lo que vive en el espacio real (bandeja, panel, controles, superficies detectadas)
@@ -34,25 +34,31 @@ const Y = new THREE.Vector3(0, 1, 0)
 export const planos = [new THREE.Plane(), new THREE.Plane(), new THREE.Plane(), new THREE.Plane(), new THREE.Plane(new THREE.Vector3(0, 1, 0), 0.6)] // 4 lados y el piso
 
 // 2. Bandeja: la base de la maqueta (un recuadro oscuro con borde dorado, los colores del juego)
-const MEDIO = 0.33 // media bandeja (m): la calle se ve en un cuadro de 66 cm
-const bandeja = new THREE.Group(); rig.add(bandeja)
+const MEDIO = 0.33 // media bandeja (m) para los espacios de adentro
+const MEDIO_CALLE = 0.24 // la calle: un cuadro de 48 cm (antes 66 cm: se veía demasiado grande)
+const bandeja = new THREE.Group(); bandeja.name = 'bandeja'; rig.add(bandeja) // (manos.js pone el joystick y el botón junto a ella)
 const base = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshStandardMaterial({ color: 0x201826, roughness: 0.85 }))
 base.scale.y = 0.022; base.position.y = -0.011 - 0.0015; bandeja.add(base)
 const borde = new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints([[-0.5, 0.5], [0.5, 0.5], [0.5, -0.5], [-0.5, -0.5]].map(([x, z]) => new THREE.Vector3(x, 0.001, z))), new THREE.LineBasicMaterial({ color: 0xf2c063, transparent: true, opacity: 0.85 }))
 bandeja.add(borde)
 
-// Entorno virtual: en realidad virtual (sin passthrough) y en la vista previa del computador hay un piso y una mesa donde va la maqueta
+// Entorno virtual: en realidad virtual (sin passthrough) y en la vista previa del computador hay un piso de referencia (sin mesa: el
+// cilindro de abajo se quitó)
 export const entornoVirtual = new THREE.Group(); rig.add(entornoVirtual)
 {
     const piso = new THREE.GridHelper(8, 32, 0x71708a, 0x3a3046); piso.material.transparent = true; piso.material.opacity = 0.35
-    const mesa = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.42, 1, 40), new THREE.MeshStandardMaterial({ color: 0x3a3046, roughness: 0.9 }))
-    mesa.name = 'mesa'; entornoVirtual.add(piso, mesa)
+    entornoVirtual.add(piso)
 }
 
 // 3. Recuadro de cada espacio: en la calle sigue a Gabriela; en el cuarto, la sala y el MIO es la caja del espacio entero
 const cajas = {}
 function cajaDe(sp) { // centro y medidas del espacio (solo lo visible), con un pequeño margen
     if (cajas[sp]) return cajas[sp]
+    // el MIO: el grupo trae también la ciudad que pasa por las ventanas, y la caja quedaba enorme. Se arma con las bancas (+ el pasillo)
+    if (sp === 'BUS' && SEATS.length) {
+        const xs = SEATS.map(s => s.x), zs = SEATS.map(s => s.z), x0 = Math.min(...xs), x1 = Math.max(...xs), z0 = Math.min(...zs), z1 = Math.max(...zs)
+        return (cajas[sp] = { x: (x0 + x1) / 2, z: (z0 + z1) / 2, hx: (x1 - x0) / 2 + 1.6, hz: Math.max(1.8, (z1 - z0) / 2 + 1) })
+    }
     const b = new THREE.Box3(), g = spaces[sp]; g.updateMatrixWorld(true)
     g.traverseVisible(o => { if (o.isMesh && !o.material?.transparent) b.expandByObject(o) })
     if (b.isEmpty()) return { x: CONFIG.camera.x, z: CONFIG.camera.z, hx: 6, hz: 6, provisional: true }
@@ -89,7 +95,7 @@ export function actualizarDiorama(dt, t) {
     rig.position.set(C.x + J.x, -tmp.y, C.z + J.z).sub(tmp.set(tmp.x, 0, tmp.z))
     rig.updateMatrixWorld(true)
     // recuadro visible (en el mundo del juego) y sus planos de corte
-    const bx = (calle ? C.x : caja.x) + J.x, bz = (calle ? C.z : caja.z) + J.z, hx = calle ? MEDIO * k : caja.hx, hz = calle ? MEDIO * k : caja.hz
+    const bx = (calle ? C.x : caja.x) + J.x, bz = (calle ? C.z : caja.z) + J.z, hx = calle ? MEDIO_CALLE * k : caja.hx, hz = calle ? MEDIO_CALLE * k : caja.hz
     Object.assign(recuadro, { x: bx, z: bz, hx, hz })
     planos[0].set(tmp.set(1, 0, 0), -(bx - hx)); planos[1].set(tmp.set(-1, 0, 0), bx + hx)
     planos[2].set(tmp.set(0, 0, 1), -(bz - hz)); planos[3].set(tmp.set(0, 0, -1), bz + hz)
@@ -97,9 +103,6 @@ export function actualizarDiorama(dt, t) {
     rig.worldToLocal(tmp.set(bx, 0, bz)); bandeja.position.copy(tmp)
     bandeja.rotation.set(0, -th, 0); bandeja.scale.set(2 * hx / k + 0.012, 1, 2 * hz / k + 0.012)
     bandeja.visible = mr.ancla.puesta || !mr.xr
-    // mesa virtual (VR y vista previa): de la altura de la bandeja hasta el piso
     entornoVirtual.visible = mr.modo !== 'ar'
-    const mesa = entornoVirtual.getObjectByName('mesa'), alto = Math.max(0.1, A.y - 0.025)
-    mesa.position.set(A.x, alto / 2, A.z); mesa.scale.set(1, alto, 1)
 }
 export const escalaActual = () => k

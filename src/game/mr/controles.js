@@ -192,6 +192,23 @@ export const controles = {
         if (punto) { puntoPanel.position.copy(punto); panel.parent.worldToLocal(puntoPanel.position); puntoPanel.quaternion.copy(panel.quaternion); puntoPanel.translateZ(0.002) }
     },
     soltarTodo() { manos.forEach(m => { if (m.gatillo) soltar(m); m.agarre = null }); runtime.joyX = runtime.joyY = 0; minijuego(null) },
+    // Vista previa abierta en el navegador de las gafas (sin entrar a la realidad aumentada): si el navegador entrega los controles como
+    // mandos (Gamepad API), el stick camina y el gatillo interactúa. Si no, quedan el joystick y el botón Interactuar en pantalla (touch.js)
+    mando() {
+        const gps = [...(navigator.getGamepads?.() || [])].filter(Boolean)
+        let x = 0, y = 0, gat = false
+        for (const g of gps) {
+            const s = g.axes.length >= 4 ? [g.axes[2], g.axes[3]] : [g.axes[0] || 0, g.axes[1] || 0]
+            if (Math.hypot(...s) > Math.hypot(x, y)) [x, y] = s
+            gat ||= !!g.buttons[0]?.pressed
+        }
+        if (gps.length) {
+            const mueve = Math.hypot(x, y) > 0.15
+            if (mueve || this._mandoMovia) { runtime.joyX = mueve ? x : 0; runtime.joyY = mueve ? -y : 0 } // (sin pisar el joystick en pantalla)
+            this._mandoMovia = mueve
+        }
+        if (gat !== !!this._mandoGat) { this._mandoGat = gat; tecla(gat ? 'keydown' : 'keyup', 'KeyE'); tecla(gat ? 'keydown' : 'keyup', 'Space') }
+    },
     // vista previa en el computador: el mouse hace de rayo (index.js)
     simular(tipo, x, y) {
         const m = this._sim ||= { gatillo: false, objetivo: null, panel: null }

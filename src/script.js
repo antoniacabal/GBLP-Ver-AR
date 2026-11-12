@@ -668,7 +668,7 @@ async function iniciarJuego() {
 }
 
 // 6. Mapa de apoyo -----------------
-    // (en la versión de realidad mixta no hay mapa de apoyo: se quitó del index junto con src/mapa/)
+    // (en la versión de realidad aumentada no hay mapa de apoyo: se quitó del index junto con src/mapa/)
 
 // 7. Techo que se derrumba -----------------
     // (index.html) Debajo de la muestra del juego la página sigue oscura, como un techo de concreto morado.

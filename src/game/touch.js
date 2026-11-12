@@ -7,11 +7,12 @@
 // Controles táctiles: joystick a la izquierda y botón "Interactuar" a la derecha (el HTML está en narrativa.html).
 import { runtime } from './config.js'
 
-// 0. Condiciones: cuándo se muestran los controles táctiles
+// 0. Condiciones: cuándo se muestran los controles táctiles (siempre en la vista previa de la realidad aumentada: en el navegador de las
+//    gafas no hay teclado, y sin esto no había cómo mover a Gabriela)
 const narrow = matchMedia('(max-width: 768px)'), coarse = matchMedia('(pointer: coarse)')
 const root = document.querySelector('.gx-touch')
 let wired = false
-const wanted = () => coarse.matches || narrow.matches || ('ontouchstart' in window && innerWidth < 1100)
+const wanted = () => document.body.classList.contains('gx-mr-sim') || coarse.matches || narrow.matches || ('ontouchstart' in window && innerWidth < 1100)
 
 // 1. Joystick virtual: el pulgar arrastra la perilla dentro del aro; la distancia al centro es la velocidad (runtime.joyX / joyY, de -1 a 1)
 function wireJoystick() {

@@ -51,6 +51,20 @@ const vineta = (() => {
     const m = new THREE.Mesh(new THREE.PlaneGeometry(0.62, 0.62), new THREE.MeshBasicMaterial({ map: t, transparent: true, opacity: 0, depthTest: false, depthWrite: false }))
     m.position.z = -0.25; m.renderOrder = 6; m.frustumCulled = false; camaraMR.add(m); return m
 })()
+// Fondo oscuro con los textos: cuando sale una tarjeta, un diálogo, un pop-up, una frase sobre negro o el anuncio de un minijuego, todo lo
+// de alrededor (el cuarto real) se oscurece y solo quedan la maqueta y el texto: así quien juega entra en la escena.
+// Es una esfera grande alrededor de la cabeza que sí respeta la profundidad: la maqueta está más cerca, así que no la tapa
+const velo = new THREE.Mesh(new THREE.SphereGeometry(6, 32, 16), new THREE.MeshBasicMaterial({ color: 0x0a050e, side: THREE.BackSide, transparent: true, opacity: 0, depthWrite: false }))
+velo.renderOrder = 4; velo.frustumCulled = false; velo.visible = false; camaraMR.add(velo)
+const TEXTOS = '.gx-card:not([hidden]), .gx-talk:not([hidden]), .gx-modal:not([hidden]), .gx-anuncio:not([hidden]), .gx-aviso:not([hidden])'
+const elSusurro = document.querySelector('.gx-whisper')
+const hayTexto = () => !!document.querySelector(TEXTOS) || (!!elSusurro.textContent.trim() && parseFloat(getComputedStyle(elSusurro).opacity) > 0.05)
+let veloT = 0
+function oscurecer(dt) {
+    const quiere = hayTexto() ? 0.9 : 0
+    veloT += (quiere - veloT) * Math.min(1, dt * 3) // entra y sale con un fundido corto (sin golpes de luz)
+    velo.material.opacity = veloT; velo.visible = veloT > 0.01
+}
 const elFundido = document.querySelector('.gx-fade'), elVineta = document.querySelector('.gx-vignette')
 const colorFundido = new THREE.Color()
 function fundidos() {
@@ -132,6 +146,9 @@ function ponerPanel(dt) {
     panel.rotation.set(0, panelYaw, 0)
 }
 export function dibujarMR() {
+    // En las gafas la página deja de recibir requestAnimationFrame (solo corren los cuadros de la sesión WebXR). GSAP mueve todos los
+    // tiempos del juego con ese reloj: sin esto se congelaba todo (se quedaba en la tarjeta "10 de agosto"). Aquí se le da cada cuadro
+    if (mr.xr) gsap.ticker.tick()
     const dt = Math.min(reloj.getDelta(), 0.1), t = reloj.elapsedTime
     const frame = mr.xr ? renderer.xr.getFrame() : null
     if (mr.xr) {
@@ -141,7 +158,8 @@ export function dibujarMR() {
     } else cabezaSim()
     actualizarDiorama(dt, t) // (con la pose de la maqueta del cuadro: los rayos y el panel ya la usan)
     controles.actualizar(dt)
-    azimut(); ponerPanel(dt); fundidos()
+    azimut(); ponerPanel(dt); fundidos(); oscurecer(dt)
+    if (mr.modo === 'sim') controles.mando() // (vista previa en el navegador de las gafas: los controles llegan como un mando)
     // la interfaz se vuelve a copiar unas 24 veces por segundo (40 en los minijuegos, que se mueven más)
     if ((tEspejo -= dt) <= 0) {
         tEspejo = breathing.active ? 1 / 40 : 1 / 24
@@ -193,6 +211,7 @@ function modoCuerpo() {
     document.body.classList.toggle('gx-mr-on', mr.vista && !mr.domOverlay)
     document.body.classList.toggle('gx-mr-sim', mr.modo === 'sim')
     CONFIG.player.screenRelative = mr.vista // WASD (en la vista previa) relativo a la vista, como el stick
+    dispatchEvent(new Event('resize')) // touch.js vuelve a decidir si muestra el joystick (en la vista previa siempre)
 }
 async function entrarXR(tipo) {
     const modo = tipo === 'ar' ? 'immersive-ar' : 'immersive-vr'
@@ -259,8 +278,8 @@ export function elegirModo() {
     const soporta = (m) => navigator.xr?.isSessionSupported(m).catch(() => false) ?? Promise.resolve(false)
     Promise.all([soporta('immersive-ar'), soporta('immersive-vr')]).then(([ar, vr]) => {
         bAR.hidden = !ar; bVR.hidden = !vr || ar
-        estado.textContent = ar ? 'Tus gafas pueden mostrar el juego sobre tu cuarto real.' : vr ? 'Este dispositivo tiene realidad virtual (sin ver tu cuarto real).'
-            : !window.isSecureContext ? 'Para usar las gafas, la página tiene que abrirse con https.' : 'Este navegador no tiene realidad mixta: puedes ver la vista previa.'
+        estado.textContent = ar ? 'Tus gafas pueden mostrar el juego sobre tu cuarto real (realidad aumentada).' : vr ? 'Este dispositivo tiene realidad virtual (sin ver tu cuarto real).'
+            : !window.isSecureContext ? 'Para usar las gafas, la página tiene que abrirse con https.' : 'Este navegador no tiene realidad aumentada: puedes ver la vista previa.'
         el.classList.add('mr-inicio--listo')
     })
     return new Promise((listo) => {

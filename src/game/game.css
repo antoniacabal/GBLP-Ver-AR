@@ -365,7 +365,6 @@ body.gx-mr-on:not(.gx-mr-sim) .gx-keys--xr,body.gx-mr-sim .gx-keys--sim{display:
 /* vista previa: la interfaz HTML no se ve (se dibuja en el panel 3D, como en las gafas) y el filtro de la ansiedad no tapa el panel */
 body.gx-mr-sim .gx{opacity:0}
 body.gx-mr-on canvas.webgl{filter:none!important}
-body.gx-mr-sim .gx-touch{display:none}
 .mr-atrapador{position:fixed;inset:0;z-index:5;cursor:crosshair;touch-action:none}
 
 /* pantalla de inicio: elegir cómo jugar */

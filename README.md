@@ -1,6 +1,6 @@
-# Grietas bajo la piel · versión de realidad mixta
+# Grietas bajo la piel · versión de realidad aumentada
 
-Versión para gafas de realidad mixta (Meta Quest 3 / 3S y otras con WebXR) de *Grietas bajo la piel*, la experiencia web sobre las huellas emocionales que deja un sismo. La versión original para computador vive en su propio repositorio.
+Versión para gafas de realidad aumentada (Meta Quest 3 / 3S y otras con WebXR) de *Grietas bajo la piel*, la experiencia web sobre las huellas emocionales que deja un sismo. La versión original para computador vive en su propio repositorio.
 
 En las gafas, el juego aparece como una **maqueta sobre una mesa real**:
 
@@ -20,14 +20,14 @@ En el computador, `narrativa.html` ofrece una **vista previa** de la maqueta (la
 
 ### Probar en las gafas
 
-Las gafas solo abren la realidad mixta en páginas con `https`. Dos opciones:
+Las gafas solo abren la realidad aumentada en páginas con `https`. Dos opciones:
 
 - La página publicada en GitHub Pages (se publica sola con cada push a `main`).
 - En la red local: `npm run dev:gafas` y abrir en el navegador de las gafas `https://<ip-del-computador>:5173` (aceptar el aviso del certificado).
 
 ## Cómo está hecho
 
-El juego (`src/game/`) es el mismo de la versión original; la realidad mixta vive en `src/game/mr/`:
+El juego (`src/game/`) es el mismo de la versión original; la realidad aumentada vive en `src/game/mr/`:
 
 | Archivo | Qué hace |
 | --- | --- |

@@ -33,7 +33,7 @@ import { haptics } from './haptics.js'
 import { INSTRUCCIONES } from './instrucciones.js'
 import { crearOclusion, conOclusion } from './oclusion.js'
 import './touch.js'
-import { dibujarMR, elegirModo, mr } from './mr/index.js' // realidad mixta: la maqueta en las gafas (o su vista previa)
+import { dibujarMR, elegirModo, mr } from './mr/index.js' // realidad aumentada: la maqueta en las gafas (o su vista previa)
 
 // 1. Constantes y estado
 document.documentElement.classList.add('sin-scroll')
@@ -512,7 +512,7 @@ initDebug({ jumpTo, playGame, forceCrisis, resetTutorials: () => seenTutorials.c
 const clock = new THREE.Clock()
 // dibujar: con oclusión ambiental en computador (oclusion.js: rincones y uniones un poco más oscuros); en celular, como siempre
 const oclusion = conOclusion() ? crearOclusion(renderer, scene, camera, { radio: 0.6, intensidad: 0.7 }) : null
-// en realidad mixta (o su vista previa) se dibuja la maqueta con la cabeza de quien juega como cámara (mr/index.js)
+// en realidad aumentada (o su vista previa) se dibuja la maqueta con la cabeza de quien juega como cámara (mr/index.js)
 const dibujar = () => mr.vista ? dibujarMR() : oclusion ? oclusion.render() : renderer.render(scene, camera)
 const nitida = () => renderSharp(camera, runtime.sharpPlayer && !mr.vista) // (en las gafas no hay segundo lienzo)
 if (oclusion) addEventListener('resize', () => oclusion.tamano(innerWidth, innerHeight))

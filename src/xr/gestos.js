@@ -39,7 +39,7 @@ const tocar = (el) => { // un toque en un botón de la interfaz (los números de
 const ART = ['wrist', 'thumb-tip', 'index-finger-metacarpal', 'index-finger-phalanx-proximal', 'index-finger-tip', 'middle-finger-phalanx-proximal', 'middle-finger-tip',
     'ring-finger-phalanx-proximal', 'ring-finger-tip', 'pinky-finger-metacarpal', 'pinky-finger-phalanx-proximal', 'pinky-finger-tip']
 const crearMano = () => ({ ok: false, libre: false, p: Object.fromEntries(ART.map(n => [n, V()])), pellizco: false, puno: false, abierta: false, dedos: 0 })
-const manos = { left: crearMano(), right: crearMano() }
+export const manos = { left: crearMano(), right: crearMano() }
 const cabeza = { p: V(), q: new THREE.Quaternion() }
 function leer(frame, ref, sesion) {
     manos.left.ok = manos.right.ok = false

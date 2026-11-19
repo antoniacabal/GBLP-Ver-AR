@@ -33,7 +33,9 @@ function cajaDe(sp) {
     if (cajas[sp]) return cajas[sp]
     if (sp === 'BUS' && SEATS.length) { // (el grupo del MIO trae también la ciudad que pasa por las ventanas: se arma con las bancas)
         const xs = SEATS.map(s => s.x), zs = SEATS.map(s => s.z), x0 = Math.min(...xs), x1 = Math.max(...xs), z0 = Math.min(...zs), z1 = Math.max(...zs)
-        return (cajas[sp] = { x: (x0 + x1) / 2, z: (z0 + z1) / 2, hx: (x1 - x0) / 2 + 1.6, hz: Math.max(1.8, (z1 - z0) / 2 + 1) })
+        // (incluye la franja de ciudad que pasa por las ventanas, en el lado -z a unos 7 unidades: así se ve el viaje)
+        const za = Math.min(z0 - 1, -8.6), zb = z1 + 1
+        return (cajas[sp] = { x: (x0 + x1) / 2, z: (za + zb) / 2, hx: (x1 - x0) / 2 + 1.6, hz: (zb - za) / 2 })
     }
     const b = new THREE.Box3(), g = spaces[sp]; g.updateMatrixWorld(true)
     g.traverseVisible(o => { if (o.isMesh && !o.material?.transparent) b.expandByObject(o) })

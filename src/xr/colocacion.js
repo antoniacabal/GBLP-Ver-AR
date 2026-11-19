@@ -142,6 +142,10 @@ export class SistemaColocacion extends createSystem({
         if (presionado && !this.antesPresionado && estado.puesta) this.empezar()
         this.antesPresionado = presionado
         if (!estado.colocando) return
+        // si cambia lo que hay en cada lado (soltaste los controles y aparecieron las manos, o al revés), las retículas se rehacen: el
+        // hit-test de IWSDK queda atado a la fuente que había al crearlas y seguiría el control que ya no se usa
+        const fuentes = ['left', 'right'].map(l => xr?.getPrimaryInputSource?.(l))
+        if (!this.fuentes || fuentes.some((f, i) => f !== this.fuentes[i])) { this.fuentes = fuentes; this.buscar(false); this.buscar(true) }
         // colocando: retículas doradas sobre superficies buenas; el pellizco de esa mano (no los controles) pone la plataforma
         for (const lado of ['left', 'right']) {
             const r = reticulas[lado], buena = this.evaluar(r)

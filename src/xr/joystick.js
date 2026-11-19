@@ -63,7 +63,7 @@ function aJoystick(off) {
 const off = new THREE.Vector3()
 export class SistemaJoystick extends createSystem({ bola: { required: [OneHandGrabbable] } }) {
     init() {
-        this.entMesa = this.world.createTransformEntity(mesa, { parent: entidades.plataforma })
+        this.entMesa = this.world.createTransformEntity(mesa, { parent: entidades.plataforma }); entidades.mesa = this.entMesa // (el botón también va aquí)
         this.entBase = this.world.createTransformEntity(base, { parent: this.entMesa })
         this.entBola = this.world.createTransformEntity(bola, { parent: this.entBase })
         // la bola se agarra con la mano y solo se traslada (sin girar), dentro de un cuadrado de 8 cm a la altura de la bola

@@ -5,4 +5,4 @@ export let mundo = null
 export const ponerMundo = (w) => { mundo = w }
 
 // entidades de IWSDK que comparten los sistemas (la plataforma: el joystick y el botón son hijos suyos)
-export const entidades = { plataforma: null }
+export const entidades = { plataforma: null, mesa: null }

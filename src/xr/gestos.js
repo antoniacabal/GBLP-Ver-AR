@@ -1,10 +1,10 @@
 // Indice
     // 0. Imports y utilidades
-    // 1. Lectura de las manos (articulaciones del seguimiento de manos de las gafas)
+    // 1. Lectura de las manos (xr/manos.js)
     // 2. Respirar: puño cerrado = inhalar y sostener · mano abierta = exhalar
     // 3. Reconstruir la gravedad: una barra imaginaria agarrada con las dos manos
     // 4. Conteo de grounding: mostrar los dedos
-    // 5. Foco entre el ruido: pellizcar y girar la muñeca (el dial)
+    // 5. Foco entre el ruido: girar la mano como una perilla (el dial)
     // 6. Salida rápida: las dos palmas hacia adelante
     // 7. Controles de Meta: solo para salir
     // 8. Sistema de gestos (IWSDK)
@@ -14,7 +14,7 @@
 //   · puño cerrado ............ inhalar y sostener (la barra espaciadora apretada) · mano abierta: exhalar (soltarla)
 //   · las dos manos pellizcando e inclinando la barra entre ellas ... enderezar el marco (gravedad)
 //   · dedos levantados (una o dos manos), quietos un momento ......... elegir ese número (conteo)
-//   · pellizcar y girar la muñeca ..................................... girar el dial (foco)
+//   · la mano en el aire girando, como una perilla .................... girar el dial (foco)
 //   · las dos palmas abiertas hacia adelante .......................... salida rápida
 //   · pellizcar apuntando al panel ..................................... elegir (xr/panel.js)
 // Para que no se confundan: la mano que está agarrando el joystick o cerca del botón de la mesa no cuenta para estos gestos.
@@ -26,7 +26,9 @@ import { createSystem, Grabbed } from '@iwsdk/core'
 import { runtime } from '../game/config.js'
 import { breathing } from '../game/breathing.js'
 import { colocacion } from './colocacion.js'
-import { mesa } from './joystick.js'
+import { mesa, joystick } from './joystick.js'
+import { manos, cabeza, leer, normalPalma } from './manos.js'
+export { manos }
 
 const V = () => new THREE.Vector3()
 const tecla = (tipo, code) => dispatchEvent(new KeyboardEvent(tipo, { code, key: code === 'Space' ? ' ' : code, bubbles: true }))
@@ -35,38 +37,11 @@ const tocar = (el) => { // un toque en un botón de la interfaz (los números de
     for (const tipo of ['pointerdown', 'pointerup']) el.dispatchEvent(new PointerEvent(tipo, { bubbles: true, cancelable: true, clientX: x, clientY: y, pointerId: 43, pointerType: 'touch', isPrimary: true, button: 0, buttons: tipo === 'pointerdown' ? 1 : 0 }))
 }
 
-// 1. Lectura de las manos: cada cuadro, las articulaciones que importan (en metros, en el espacio de referencia de la sesión)
-const ART = ['wrist', 'thumb-tip', 'index-finger-metacarpal', 'index-finger-phalanx-proximal', 'index-finger-tip', 'middle-finger-phalanx-proximal', 'middle-finger-tip',
-    'ring-finger-phalanx-proximal', 'ring-finger-tip', 'pinky-finger-metacarpal', 'pinky-finger-phalanx-proximal', 'pinky-finger-tip']
-const crearMano = () => ({ ok: false, libre: false, p: Object.fromEntries(ART.map(n => [n, V()])), pellizco: false, puno: false, abierta: false, dedos: 0 })
-export const manos = { left: crearMano(), right: crearMano() }
-const cabeza = { p: V(), q: new THREE.Quaternion() }
-function leer(frame, ref, sesion) {
-    manos.left.ok = manos.right.ok = false
-    const vista = frame.getViewerPose(ref)
-    if (vista) { const t = vista.transform; cabeza.p.set(t.position.x, t.position.y, t.position.z); cabeza.q.set(t.orientation.x, t.orientation.y, t.orientation.z, t.orientation.w) }
-    for (const src of sesion.inputSources) {
-        const m = src.hand && manos[src.handedness]; if (!m) continue
-        let ok = true
-        for (const n of ART) {
-            const j = src.hand.get(n), pose = j && frame.getJointPose?.(j, ref)
-            if (!pose) { ok = false; break }
-            const t = pose.transform.position; m.p[n].set(t.x, t.y, t.z)
-        }
-        m.ok = ok; if (!ok) continue
-        const P = m.p, d = (a, b) => P[a].distanceTo(P[b])
-        const pz = d('thumb-tip', 'index-finger-tip'); m.pellizco = m.pellizco ? pz < 0.045 : pz < 0.025 // (con histéresis: no parpadea)
-        const puntas = ['index-finger-tip', 'middle-finger-tip', 'ring-finger-tip', 'pinky-finger-tip'].reduce((s, n) => s + d(n, 'wrist'), 0) / 4
-        m.puno = m.puno ? puntas < 0.11 : puntas < 0.085 // las cuatro puntas cerca de la muñeca
-        m.abierta = puntas > 0.145
-        const larga = (f) => d(f + '-tip', 'wrist') > d(f + '-phalanx-proximal', 'wrist') + 0.04 // la punta bastante más lejos que su nudillo
-        m.dedos = ['index-finger', 'middle-finger', 'ring-finger', 'pinky-finger'].filter(larga).length + (d('thumb-tip', 'pinky-finger-metacarpal') > 0.085 ? 1 : 0)
-    }
-}
-// ¿la mano está ocupada con los controles de la mesa? (agarrando el joystick o a menos de 14 cm de él o del botón)
+// 1. Las manos se leen en xr/manos.js (lo comparten la colocación y el joystick)
+// ¿la mano está ocupada con los controles de la mesa? (agarrando el joystick, pellizcado o con la mano cerrada, o a menos de 14 cm de él o del botón)
 const w = V(), r = V()
 function ocupada(m, refAMundo, joyAgarrado) {
-    if (joyAgarrado && m.pellizco) return true
+    if ((joyAgarrado && m.pellizco) || joystick.mano === m) return true
     if (!mesa.visible) return false
     w.copy(m.p['index-finger-tip']).applyMatrix4(refAMundo)
     return mesa.children.some(c => c.getWorldPosition(r).distanceTo(w) < 0.14)
@@ -110,29 +85,30 @@ function conteo(dt) {
     if (b) { elegida = n; tocar(b) }
 }
 
-// 5. Foco: pellizcando, el giro de la muñeca (visto desde quien juega) gira el dial (como la rueda del mouse sobre el dial)
-let giroAntes = null
+// 5. Foco: la mano en el aire, como si girara una perilla (dibujo "Sonido"): el giro de la muñeca, visto desde quien juega, gira el
+//    dial (como la rueda del mouse sobre el dial). No hace falta pellizcar; el puño no cuenta (es para respirar)
+let giroAntes = null, manoFoco = null
 const adelante = V(), arriba = V(), derecha = V(), tmp = V()
 function foco() {
-    const m = manos.right.libre && manos.right.pellizco ? manos.right : manos.left.libre && manos.left.pellizco ? manos.left : null
+    const gira = (m) => m.libre && !m.puno
+    const m = gira(manos.right) ? manos.right : gira(manos.left) ? manos.left : null
+    if (m !== manoFoco) { manoFoco = m; giroAntes = null } // (si cambia de mano, el giro empieza de nuevo: sin saltos)
     const dial = breathing.active && runtime.techId === 'foco' && m && document.querySelector('.gx-foco-dial')
     if (!dial) { giroAntes = null; return }
     adelante.set(0, 0, -1).applyQuaternion(cabeza.q); arriba.set(0, 1, 0).applyQuaternion(cabeza.q); derecha.crossVectors(adelante, arriba)
     tmp.subVectors(m.p['pinky-finger-metacarpal'], m.p['index-finger-metacarpal']) // atraviesa la palma: gira con la muñeca
     const ang = Math.atan2(tmp.dot(arriba), tmp.dot(derecha))
-    if (giroAntes !== null) {
-        let d = ang - giroAntes; d = Math.atan2(Math.sin(d), Math.cos(d))
-        if (Math.abs(d) > 0.002) dial.dispatchEvent(new WheelEvent('wheel', { deltaY: d * 500, bubbles: true, cancelable: true })) // a la derecha sube
-    }
+    if (giroAntes === null) { giroAntes = ang; return }
+    // sin pellizco, el temblor natural de la mano no debe mover el dial: el giro se acumula y cuenta cuando pasa de ~1.5°
+    let d = ang - giroAntes; d = Math.atan2(Math.sin(d), Math.cos(d))
+    if (Math.abs(d) < 0.025) return
+    dial.dispatchEvent(new WheelEvent('wheel', { deltaY: d * 500, bubbles: true, cancelable: true })) // a la derecha sube
     giroAntes = ang
 }
 
 // 6. Salida rápida: las dos manos libres, abiertas, con las palmas hacia adelante, durante 0.7 s
 let palmas = 0, esperaSalida = 0
-const palmaAdelante = (m, izq) => {
-    const a = V().subVectors(m.p['index-finger-metacarpal'], m.p.wrist), b = V().subVectors(m.p['pinky-finger-metacarpal'], m.p.wrist)
-    return (izq ? b.cross(a) : a.cross(b)).normalize().dot(adelante) > 0.55
-}
+const normal = V(), palmaAdelante = (m, izq) => normalPalma(m, izq ? 'left' : 'right', normal).dot(adelante) > 0.55
 function salida(dt) {
     esperaSalida = Math.max(0, esperaSalida - dt)
     adelante.set(0, 0, -1).applyQuaternion(cabeza.q)
@@ -163,8 +139,8 @@ export class SistemaGestos extends createSystem({ agarrados: { required: [Grabbe
         const sesion = this.world.session, frame = this.world.renderer.xr.getFrame?.(), ref = this.world.renderer.xr.getReferenceSpace?.()
         if (!sesion || !frame || !ref) return this.soltar()
         controles(sesion)
+        leer(frame, ref, sesion) // (también mientras se coloca: la colocación mira si las manos están apoyadas en la mesa)
         if (!colocacion.puesta || colocacion.colocando) return this.soltar()
-        leer(frame, ref, sesion)
         // del espacio de referencia de la sesión al mundo de IWSDK (las manos se miden allá; la mesa está acá)
         refAMundo.copy(this.world.player.matrixWorld)
         const ents = this.queries.agarrados.entities, joyAgarrado = (ents.size ?? ents.length) > 0

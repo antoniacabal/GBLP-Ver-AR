@@ -47,6 +47,6 @@ export const INSTRUCCIONES_GAFAS = {
     hold: ['Cierra el puño para inhalar y sostener', null, 'Abre la mano para exhalar'],
     earth: ['Camina con el joystick hasta el pasto', null, null],
     gravedad: [null, 'Pellizca con las dos manos e inclina la barra hacia el otro lado', null],
-    foco: [null, 'Pellizca en el aire y gira la muñeca', null],
+    foco: [null, 'Gira la mano en el aire, como una perilla', null],
     conteo: [null, 'Muestra esa cantidad de dedos (o pellizca el número)', null]
 }

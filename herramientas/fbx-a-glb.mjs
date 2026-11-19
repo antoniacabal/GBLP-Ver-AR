@@ -1,4 +1,4 @@
-// Convierte los modelos FBX de static/assets a GLB comprimido con Draco (lo que carga el juego: ver src/game/modelos.js)
+// Convierte los modelos FBX de src/public/assets a GLB comprimido con Draco (lo que carga el juego: ver src/game/modelos.js)
 //   npm run modelos            → convierte los FBX que no tienen GLB o que cambiaron después de él
 //   npm run modelos -- --todos → los convierte todos otra vez
 //
@@ -27,7 +27,7 @@ const { KHRDracoMeshCompression } = await import('@gltf-transform/extensions')
 const { draco } = await import('@gltf-transform/functions')
 const draco3d = (await import('draco3dgltf')).default
 
-const raiz = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../static/assets')
+const raiz = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../src/public/assets')
 const todos = process.argv.includes('--todos')
 const io = new NodeIO().registerExtensions([KHRDracoMeshCompression]).registerDependencies({ 'draco3d.encoder': await draco3d.createEncoderModule() })
 

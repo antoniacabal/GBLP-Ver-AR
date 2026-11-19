@@ -5,7 +5,6 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "dev:gafas": "vite --mode gafas",
     "build": "vite build",
     "modelos": "node herramientas/fbx-a-glb.mjs"
   },
@@ -13,14 +12,18 @@
     "@gltf-transform/core": "^4.5.1",
     "@gltf-transform/extensions": "^4.5.1",
     "@gltf-transform/functions": "^4.5.1",
-    "@vitejs/plugin-basic-ssl": "^1.2.0",
+    "@iwsdk/vite-plugin-dev": "^1.1.0",
     "draco3dgltf": "^1.5.9",
-    "vite": "^6.4.3",
-    "vite-plugin-restart": "^0.4.2"
+    "vite": "^7.3.8"
   },
   "dependencies": {
+    "@iwsdk/core": "^1.1.0",
+    "@pmndrs/uikit": "^1.0.78",
     "gsap": "^3.15.0",
     "lil-gui": "^0.21.0",
-    "three": "^0.174.0"
+    "three": "npm:super-three@0.185.0"
+  },
+  "overrides": {
+    "three": "npm:super-three@0.185.0"
   }
 }

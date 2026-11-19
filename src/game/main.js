@@ -18,7 +18,7 @@ import gsap from 'gsap'
 import * as THREE from 'three'
 import { CONFIG, runtime } from './config.js'
 import { sm } from './stateMachine.js'
-import { renderer, scene, canvas, renderSharp } from './scene.js'
+import { scene, canvas } from './scene.js' // (el renderer y el ciclo de dibujo son de IWSDK: xr/mundo.js)
 import { camera, updateCamera } from './camera.js'
 import { DINING_SEAT, setDesayuno } from './environment.js'
 import { modelosListos, updateEnvironment, props, uniBus, resetProps, marker, setSpace, SEATS, SEGS, atUniversity, nearUniversity, endless, HOME_DOOR, STREET_X0, ROUTE_LEN, routePoint, nearestSeg, scareBuilding, DOORS, SPAWN, BED_LIE, BUS_DOORS, busExits } from './environment.js'
@@ -31,9 +31,7 @@ import { initDebug } from './debug.js'
 import { updateNpcs, npcState, mom } from './npcs.js'
 import { haptics } from './haptics.js'
 import { INSTRUCCIONES } from './instrucciones.js'
-import { crearOclusion, conOclusion } from './oclusion.js'
 import './touch.js'
-import { dibujarMR, elegirModo, mr } from './mr/index.js' // realidad aumentada: la maqueta en las gafas (o su vista previa)
 
 // 1. Constantes y estado
 document.documentElement.classList.add('sin-scroll')
@@ -358,7 +356,7 @@ function intro() {
     // antes de poder moverte: pop-up con los controles (en celular no: sobra, los botones están a la vista); después Gabriela se levanta sola
     ui.hud(false) // los botones de arriba y la línea de tiempo aparecen después del pop-up de controles
     const start = () => { ui.hud(true); sm.go('EXPLORATION'); wakeUp(0.6) }
-    gsap.delayedCall(3, () => { ui.card(); ui.fade(0, 1.5, () => document.body.classList.contains('gx-touch-on') && !mr.vista ? start() : ui.controls(start)) }) // (en las gafas sí: los controles son otros)
+    gsap.delayedCall(3, () => { ui.card(); ui.fade(0, 1.5, () => ui.controls(start)) }) // (en las gafas siempre: explica los gestos)
 }
 sm.on('EXPLORATION', () => { player.setMode('free') })
 // Saltar durante el sismo (y su explicación) lleva directo a "Una semana después": se corta todo lo que estaba pasando
@@ -509,13 +507,9 @@ function forceCrisis() { if (runtime.state === 'EXPLORATION') sm.go('ANXIETY') }
 initDebug({ jumpTo, playGame, forceCrisis, resetTutorials: () => seenTutorials.clear() })
 
 // 11. Bucle principal
-const clock = new THREE.Clock()
-// dibujar: con oclusión ambiental en computador (oclusion.js: rincones y uniones un poco más oscuros); en celular, como siempre
-const oclusion = conOclusion() ? crearOclusion(renderer, scene, camera, { radio: 0.6, intensidad: 0.7 }) : null
-// en realidad aumentada (o su vista previa) se dibuja la maqueta con la cabeza de quien juega como cámara (mr/index.js)
-const dibujar = () => mr.vista ? dibujarMR() : oclusion ? oclusion.render() : renderer.render(scene, camera)
-const nitida = () => renderSharp(camera, runtime.sharpPlayer && !mr.vista) // (en las gafas no hay segundo lienzo)
-if (oclusion) addEventListener('resize', () => oclusion.tamano(innerWidth, innerHeight))
+// El juego ya no dibuja: IWSDK tiene un solo ciclo y un solo renderer para la sesión de realidad aumentada (xr/mundo.js). Cada cuadro,
+// el sistema del juego llama a cuadroJuego(delta) y después IWSDK dibuja su escena (la maqueta con el juego adentro)
+const clock = { elapsedTime: 0 } // (lo usa la flecha guía para latir)
 // Más gente cerca, más ansiedad y choques con NPCs = más probabilidad de crisis (el temporizador corre más rápido)
 let lastBumps = 0, lastCalms = 0, crowdSaid = -99, crowdHits = 0 // lastCalms: alucinaciones tocadas · crowdHits: choques con gente desde el último "nivel" de ansiedad
 const CALMAS = ['Lo tocas... y no hay nada. Estás aquí.', 'No era real. Respiras un poco mejor.', 'Ahí no hay nadie. Tu cuerpo lo entiende.'] // frases al tocar una alucinación
@@ -609,16 +603,15 @@ function updateProgress() {
 
 const extraMarks = [0, 1, 2].map(() => { const m = marker.clone(); m.visible = false; marker.parent.add(m); return m }) // flechitas extra (mismo dibujo que el marcador)
 
-const tick = () => {
-    // (setAnimationLoop: el mismo bucle sirve en la pantalla y en las gafas, que piden los cuadros a su propio ritmo)
-    try { frame() } catch (e) { console.error(e) }
-}
+// cuadroJuego(delta): un paso del juego. Lo llama el sistema de IWSDK (xr/mundo.js) en cada cuadro, en la pantalla y en las gafas.
+// Un error en un cuadro no detiene el siguiente
+export function cuadroJuego(delta) { try { frame(Math.min(delta || 0, 0.1)) } catch (e) { console.error(e) } }
 let juegoT = 0 // tiempo del juego (no corre en pausa)
-const frame = () => {
-    // en pausa (salida rápida o un pop-up) TODO se detiene: solo se vuelve a dibujar el mismo cuadro. Antes el reloj seguía y Gabriela,
-    // la gente, las fallas y el temblor de la cámara se seguían moviendo (el audio y GSAP ya se pausaban en ui.js)
-    if (runtime.paused) { clock.getDelta(); ui.updateOverlay(); dibujar(); nitida(); return }
-    const dt = Math.min(clock.getDelta(), 0.1)
+const frame = (dt) => {
+    // en pausa (salida rápida o un pop-up) TODO se detiene. Antes el reloj seguía y Gabriela, la gente, las fallas y el temblor se
+    // seguían moviendo (el audio y GSAP ya se pausaban en ui.js)
+    if (runtime.paused) { ui.updateOverlay(); return }
+    clock.elapsedTime += dt
     if (runtime.postQuake && up && runtime.space === 'HOUSE' && runtime.state === 'EXPLORATION' && !busy && (houseT += dt) > 35) momCheck('cuarto') // 35 s en el cuarto: mamá pregunta desde abajo
     const t = (juegoT += dt), sp = runtime.space, explore = dt > 0 && runtime.state === 'EXPLORATION'
     // Gente cerca (después del sismo): la ansiedad sube mientras estés rodeada y cada choque la dispara y sacude la cámara
@@ -699,7 +692,6 @@ const frame = () => {
     else if (s2 === 'BUS') updateCamera(t, dt, W.busInteriorX, 0)
     else updateCamera(t, dt, ...streetCam(player.x, player.z))
     ui.updateBreath(); ui.updateOverlay(); audio.update(dt, runtime.anxiety)
-    dibujar(); nitida()
     // Seguro anti-trabas: si un estado transitorio se queda pegado, se recupera solo
     if (runtime.state !== lastState) { lastState = runtime.state; stateT = 0 } else stateT += dt
     breathIdle = runtime.state === 'BREATHING' && !breathing.active ? breathIdle + dt : 0
@@ -711,6 +703,5 @@ const frame = () => {
 
 // 12. Inicio: con ?debug se entra directo al cuarto sin la historia; si no, empieza la narrativa
 addEventListener('pointerdown', initAudio, { once: true }); addEventListener('keydown', initAudio, { once: true })
-// primero se elige cómo jugar (gafas o vista previa): entrar a las gafas necesita un clic
-elegirModo().then(() => { if (runtime.sandbox) { player.cargarModelo(); jumpTo('HOUSE_PRE') } else sm.go('INTRO') })
-renderer.setAnimationLoop(tick)
+// La historia empieza cuando xr/arranque.js lo pide (después de elegir entrar a la realidad aumentada o verla en la pantalla)
+export function empezarJuego() { if (runtime.sandbox) { player.cargarModelo(); jumpTo('HOUSE_PRE') } else sm.go('INTRO') }

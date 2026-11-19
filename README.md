@@ -23,7 +23,11 @@ En el computador, `narrativa.html` ofrece una **vista previa** de la maqueta (la
 Las gafas solo abren la realidad aumentada en páginas con `https`. Dos opciones:
 
 - La página publicada en GitHub Pages (se publica sola con cada push a `main`).
-- En la red local: `npm run dev:gafas` y abrir en el navegador de las gafas `https://<ip-del-computador>:5173` (aceptar el aviso del certificado).
+- En la red local: `npm run dev` (sirve con https) y abrir en el navegador de las gafas `https://<ip-del-computador>:5173` (aceptar el aviso del certificado).
+
+En el computador, `npm run dev` carga el emulador IWER de IWSDK (una Quest 3 simulada): la primera vez descarga un navegador de unos 200 MB. La página es `https://localhost:5173/narrativa.html` (aceptar el aviso del certificado local).
+
+**IWSDK** (Meta Immersive Web SDK) maneja la sesión de realidad aumentada, el renderer y el ciclo de dibujo. Su configuración está en `src/iwsdk.config.json`; los archivos públicos viven en `src/public/`.
 
 ## Cómo está hecho
 
@@ -40,7 +44,7 @@ El juego (`src/game/`) es el mismo de la versión original; la realidad aumentad
 
 ## Modelos 3D
 
-Los modelos se exportan de Blender como FBX a `static/assets/`, pero el juego carga su versión GLB comprimida con Draco. Después de agregar o cambiar un FBX:
+Los modelos se exportan de Blender como FBX a `src/public/assets/`, pero el juego carga su versión GLB comprimida con Draco. Después de agregar o cambiar un FBX:
 
 ```bash
 npm run modelos

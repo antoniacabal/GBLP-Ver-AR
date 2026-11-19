@@ -661,10 +661,11 @@ function iniciarScroll() {
 // 5. Juego -----------------
     // (narrativa.html)
 async function iniciarJuego() {
-    if (!document.querySelector('canvas.webgl--narrativa')) return
+    if (!document.getElementById('escena-xr')) return
 
     await import('./game/game.css')
-    await import('./game/main.js')
+    const { arrancar } = await import('./xr/arranque.js') // IWSDK: el mundo de realidad aumentada y, dentro, el juego
+    await arrancar()
 }
 
 // 6. Mapa de apoyo -----------------

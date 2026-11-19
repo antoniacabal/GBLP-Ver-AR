@@ -1,0 +1,11 @@
+{
+  "version": "iwsdk.scene.v1",
+  "units": "meters",
+  "environment": {
+    "toneMapping": "none",
+    "exposure": 1,
+    "shadows": false
+  },
+  "resources": {},
+  "nodes": []
+}

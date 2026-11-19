@@ -1,30 +1,22 @@
+// La escena del juego. Antes el juego tenía su propio renderer, su canvas y su escena; ahora todo eso es de IWSDK (xr/mundo.js), que
+// tiene una sola sesión XR y un solo ciclo de dibujo. Aquí "scene" es un grupo con el juego entero: xr/maqueta.js lo pone sobre la
+// plataforma, lo escala y lo desplaza (Gabriela queda en el centro y lo que se mueve es el mapa). El resto del juego no cambió:
+// sigue haciendo scene.add(...) como antes
 import * as THREE from 'three'
 import { CAPA_PROTA } from './config.js'
-export const canvas = document.querySelector('canvas.webgl')
-export const scene = new THREE.Scene()
-scene.background = new THREE.Color(0x1a1620)
-export const renderer = new THREE.WebGLRenderer({ canvas, antialias: true })
-renderer.setPixelRatio(Math.min(devicePixelRatio, 2))
-renderer.setSize(innerWidth, innerHeight)
+import { mundo } from '../xr/estado.js'
+
+export const renderer = mundo.renderer
+export const canvas = renderer.domElement
+export const scene = new THREE.Group()
+scene.name = 'juego'
+// (environment.js le pone fondo y niebla como si fuera una escena: en un grupo no hacen nada, y en realidad aumentada el fondo es el
+// cuarto real)
 export const ambient = new THREE.AmbientLight(0x8899bb, 0.7)
 export const sun = new THREE.DirectionalLight(0xaab4d0, 1)
 sun.position.set(8, 14, 6)
-scene.add(ambient, sun)
-addEventListener('resize', () => { renderer.setPixelRatio(Math.min(devicePixelRatio, 2)); renderer.setSize(innerWidth, innerHeight) }) // la resolución también se actualiza: con zoom del navegador u otra pantalla ya no queda pixelado
-// Protagonista nítida (nivel 3 de ansiedad): el mundo se ve muy borroso, pero ella no. Se dibuja otra vez, solo ella (capa 1),
-// en un segundo canvas transparente encima, sin el filtro de blur. Las luces también alumbran la capa 1
+scene.add(ambient, sun, sun.target) // (el blanco del sol va dentro del juego: así la luz no cambia de dirección cuando el mapa se mueve)
 ambient.layers.enable(CAPA_PROTA); sun.layers.enable(CAPA_PROTA)
-let sharp = null, sharpCanvas = null
-const sizeSharp = () => { if (!sharp) return; sharp.setPixelRatio(Math.min(devicePixelRatio, 2)); sharp.setSize(innerWidth, innerHeight) }
-addEventListener('resize', sizeSharp)
-export function renderSharp(cam, on) {
-    if (!on) { if (sharpCanvas) sharpCanvas.style.display = 'none'; return }
-    if (!sharp) {
-        sharpCanvas = document.createElement('canvas'); sharpCanvas.className = 'webgl-nitida'; sharpCanvas.setAttribute('aria-hidden', 'true'); canvas.after(sharpCanvas)
-        sharp = new THREE.WebGLRenderer({ canvas: sharpCanvas, antialias: true, alpha: true }); sizeSharp()
-    }
-    sharpCanvas.style.display = ''
-    const bg = scene.background; scene.background = null
-    cam.layers.set(CAPA_PROTA); sharp.render(scene, cam); cam.layers.set(0); cam.layers.enable(CAPA_PROTA)
-    scene.background = bg
-}
+
+// (la protagonista nítida sobre el mundo borroso del nivel 3 de ansiedad usaba un segundo canvas: en las gafas no hay filtros de CSS)
+export function renderSharp() {}

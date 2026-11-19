@@ -20,7 +20,7 @@ const sinFbx = {
 
 // IWSDK (Meta Immersive Web SDK): la configuración del mundo XR vive en src/iwsdk.config.json (la raíz de Vite es src/).
 // En desarrollo, el plugin carga el emulador IWER (una Quest 3 simulada en el navegador) y sirve con https
-export default {
+export default ({ mode }) => ({
     root: 'src/',
     publicDir: 'public', // (src/public: así lo espera IWSDK, que guarda ahí sus escenas)
     base: './', // rutas relativas: funciona dentro de usuario.github.io/GBLP-Ver-AR/
@@ -47,5 +47,6 @@ export default {
         include: ['three', '@pmndrs/uikit', '@drawcall/uikitml'],
         esbuildOptions: { target: 'esnext' }
     },
-    plugins: [iwsdkDev(), sinFbx]
-}
+    // npm run dev -- --mode iwer: el servidor de desarrollo con http (sin certificado) para probar con el emulador en localhost
+    plugins: [iwsdkDev(mode === 'iwer' ? { https: false } : {}), sinFbx]
+})

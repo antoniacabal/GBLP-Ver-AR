@@ -14,7 +14,9 @@ export async function arrancar() {
     const juego = await import('../game/main.js')
     const { audio } = await import('../game/audio.js')
     const { actualizarMaqueta } = await import('./maqueta.js')
+    const { SistemaColocacion } = await import('./colocacion.js') // colocar la plataforma sobre la mesa real (etapa 2)
     mundo.registerSystem(sistemaJuego((dt, t) => { juego.cuadroJuego(dt); actualizarMaqueta(dt, t) }))
+    mundo.registerSystem(SistemaColocacion)
     await elegir(mundo, audio)
     juego.empezarJuego()
 }

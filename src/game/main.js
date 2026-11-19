@@ -30,7 +30,7 @@ import { ui } from './ui.js'
 import { initDebug } from './debug.js'
 import { updateNpcs, npcState, mom } from './npcs.js'
 import { haptics } from './haptics.js'
-import { INSTRUCCIONES } from './instrucciones.js'
+import { INSTRUCCIONES, INSTRUCCIONES_GAFAS } from './instrucciones.js'
 import './touch.js'
 
 // 1. Constantes y estado
@@ -342,7 +342,9 @@ addEventListener('keydown', (e) => e.code === 'KeyE' && !e.isTrusted && !e.repea
 // 7. Explicación de los minijuegos: sale la primera vez que aparece cada tipo (se reinicia al recargar la página)
 const seenTutorials = new Set()
 // Tres imágenes con una frase corta por minijuego (instrucciones.js); el botón "?" las muestra otra vez
-const tutorialFor = (tech) => { const mech = tech.game || 'hold'; return { sub: mech === 'hold' ? 'Ejercicios de respiración' : tech.name, steps: INSTRUCCIONES[mech], page: tech.page } }
+// en las gafas, las frases dicen el gesto de la mano en vez del clic o las teclas
+const pasosDe = (mech) => !document.documentElement.classList.contains('gx-en-xr') ? INSTRUCCIONES[mech] : INSTRUCCIONES[mech].map((p, i) => INSTRUCCIONES_GAFAS[mech]?.[i] ? { ...p, txt: INSTRUCCIONES_GAFAS[mech][i] } : p)
+const tutorialFor = (tech) => { const mech = tech.game || 'hold'; return { sub: mech === 'hold' ? 'Ejercicios de respiración' : tech.name, steps: pasosDe(mech), page: tech.page } }
 
 // 8. Máquina de estados
 sm.on('INTRO', () => {

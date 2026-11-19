@@ -41,3 +41,12 @@ export const INSTRUCCIONES = {
         { img: svg([0, 1, 2, 3, 4].map(i => `<circle cx="${20 + i * 20}" cy="34" r="8" fill="${C.oro}"/>`).join('') + [0, 1, 2].map(i => `<circle cx="${44 + i * 16}" cy="66" r="5.5" fill="${i ? 'rgba(255,255,255,.35)' : C.rojo}" stroke="#fff" stroke-width="1.5"/>`).join('')), txt: '5 aciertos; 3 errores y no pasa' }
     ]
 }
+
+// En las gafas (realidad aumentada) se juega con las manos: las frases que cambian (los dibujos son los mismos). xr/gestos.js
+export const INSTRUCCIONES_GAFAS = {
+    hold: ['Cierra el puño para inhalar y sostener', null, 'Abre la mano para exhalar'],
+    earth: ['Camina con el joystick hasta el pasto', null, null],
+    gravedad: [null, 'Pellizca con las dos manos e inclina la barra hacia el otro lado', null],
+    foco: [null, 'Pellizca en el aire y gira la muñeca', null],
+    conteo: [null, 'Muestra esa cantidad de dedos (o pellizca el número)', null]
+}

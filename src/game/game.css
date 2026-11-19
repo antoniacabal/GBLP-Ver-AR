@@ -359,7 +359,8 @@ body.gx-touch-on .gx-ver-controles{display:none}
 /* controles: en las gafas, los de las gafas; en la vista previa, los del computador */
 .gx-keys--xr,.gx-keys--sim{display:none}
 body.gx-mr-on .gx-keys--pc,body.gx-mr-on .gx-keys--touch{display:none}
-body.gx-mr-on:not(.gx-mr-sim) .gx-keys--xr,body.gx-mr-sim .gx-keys--sim{display:grid}
+body.gx-mr-on:not(.gx-mr-sim) .gx-keys--xr,body.gx-mr-sim .gx-keys--sim,html.gx-en-xr .gx-keys--xr{display:grid}
+html.gx-en-xr .gx-keys--pc,html.gx-en-xr .gx-keys--touch,html.gx-en-xr .gx-keys--sim{display:none} /* en las gafas: los gestos de las manos */
 .gx-keys--xr .gx-keycaps,.gx-keys--sim .gx-keycaps{min-width:7.4rem;justify-content:center}
 .gx-keys--xr kbd,.gx-keys--sim kbd{font-size:1.45rem}
 /* vista previa: la interfaz HTML no se ve (se dibuja en el panel 3D, como en las gafas) y el filtro de la ansiedad no tapa el panel */

@@ -23,6 +23,8 @@ export async function arrancar() {
     mundo.registerSystem(SistemaJoystick)
     const { SistemaBoton } = await import('./boton.js') // el botón de la mesa: interactuar con el índice (etapa 5)
     mundo.registerSystem(SistemaBoton)
+    const { SistemaGestos } = await import('./gestos.js') // respirar, minijuegos y salida rápida con las manos (etapa 6)
+    mundo.registerSystem(SistemaGestos)
     await elegir(mundo, audio)
     juego.empezarJuego()
 }

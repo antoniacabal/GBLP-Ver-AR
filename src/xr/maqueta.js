@@ -16,7 +16,7 @@
 import * as THREE from 'three'
 import { CONFIG, runtime } from '../game/config.js'
 import { player } from '../game/player.js'
-import { spaces, SEATS } from '../game/environment.js'
+import { spaces, SEATS, modelosListos } from '../game/environment.js'
 import { scene as juego } from '../game/scene.js'
 import { mundo } from './estado.js'
 
@@ -68,8 +68,56 @@ export function actualizarMaqueta(dt, t) {
     escala.scale.setScalar(1 / k)
     juego.position.set(-(C.x + J.x), 0, -(C.z + J.z))
     Object.assign(recuadro, { x: calle ? C.x : caja.x, z: calle ? C.z : caja.z, hx: calle ? MEDIO_CALLE * k : caja.hx, hz: calle ? MEDIO_CALLE * k : caja.hz, k })
+    // el recuadro en la plataforma (metros): en la calle, centrado; adentro, donde cae la caja del espacio (fijo aunque tiemble el juego)
+    recortar(calle ? 0 : (caja.x - C.x) / k, calle ? 0 : (caja.z - C.z) / k, recuadro.hx / k, recuadro.hz / k, dt)
     azimut()
+    esconderFuera()
 }
+
+// 3.1 Recorte: lo que sale del recuadro no se dibuja (planos de corte en los materiales del juego). No se recorta todo lo que se dibuja
+//     (renderer.clippingPlanes): eso cortaría también las manos, la plataforma y la interfaz de IWSDK
+export const planos = [0, 1, 2, 3, 4].map(() => new THREE.Plane())
+const LOCAL = [[1, 0, 0], [-1, 0, 0], [0, 0, 1], [0, 0, -1], [0, 1, 0]].map(n => new THREE.Plane(new THREE.Vector3(...n), 0))
+mundo.renderer.localClippingEnabled = true
+let tMateriales = 0
+function recortar(cx, cz, hx, hz, dt) {
+    LOCAL[0].constant = -(cx - hx); LOCAL[1].constant = cx + hx; LOCAL[2].constant = -(cz - hz); LOCAL[3].constant = cz + hz
+    LOCAL[4].constant = 0.0005 // (y nada por debajo de la plataforma)
+    plataforma.updateMatrixWorld(true)
+    planos.forEach((p, i) => p.copy(LOCAL[i]).applyMatrix4(plataforma.matrixWorld))
+    // cada segundo, los materiales nuevos del juego (modelos que terminan de cargar, clones) reciben los planos
+    if ((tMateriales -= dt) > 0) return
+    tMateriales = 1
+    juego.traverse(o => { for (const m of [o.material].flat()) if (m && m.clippingPlanes !== planos) { m.clippingPlanes = planos; m.needsUpdate = true } })
+}
+
+// 3.2 Rendimiento: en la calle, lo que queda fuera del recuadro se esconde mientras se dibuja (las gafas dibujan dos veces, una por ojo).
+//     Se vuelve a mostrar al empezar el cuadro siguiente, antes de que el juego corra: la lógica del juego nunca ve el cambio
+let piezas = null
+const escondidas = [], esfera = new THREE.Sphere(), aJuego = new THREE.Matrix4(), rel = new THREE.Matrix4()
+function prepararPiezas() {
+    piezas = []
+    spaces.STREET.traverse(o => {
+        if (!o.isMesh || !o.geometry) return
+        if (o.isInstancedMesh) { o.computeBoundingSphere(); piezas.push({ o, s: o.boundingSphere.clone() }); return }
+        if (!o.geometry.boundingSphere) o.geometry.computeBoundingSphere()
+        piezas.push({ o, s: o.geometry.boundingSphere.clone() })
+    })
+}
+function esconderFuera() {
+    if (runtime.space !== 'STREET') return
+    if (!piezas) prepararPiezas()
+    juego.updateMatrixWorld(true); aJuego.copy(juego.matrixWorld).invert()
+    const r = recuadro
+    for (const { o, s } of piezas) {
+        if (!o.visible) continue
+        esfera.copy(s).applyMatrix4(rel.multiplyMatrices(aJuego, o.matrixWorld)) // (en coordenadas del juego)
+        const dx = Math.max(Math.abs(esfera.center.x - r.x) - r.hx, 0), dz = Math.max(Math.abs(esfera.center.z - r.z) - r.hz, 0)
+        if (Math.hypot(dx, dz) > esfera.radius + 0.5) { o.visible = false; escondidas.push(o) }
+    }
+}
+export const mostrarFuera = () => { while (escondidas.length) escondidas.pop().visible = true }
+export const olvidarPiezas = () => { piezas = null }
 
 // 4. Hacia dónde está quien juega, en el mundo del juego. player.js mueve el joystick (y WASD) relativo a CONFIG.camera.azimuth: con
 //    la cabeza de quien juega, "adelante" siempre lleva a Gabriela hacia el fondo de la maqueta, se mire desde donde se mire. También
@@ -81,3 +129,6 @@ function azimut() {
     if (dx * dx + dz * dz > 1e-6) CONFIG.camera.azimuth = THREE.MathUtils.radToDeg(Math.atan2(dx, dz))
 }
 CONFIG.player.screenRelative = true // (WASD en la vista previa: relativo a la vista, como el joystick)
+
+// cuando terminan de cargar los modelos, las cajas de los espacios y las piezas de la calle se vuelven a medir
+modelosListos.then(() => { olvidarCajas(); olvidarPiezas() })

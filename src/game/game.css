@@ -389,3 +389,5 @@ body.gx-mr-on .gx-full{display:none!important} /* en las gafas (y su vista previ
 
 /* IWSDK pone su lienzo dentro de #escena-xr y toma su tamaño: si nace en 0 x 0, los primeros cuadros fallan */
 .escena-xr{position:fixed;inset:0}
+/* En las gafas la interfaz se copia en el panel de la plataforma (xr/panel.js): un poco más grande, para leerla desde la mesa */
+html.gx-en-xr .gx{zoom:1.45}

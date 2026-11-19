@@ -21,8 +21,9 @@ export async function crearMundo(contenedor) {
 }
 
 // Sistema del juego: en cada cuadro de IWSDK avanza GSAP y da un paso del juego (paso: main.js → cuadroJuego, xr/maqueta.js...)
-export const sistemaJuego = (paso) => class SistemaJuego extends createSystem({}) {
+export const sistemaJuego = ({ antes, paso }) => class SistemaJuego extends createSystem({}) {
     update(delta, tiempo) {
+        antes?.() // (lo que se escondió para dibujar el cuadro anterior vuelve antes de que corra el juego)
         gsap.ticker.tick()
         paso(delta, tiempo)
     }

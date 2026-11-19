@@ -202,9 +202,13 @@ export const modelosListos = new Promise(r => { avisarListos = r; setTimeout(r, 
 // Flechas del piso de la casa (Salida, Señaladores): guían por dónde se entra y se sale. Brillan siempre (laten en updateEnvironment)
 export const ARROW = new THREE.MeshBasicMaterial({ color: 0xf2c063, transparent: true, opacity: 0.9, side: THREE.DoubleSide })
 const ARROWS = /^(Salida|Se\{alador|Señalador_entrada)$/
+// enJuego(o, ref): la matriz de o en las coordenadas del juego (o de ref). No sirve matrixWorld: en las gafas el juego va dentro de la
+// maqueta (escalado, girado y desplazado sobre la plataforma), así que matrixWorld trae también eso. Los brillos hechos con matrixWorld
+// quedaban corridos lejos de su objeto (y las colisiones de las bancas del MIO, en otro lugar)
+export const enJuego = (o, ref = scene) => { o.updateWorldMatrix(true, false); return new THREE.Matrix4().copy(ref.matrixWorld).invert().multiply(o.matrixWorld) }
 // shell: una copia de la malla un poco más grande, por detrás (BackSide): un brillo con la forma del objeto (no una caja)
-function shell(mesh, k = 1.1, m = OUTLINE) {
-    const g = mesh.geometry.clone().applyMatrix4(mesh.matrixWorld); g.computeBoundingBox()
+function shell(mesh, k = 1.1, m = OUTLINE, ref = scene) {
+    const g = mesh.geometry.clone().applyMatrix4(enJuego(mesh, ref)); g.computeBoundingBox()
     const c = g.boundingBox.getCenter(new THREE.Vector3()); g.translate(-c.x, -c.y, -c.z).scale(k, k, k).translate(c.x, c.y, c.z)
     return new THREE.Mesh(g, m)
 }
@@ -376,7 +380,7 @@ let bagReady = null; export const bagModel = new Promise(r => { bagReady = r }) 
 model('assets/casa/cuarto/Cuarto.fbx', 'assets/casa/cuarto/Cuarto_Oscuro.fbx', cur, SH, R0.x, R0.y, R0.z, {
     onLoad: (o, dark) => {
         wardrobe.grab(o, dark); bag.grab(o, dark)
-        if (!dark) { const m = o.getObjectByName('Maleta'); if (m) bagReady({ geometry: m.geometry.clone().applyMatrix4(m.matrixWorld), material: m.material }) }
+        if (!dark) { const m = o.getObjectByName('Maleta'); if (m) bagReady({ geometry: m.geometry.clone().applyMatrix4(enJuego(m)), material: m.material }) }
     }
 })
 ;[[-371, -224, 47, 252], [-371, -205, -327, 39], [-201, -38, -269, -109], [122, 362, -325, 100]].forEach(r => rawSolid(R0, r)) // armario · escritorio · silla · cama
@@ -390,8 +394,8 @@ function suelto(grupo, archivos, escala, colors, brillan = /./, alCargar) {
         model(normal, oscuro, g, escala, 0, 0, 0, { colors, onLoad: (o, dark) => {
             alCargar?.(o, dark)
             if (dark || i > 0) return
-            grupo.updateMatrixWorld(true); const a = grupo.matrixWorld.clone().invert()
-            o.traverse(c => { if (c.isMesh && brillan.test(c.name)) { const s = shell(c, 1.12); s.geometry.applyMatrix4(a); brillo.add(s) } })
+            grupo.updateMatrixWorld(true)
+            o.traverse(c => { if (c.isMesh && brillan.test(c.name)) brillo.add(shell(c, 1.12, OUTLINE, grupo)) })
         } })
     })
     return grupo
@@ -833,7 +837,8 @@ model('assets/bus/interior/bus.fbx', 'assets/bus/interior/bus_Oscuro.fbx', cur, 
             s.glow.add(shell(m, 1.12, SOFT))
             // la silla también es un obstáculo: antes Gabriela podía pararse dentro de las bancas (y quedaba metida hasta la cintura).
             // Margen pequeño (solid suma PAD = 0.3; aquí queda 0.1) para no cerrar el pasillo. Sentarse no cambia: se hace desde el pasillo
-            const b = new THREE.Box3().setFromObject(m)
+            if (!m.geometry.boundingBox) m.geometry.computeBoundingBox()
+            const b = m.geometry.boundingBox.clone().applyMatrix4(enJuego(m))
             solid(b.max.x - b.min.x - 0.4, b.max.z - b.min.z - 0.4, (b.min.x + b.max.x) / 2, (b.min.z + b.max.z) / 2, undefined, 'BUS')
         })
     }

@@ -37,13 +37,34 @@ function cajaDe(sp) {
         const za = Math.min(z0 - 1, -8.6), zb = z1 + 1
         return (cajas[sp] = { x: (x0 + x1) / 2, z: (za + zb) / 2, hx: (x1 - x0) / 2 + 1.6, hz: (zb - za) / 2 })
     }
-    const b = new THREE.Box3(), g = spaces[sp]; g.updateMatrixWorld(true)
-    g.traverseVisible(o => { if (o.isMesh && !o.material?.transparent) b.expandByObject(o) })
+    const b = medir(sp)
     if (b.isEmpty()) return { x: CONFIG.camera.x, z: CONFIG.camera.z, hx: 6, hz: 6, provisional: true }
-    // (la caja se mide en el mundo del juego: se deshace la escala y el desplazamiento de la maqueta)
-    b.applyMatrix4(new THREE.Matrix4().copy(juego.matrixWorld).invert())
-    const c = b.getCenter(new THREE.Vector3()), s = b.getSize(new THREE.Vector3())
-    return (cajas[sp] = { x: c.x, z: c.z, hx: Math.min(14, s.x / 2 + 0.2), hz: Math.min(14, s.z / 2 + 0.2) })
+    return (cajas[sp] = deCaja(b))
+}
+// la caja de lo que se ve del espacio, medida en el mundo del juego (sin la escala, el giro ni el desplazamiento de la maqueta: antes se
+// medía en el mundo de las gafas y, con la plataforma girada, salía torcida)
+const relCaja = new THREE.Matrix4(), inv = new THREE.Matrix4(), unaCaja = new THREE.Box3()
+function medir(sp) {
+    const b = new THREE.Box3(), g = spaces[sp]
+    g.updateWorldMatrix(true, true); inv.copy(juego.matrixWorld).invert()
+    g.traverseVisible(o => {
+        if (!o.isMesh || o.material?.transparent || !o.geometry) return
+        if (o.isInstancedMesh) { if (!o.boundingBox) o.computeBoundingBox(); unaCaja.copy(o.boundingBox) }
+        else { if (!o.geometry.boundingBox) o.geometry.computeBoundingBox(); unaCaja.copy(o.geometry.boundingBox) }
+        b.union(unaCaja.applyMatrix4(relCaja.multiplyMatrices(inv, o.matrixWorld)))
+    })
+    return b
+}
+const deCaja = (b) => { const c = b.getCenter(new THREE.Vector3()), s = b.getSize(new THREE.Vector3()); return { b, x: c.x, z: c.z, hx: Math.min(14, s.x / 2 + 0.3), hz: Math.min(14, s.z / 2 + 0.3) } }
+// en las gafas los modelos pueden tardar en cargar más que la espera de modelosListos: si la caja se midió con el cuarto a medias, la cama
+// quedaba cortada. Por eso, adentro, cada 2 s se vuelve a medir; la caja solo crece (nunca se encoge de golpe)
+let tMedir = 0
+function remedir(sp, dt) {
+    if ((tMedir -= dt) > 0 || !cajas[sp]?.b) return
+    tMedir = 2
+    const b = medir(sp), a = cajas[sp].b
+    if (b.isEmpty() || (a.containsPoint(b.min) && a.containsPoint(b.max))) return
+    cajas[sp] = deCaja(b.union(a))
 }
 export const olvidarCajas = () => { for (const k in cajas) delete cajas[k] }
 
@@ -56,6 +77,7 @@ export function actualizarMaqueta(dt, t) {
     const sp = runtime.space, calle = sp === 'STREET', salto = sp !== ultimo; ultimo = sp
     const caja = calle ? null : cajaDe(sp)
     if (caja?.provisional) delete cajas[sp]
+    else if (caja) remedir(sp, dt || 0)
     // las tomas del juego (al despertar después del sismo, los finales) acercan la maqueta despacio a lo que importa
     const zj = Math.min(2.5, Math.max(1, CONFIG.camera.zoom)), mezcla = (zj - 1) / zj
     const cx = calle ? player.x : caja.x + (CONFIG.camera.x - caja.x) * mezcla
@@ -90,7 +112,9 @@ function recortar(cx, cz, hx, hz, dt) {
     // cada segundo, los materiales nuevos del juego (modelos que terminan de cargar, clones) reciben los planos
     if ((tMateriales -= dt) > 0) return
     tMateriales = 1
-    juego.traverse(o => { for (const m of [o.material].flat()) if (m && m.clippingPlanes !== planos) { m.clippingPlanes = planos; m.needsUpdate = true } })
+    // Gabriela no se recorta nunca (en el cuarto, junto a una pared, se le cortaba un pedazo)
+    const suyos = new Set(); player.group.traverse(o => { for (const m of [o.material].flat()) if (m) suyos.add(m) })
+    juego.traverse(o => { for (const m of [o.material].flat()) { if (!m) continue; const q = suyos.has(m) ? null : planos; if (m.clippingPlanes !== q) { m.clippingPlanes = q; m.needsUpdate = true } } })
 }
 
 // 3.2 Rendimiento: en la calle, lo que queda fuera del recuadro se esconde mientras se dibuja (las gafas dibujan dos veces, una por ojo).

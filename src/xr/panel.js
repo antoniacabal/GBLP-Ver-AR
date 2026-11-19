@@ -1,13 +1,14 @@
 // Indice
     // 0. Imports
-    // 1. El panel: la interfaz del juego pegada al borde de atrás de la plataforma
+    // 1. El panel: la interfaz del juego entre quien juega y la maqueta
     // 2. Fundido, fondo morado y viñeta (alrededor de la cabeza)
     // 3. Pellizcar el panel con el rayo de la mano
     // 4. Sistema del panel (IWSDK)
 
 // La interfaz en las gafas. La página HTML no se ve dentro de la sesión inmersiva, así que la interfaz del juego (narrativa.html y ui.js:
-// diálogos, tarjetas, pop-ups, el medidor de respiración y los minijuegos) se copia en un panel (xr/espejo.js) que va pegado al borde
-// de atrás de la plataforma, como parte de la maqueta: no flota frente a la cara ni sigue la cabeza.
+// diálogos, tarjetas, pop-ups, el medidor de respiración y los minijuegos) se copia en un panel (xr/espejo.js) que flota entre quien
+// juega y la maqueta, de frente, como la pantalla del juego original: los textos quedan sobre la maqueta, en el mismo lugar que en la
+// pantalla. Antes iba de pie detrás de la plataforma y los anuncios y diálogos se veían al fondo, lejos y pequeños.
 // Se elige apuntando con la mano y pellizcando: el pellizco llega a la página como un clic en ese mismo punto, así los botones, el
 // dial y los números funcionan sin cambiar el juego. Los controles de Meta no tocan el panel (solo sirven para salir).
 
@@ -16,21 +17,29 @@ import * as THREE from 'three'
 import { createSystem } from '@iwsdk/core'
 import { espejo, textura } from './espejo.js'
 import { plataforma } from './maqueta.js'
-import { LADO } from './colocacion.js'
 import { mesa } from './joystick.js'
+import { mundo } from './estado.js'
 
-// 1. El panel: tan ancho como la plataforma (un poco más), de pie detrás de ella e inclinado hacia quien juega
-const ANCHO = 0.62
+// 1. El panel: en la línea que va de la cabeza al centro de la maqueta, a algo más de la mitad del camino (entre 30 y 55 cm de los
+//    ojos) y siempre de frente. Su ancho crece con la distancia: se ve del mismo tamaño (unos 55°, como una pantalla) estés donde estés
+const CERCA = 0.62, MIN = 0.3, MAX = 0.55, ANGULO = 1.05 // (ANGULO: ancho del panel / distancia a los ojos)
 const panel = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ map: textura, transparent: true, depthTest: false, depthWrite: false, toneMapped: false }))
 panel.name = 'panel'; panel.renderOrder = 10; panel.visible = false
 // (sin prueba de profundidad: así los edificios altos de la calle no tapan los textos)
-const soporte = new THREE.Group(); soporte.name = 'soporte-panel'; soporte.add(panel); plataforma.add(soporte)
-function medir() {
-    const alto = ANCHO * innerHeight / innerWidth
-    panel.scale.set(ANCHO, alto, 1); panel.position.set(0, alto / 2, 0)
-    soporte.position.set(0, 0.07, -LADO / 2 - 0.04); soporte.rotation.set(-0.18, 0, 0) // 7 cm sobre la plataforma, inclinado hacia atrás
+const soporte = new THREE.Group(); soporte.name = 'soporte-panel'; soporte.add(panel); mundo.scene.add(soporte)
+const cab = new THREE.Vector3(), centro = new THREE.Vector3(), meta = new THREE.Vector3(), qMeta = new THREE.Quaternion(), mira = new THREE.Object3D()
+let ancho = 0.4, pegar = true
+function colocar(camara, dt) {
+    camara.getWorldPosition(cab)
+    plataforma.getWorldPosition(centro); centro.y += 0.16 // (un poco por encima de la plataforma: así los avisos quedan sobre la maqueta)
+    const d = cab.distanceTo(centro), dist = Math.min(MAX, Math.max(MIN, d * CERCA))
+    meta.subVectors(centro, cab).setLength(dist).add(cab)
+    mira.position.copy(meta); mira.lookAt(cab); qMeta.copy(mira.quaternion)
+    const a = pegar ? 1 : 1 - Math.exp(-dt * 6); pegar = false // (suave: sin temblar con la cabeza)
+    soporte.position.lerp(meta, a); soporte.quaternion.slerp(qMeta, a)
+    ancho += (dist * ANGULO - ancho) * a
+    panel.scale.set(ancho, ancho * innerHeight / innerWidth, 1)
 }
-medir(); addEventListener('resize', medir)
 const punto = new THREE.Mesh(new THREE.CircleGeometry(0.004, 20), new THREE.MeshBasicMaterial({ color: 0xf2c063, depthTest: false, transparent: true }))
 punto.renderOrder = 12; punto.visible = false; soporte.add(punto)
 
@@ -66,7 +75,8 @@ function fundidos(dt) {
 // 3. Pellizcar el panel: el rayo de cada mano; si toca el panel, el pellizco es un clic de la página en ese punto
 const raycaster = new THREE.Raycaster(), mtx = new THREE.Matrix4()
 const evento = (tipo, el, x, y, botones) => el.dispatchEvent(new PointerEvent(tipo, { bubbles: true, cancelable: true, composed: true, clientX: x, clientY: y, pointerId: 41, pointerType: 'touch', isPrimary: true, button: 0, buttons: botones, view: window }))
-const bajo = (x, y) => { const el = document.elementFromPoint(x, y); return el && el.closest('.gx') && !el.matches('.gx') ? el : null }
+// (el primer elemento de la interfaz en ese punto, aunque encima haya otro lienzo: el del emulador, o el de IWSDK si queda arriba)
+const bajo = (x, y) => document.elementsFromPoint(x, y).find(el => el.closest('.gx') && !el.matches('.gx')) || null
 // (los minijuegos capturan el puntero con setPointerCapture: con un puntero simulado eso falla; se ignora y todo sigue igual)
 const capturar = Element.prototype.setPointerCapture
 Element.prototype.setPointerCapture = function (id) { try { capturar.call(this, id) } catch { /* puntero simulado */ } }
@@ -74,6 +84,8 @@ const agarre = { left: null, right: null } // lo que cada mano está apretando e
 function apuntar(rayo) {
     rayo.updateWorldMatrix(true, false); mtx.identity().extractRotation(rayo.matrixWorld)
     raycaster.ray.origin.setFromMatrixPosition(rayo.matrixWorld); raycaster.ray.direction.set(0, 0, -1).applyMatrix4(mtx).normalize()
+    // (el rayo empieza 40 cm detrás de la mano: el panel está a unos 40 cm de los ojos y la mano a veces queda más allá de él)
+    raycaster.ray.origin.addScaledVector(raycaster.ray.direction, -0.4)
     const hit = panel.visible && raycaster.intersectObject(panel, false)[0]
     return hit ? { x: hit.uv.x * innerWidth, y: (1 - hit.uv.y) * innerHeight, punto: hit.point } : null
 }
@@ -98,7 +110,7 @@ export class SistemaPanel extends createSystem({}) {
         if (sesion !== this.sesion) { // en las gafas la interfaz se agranda un poco (se lee desde la mesa); en la pantalla, como siempre
             this.sesion = sesion; document.documentElement.classList.toggle('gx-en-xr', !!sesion)
         }
-        if (!sesion) { panel.visible = punto.visible = fundido.visible = velo.visible = vineta.visible = false; return }
+        if (!sesion) { panel.visible = punto.visible = fundido.visible = velo.visible = vineta.visible = false; pegar = true; return }
         fundidos(delta)
         // la interfaz se vuelve a copiar unas 24 veces por segundo (40 durante un minijuego, que se mueve más)
         if ((tEspejo -= delta) <= 0) {
@@ -106,6 +118,7 @@ export class SistemaPanel extends createSystem({}) {
             espejo.actualizar()
             panel.visible = !espejo.vacio && plataforma.visible
         }
+        if (panel.visible) colocar(this.world.camera, delta); else pegar = true
         // manos: apuntar y pellizcar (los controles no: isPrimary('hand'))
         const xr = this.world.input?.xr, rayos = this.world.playerSpaceEntities?.raySpaces
         let visto = null

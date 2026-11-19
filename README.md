@@ -22,7 +22,7 @@ La versión original para computador está en https://antoniacabal.github.io/gri
 | Mostrar **los dedos** | Conteo de grounding |
 | **Girar la mano** en el aire, como una perilla | Foco entre el ruido (el dial del sonido) |
 | **Las dos palmas** hacia adelante | Salida rápida |
-| Botón pequeño en la esquina de la plataforma | Volver a colocarla en otro lugar |
+| Botón "Mover la maqueta" (esquina de atrás de la plataforma) | Volver a colocarla en otro lugar |
 
 Los **controles** de Meta solo sirven para salir: **B / Y** abre la salida rápida; ahí, **A / X** para parar.
 
@@ -37,7 +37,7 @@ Se juega sentado o de pie, sin caminar. La vista nunca tiembla: los temblores (e
 | Environment Raycast | La retícula sigue el rayo de cada mano sobre las superficies reales | `EnvironmentRaycastTarget` |
 | Room Surfaces and Anchors | La plataforma queda anclada al espacio real | `XRAnchor` |
 | Hand Tracking | Colocar con las manos apoyadas, joystick (agarre), botón (toque con el índice) y gestos | `OneHandGrabbable`, `PokeInteractable`, `src/xr/manos.js`, `src/xr/gestos.js` |
-| Interfaz espacial | La interfaz del juego en un panel pegado a la plataforma | `src/xr/panel.js` |
+| Interfaz espacial | La interfaz del juego en un panel que flota entre quien juega y la maqueta, de frente | `src/xr/panel.js` |
 
 ## Trabajar en el proyecto
 

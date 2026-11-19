@@ -52,7 +52,8 @@ function crearReticula() {
 }
 const reticulas = { left: null, right: null }
 
-// 3. Botón de recolocar: un botón pequeño (2.4 cm) en la esquina de atrás a la derecha de la plataforma, con el ícono de un ancla
+// 3. Botón de recolocar: un botón pequeño (2.4 cm) en la esquina de atrás a la derecha de la plataforma. Encima lleva un rótulo que
+//    dice qué es ("Mover la maqueta"), siempre de frente a quien juega (sin él no se entendía para qué estaba)
 const recolocar = new THREE.Group(); recolocar.name = 'recolocar'
 {
     const caja = new THREE.Mesh(new THREE.CylinderGeometry(0.016, 0.018, 0.01, 24), new THREE.MeshStandardMaterial({ color: MORADO }))
@@ -61,6 +62,20 @@ const recolocar = new THREE.Group(); recolocar.name = 'recolocar'
     tapa.position.y = 0.012; tapa.name = 'tapa'
     recolocar.add(caja, tapa); recolocar.position.set(LADO / 2 - 0.03, 0, -LADO / 2 + 0.03)
 }
+const rotulo = (() => {
+    const c = document.createElement('canvas'); c.width = 320; c.height = 80
+    const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace
+    const dibujar = () => {
+        const g = c.getContext('2d'); g.clearRect(0, 0, 320, 80)
+        g.fillStyle = 'rgba(32,24,38,0.88)'; g.beginPath(); g.roundRect(4, 4, 312, 72, 36); g.fill()
+        g.strokeStyle = '#F2C063'; g.lineWidth = 3; g.stroke()
+        g.fillStyle = '#E4FFFF'; g.font = '600 34px Outfit, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('Mover la maqueta', 160, 42)
+        t.needsUpdate = true
+    }
+    dibujar(); document.fonts?.ready.then(dibujar)
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(0.064, 0.016), new THREE.MeshBasicMaterial({ map: t, transparent: true, depthWrite: false, toneMapped: false }))
+    m.position.y = 0.036; m.name = 'rotulo'; recolocar.add(m); return m
+})()
 plataforma.add(recolocar)
 
 // pausa del juego mientras se coloca (y se reanuda al terminar)
@@ -240,6 +255,7 @@ export class SistemaColocacion extends createSystem({
         }
         recolocar.visible = !!sesion && estado.puesta
         if (!sesion) return
+        if (recolocar.visible) { this.world.camera.getWorldPosition(cab); rotulo.lookAt(cab) } // (el rótulo, de frente a quien juega)
         // recolocar: al presionar el botón de la esquina
         const presionado = this.entBoton.hasComponent(Pressed)
         recolocar.getObjectByName('tapa').position.y = presionado ? 0.008 : 0.012

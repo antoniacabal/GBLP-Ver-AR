@@ -26,7 +26,7 @@ export async function arrancar() {
     const { SistemaGestos } = await import('./gestos.js') // respirar, minijuegos y salida rápida con las manos (etapa 6)
     mundo.registerSystem(SistemaGestos)
     // ?debug: para revisar la realidad aumentada desde la consola (y las pruebas automáticas con el emulador)
-    if (window.juego) Object.assign(window.juego, { mundo, xr: { colocacion: (await import('./colocacion.js')).colocacion, plataforma: (await import('./maqueta.js')).plataforma, mesa: (await import('./joystick.js')).mesa, manos: (await import('./manos.js')).manos } })
+    if (window.juego) Object.assign(window.juego, { mundo, xr: { colocacion: (await import('./colocacion.js')).colocacion, plataforma: (await import('./maqueta.js')).plataforma, mesa: (await import('./joystick.js')).mesa, manos: (await import('./manos.js')).manos, maqueta: await import('./maqueta.js'), entorno: await import('../game/environment.js'), espejo: (await import('./espejo.js')).espejo } })
     await elegir(mundo, audio)
     juego.empezarJuego()
 }

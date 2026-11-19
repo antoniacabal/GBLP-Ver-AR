@@ -3,3 +3,6 @@
 //   mundo: el World de IWSDK (su renderer, su escena, su cámara y la sesión XR)
 export let mundo = null
 export const ponerMundo = (w) => { mundo = w }
+
+// entidades de IWSDK que comparten los sistemas (la plataforma: el joystick y el botón son hijos suyos)
+export const entidades = { plataforma: null }

@@ -19,7 +19,7 @@ import * as THREE from 'three'
 import { createSystem, EnvironmentRaycastTarget, RaycastSpace, XRAnchor, XRPlane, PokeInteractable, Pressed } from '@iwsdk/core'
 import gsap from 'gsap'
 import { runtime } from '../game/config.js'
-import { mundo } from './estado.js'
+import { mundo, entidades } from './estado.js'
 import { plataforma } from './maqueta.js'
 
 export const LADO = 0.5, ALTO = 0.02 // plataforma de 50 cm, 2 cm sobre la mesa
@@ -74,7 +74,7 @@ export class SistemaColocacion extends createSystem({
     boton: { required: [PokeInteractable] }
 }) {
     init() {
-        this.entPlataforma = this.world.createTransformEntity(plataforma)
+        this.entPlataforma = this.world.createTransformEntity(plataforma); entidades.plataforma = this.entPlataforma // (los controles de la mesa se cuelgan de ella)
         this.entRet = {}
         for (const lado of ['left', 'right']) { const r = crearReticula(); reticulas[lado] = r; this.entRet[lado] = this.world.createTransformEntity(r) }
         // el botón de recolocar: se toca con el índice (poke). Sin rayo: el rayo también puede venir de un control de Meta

@@ -17,6 +17,7 @@ import { createSystem } from '@iwsdk/core'
 import { espejo, textura } from './espejo.js'
 import { plataforma } from './maqueta.js'
 import { LADO } from './colocacion.js'
+import { mesa } from './joystick.js'
 
 // 1. El panel: tan ancho como la plataforma (un poco más), de pie detrás de ella e inclinado hacia quien juega
 const ANCHO = 0.62
@@ -77,6 +78,14 @@ function apuntar(rayo) {
     return hit ? { x: hit.uv.x * innerWidth, y: (1 - hit.uv.y) * innerHeight, punto: hit.point } : null
 }
 
+// el pellizco que agarra el joystick o se acerca al botón no es un clic en el panel (aunque el rayo de esa mano lo esté tocando)
+const w1 = new THREE.Vector3(), w2 = new THREE.Vector3()
+function cercaDeLaMesa(rayo) {
+    if (!mesa.visible) return false
+    rayo.getWorldPosition(w1)
+    return mesa.children.some(c => c.getWorldPosition(w2).distanceTo(w1) < 0.16)
+}
+
 // 4. Sistema del panel
 let tEspejo = 0
 export class SistemaPanel extends createSystem({}) {
@@ -105,7 +114,7 @@ export class SistemaPanel extends createSystem({}) {
             if (!mano || !rayo) { if (agarre[lado]) this.soltar(lado); continue }
             const p = apuntar(rayo), st = xr.getSelectState(lado)
             if (p && (!visto || agarre[lado])) visto = p
-            if (st.start && p) { const el = bajo(p.x, p.y); if (el) { agarre[lado] = { el, x: p.x, y: p.y }; evento('pointerover', el, p.x, p.y, 0); evento('pointerdown', el, p.x, p.y, 1) } }
+            if (st.start && p && !cercaDeLaMesa(rayo)) { const el = bajo(p.x, p.y); if (el) { agarre[lado] = { el, x: p.x, y: p.y }; evento('pointerover', el, p.x, p.y, 0); evento('pointerdown', el, p.x, p.y, 1) } }
             else if (st.active && agarre[lado] && p && (Math.abs(p.x - agarre[lado].x) > 0.5 || Math.abs(p.y - agarre[lado].y) > 0.5)) { // arrastrar (el dial, la plomada)
                 const a = agarre[lado]; a.x = p.x; a.y = p.y; evento('pointermove', a.el, a.x, a.y, 1)
             }

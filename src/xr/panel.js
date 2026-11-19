@@ -72,7 +72,7 @@ const capturar = Element.prototype.setPointerCapture
 Element.prototype.setPointerCapture = function (id) { try { capturar.call(this, id) } catch { /* puntero simulado */ } }
 const agarre = { left: null, right: null } // lo que cada mano está apretando en la página
 function apuntar(rayo) {
-    rayo.updateMatrixWorld(true); mtx.identity().extractRotation(rayo.matrixWorld)
+    rayo.updateWorldMatrix(true, false); mtx.identity().extractRotation(rayo.matrixWorld)
     raycaster.ray.origin.setFromMatrixPosition(rayo.matrixWorld); raycaster.ray.direction.set(0, 0, -1).applyMatrix4(mtx).normalize()
     const hit = panel.visible && raycaster.intersectObject(panel, false)[0]
     return hit ? { x: hit.uv.x * innerWidth, y: (1 - hit.uv.y) * innerHeight, punto: hit.point } : null

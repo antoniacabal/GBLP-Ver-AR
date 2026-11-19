@@ -1,13 +1,43 @@
-# Grietas bajo la piel · versión de realidad aumentada
+# Grietas bajo la piel · realidad aumentada para Meta Quest
 
-Versión para gafas de realidad aumentada (Meta Quest 3 / 3S y otras con WebXR) de *Grietas bajo la piel*, la experiencia web sobre las huellas emocionales que deja un sismo. La versión original para computador vive en su propio repositorio.
+**URL:** https://antoniacabal.github.io/GBLP-Ver-AR/
 
-En las gafas, el juego aparece como una **maqueta sobre una mesa real**:
+Versión de realidad aumentada (RA) de *Grietas bajo la piel*, la experiencia web sobre las huellas emocionales que deja un sismo. El juego completo —personajes, escenarios, historia, minijuegos y finales— aparece como una **maqueta sobre una mesa real** y se juega **con las manos**. Hecho con **IWSDK** (Meta Immersive Web SDK), **Three.js** y **WebXR**.
 
-- Las gafas **detectan el entorno** (WebXR `plane-detection`, `mesh-detection`, `hit-test`, `anchors` y `depth-sensing`): se ven las superficies que encuentran, la maqueta se pone sobre una mesa o el piso y queda anclada, tus manos reales tapan la maqueta y sale un aviso si te acercas mucho a una pared o un mueble.
-- **Sin mareo**: la vista nunca la mueve el juego. Los temblores (sismo, frenón del MIO, sustos) se ven en la maqueta y mucho más suaves; el giro de la maqueta es por pasos.
-- **Un recuadro, no la calle entera**: solo se ve un cuadro de la ciudad alrededor de Gabriela.
-- **Se mueve el mapa, no Gabriela**: ella se queda en el centro de la bandeja y la ciudad se desliza debajo (con el stick izquierdo o agarrando el mapa con el botón lateral).
+La versión original para computador está en https://antoniacabal.github.io/grietas-bajo-la-piel/
+
+## Cómo se usa
+
+1. En las gafas Meta Quest (3 o 3S), abre la URL en el navegador, pulsa **Empezar**, acepta la advertencia y luego **Entrar en realidad aumentada**. Acepta el permiso de espacio.
+2. **Colocar:** apunta con la mano a una mesa o al piso. Sobre una superficie horizontal el aro se ve dorado; **pellizca** y aparece la plataforma (50 cm, 2 cm sobre la superficie), anclada al espacio real.
+3. **Jugar con las manos:**
+
+| Interacción | Qué hace |
+| --- | --- |
+| **Joystick** (izquierda de la plataforma): pellizcar la bola y empujarla | Gabriela camina; ella queda en el centro y **lo que se mueve es el mapa** |
+| **Botón** (derecha): hundirlo con el índice | Interactuar, avanzar diálogos y tarjetas (lo del clic izquierdo) |
+| Apuntar al **panel** y pellizcar | Elegir opciones de la interfaz |
+| **Puño** cerrado / mano abierta | Inhalar y sostener / exhalar (minijuegos de respiración) |
+| Pellizcar con **las dos manos** e inclinar la barra | Reconstruir la gravedad |
+| Mostrar **los dedos** | Conteo de grounding |
+| Pellizcar y **girar la muñeca** | Foco entre el ruido (el dial) |
+| **Las dos palmas** hacia adelante | Salida rápida |
+| Botón pequeño en la esquina de la plataforma | Volver a colocarla en otro lugar |
+
+Los **controles** de Meta solo sirven para salir: **B / Y** abre la salida rápida; ahí, **A / X** para parar.
+
+Se juega sentado o de pie, sin caminar. La vista nunca tiembla: los temblores (el sismo, el frenón del MIO) se ven suaves en la maqueta.
+
+## Funciones de IWSDK que usa
+
+| Función | Cómo se usa | Dónde |
+| --- | --- | --- |
+| Sesión de RA (passthrough) | Una sola sesión, un solo renderer y un solo ciclo para todo el juego | `src/iwsdk.config.json`, `src/xr/mundo.js` |
+| Scene Understanding | Reconoce mesas, piso y muebles entre los planos detectados | `features.sceneUnderstanding`, `src/xr/colocacion.js` |
+| Environment Raycast | La retícula sigue el rayo de cada mano sobre las superficies reales | `EnvironmentRaycastTarget` |
+| Room Surfaces and Anchors | La plataforma queda anclada al espacio real | `XRAnchor` |
+| Hand Tracking | Joystick (agarre), botón (toque con el índice) y gestos | `OneHandGrabbable`, `PokeInteractable`, `src/xr/gestos.js` |
+| Interfaz espacial | La interfaz del juego en un panel pegado a la plataforma | `src/xr/panel.js` |
 
 ## Trabajar en el proyecto
 
@@ -16,43 +46,27 @@ npm install
 npm run dev
 ```
 
-En el computador, `narrativa.html` ofrece una **vista previa** de la maqueta (la misma interfaz y controles con mouse y teclado).
+`npm run dev` sirve con https (certificado propio) y carga el emulador **IWER** (una Quest 3 simulada con su sala de prueba): abre `https://localhost:5173/narrativa.html` y acepta el aviso del certificado. La primera vez descarga un navegador de unos 200 MB. Para probar con el emulador sin certificado: `npm run dev -- --mode iwer` y `http://localhost:5173/narrativa.html`.
 
-### Probar en las gafas
-
-Las gafas solo abren la realidad aumentada en páginas con `https`. Dos opciones:
-
-- La página publicada en GitHub Pages (se publica sola con cada push a `main`).
-- En la red local: `npm run dev` (sirve con https) y abrir en el navegador de las gafas `https://<ip-del-computador>:5173` (aceptar el aviso del certificado).
-
-En el computador, `npm run dev` carga el emulador IWER de IWSDK (una Quest 3 simulada): la primera vez descarga un navegador de unos 200 MB. La página es `https://localhost:5173/narrativa.html` (aceptar el aviso del certificado local).
-
-**IWSDK** (Meta Immersive Web SDK) maneja la sesión de realidad aumentada, el renderer y el ciclo de dibujo. Su configuración está en `src/iwsdk.config.json`; los archivos públicos viven en `src/public/`.
+`npm run build` crea `dist/`; GitHub Actions publica en GitHub Pages con cada envío a `main`. Añadir `?debug` a la URL muestra el panel de pruebas (saltar a cada escena o minijuego).
 
 ## Cómo está hecho
 
-El juego (`src/game/`) es el mismo de la versión original; la realidad aumentada vive en `src/game/mr/`:
+El juego (`src/game/`) es el mismo de la versión original: la historia, los estados, los minijuegos, los modelos y el audio no cambiaron. La realidad aumentada vive en `src/xr/`, como sistemas de IWSDK:
 
 | Archivo | Qué hace |
 | --- | --- |
-| `mr/index.js` | Elegir modo, abrir la sesión WebXR, panel 3D, fundidos y el dibujo de cada cuadro |
-| `mr/diorama.js` | La maqueta: el recuadro recortado, la bandeja y el mapa que sigue a Gabriela |
-| `mr/entorno.js` | Superficies y muebles detectados, colocar la maqueta, avisos de seguridad |
-| `mr/controles.js` | Controles de las gafas → teclado, clic y joystick del juego |
-| `mr/espejo.js` | Copia la interfaz HTML en el panel 3D (en las gafas la página no se ve) |
-| `mr/estado.js` | Estado compartido y ajustes de comodidad |
+| `xr/arranque.js` | Crea el mundo de IWSDK, carga el juego y registra los sistemas |
+| `xr/mundo.js` | El mundo y el sistema que da un paso del juego en cada cuadro |
+| `xr/maqueta.js` | El juego en miniatura sobre la plataforma: escala, el mapa que se mueve, el recorte y lo que no se dibuja |
+| `xr/colocacion.js` | Retículas, colocar y recolocar la plataforma, el ancla |
+| `xr/panel.js` + `xr/espejo.js` | La interfaz HTML copiada en un panel 3D; fundidos y fondo morado |
+| `xr/joystick.js` · `xr/boton.js` | Los controles de la mesa |
+| `xr/gestos.js` | Gestos de las manos y controles solo para salir |
 
-## Modelos 3D
-
-Los modelos se exportan de Blender como FBX a `src/public/assets/`, pero el juego carga su versión GLB comprimida con Draco. Después de agregar o cambiar un FBX:
-
-```bash
-npm run modelos
-```
-
-Los FBX no se publican: `npm run build` los quita de `dist/`.
+Los archivos públicos (modelos, audio, escenas de IWSDK) están en `src/public/`. Los modelos se exportan de Blender como FBX y el juego carga su versión GLB con Draco (`npm run modelos`).
 
 ## Pendiente
 
+- Probar y ajustar en la Quest real: tamaño de la plataforma y del panel, umbrales de los gestos, sensación del joystick y del botón.
 - Reorganizar las páginas de técnicas de respiración y recursos de prevención para esta versión.
-- Probar y ajustar en las gafas (tamaño del panel y de la maqueta, rendimiento).

@@ -85,7 +85,7 @@ let tMateriales = 0
 function recortar(cx, cz, hx, hz, dt) {
     LOCAL[0].constant = -(cx - hx); LOCAL[1].constant = cx + hx; LOCAL[2].constant = -(cz - hz); LOCAL[3].constant = cz + hz
     LOCAL[4].constant = 0.0005 // (y nada por debajo de la plataforma)
-    plataforma.updateMatrixWorld(true)
+    plataforma.updateWorldMatrix(true, false) // (solo la cadena hasta la plataforma: recalcular todo el juego cada cuadro costaba mucho)
     planos.forEach((p, i) => p.copy(LOCAL[i]).applyMatrix4(plataforma.matrixWorld))
     // cada segundo, los materiales nuevos del juego (modelos que terminan de cargar, clones) reciben los planos
     if ((tMateriales -= dt) > 0) return
@@ -109,7 +109,7 @@ function prepararPiezas() {
 function esconderFuera() {
     if (runtime.space !== 'STREET') return
     if (!piezas) prepararPiezas()
-    juego.updateMatrixWorld(true); aJuego.copy(juego.matrixWorld).invert()
+    aJuego.copy(juego.matrixWorld).invert() // (con las matrices del último dibujo, las mismas que tienen las piezas: sin recalcular todo)
     const r = recuadro
     for (const { o, s } of piezas) {
         if (!o.visible) continue
@@ -126,7 +126,7 @@ export const olvidarPiezas = () => { piezas = null }
 //    vuelve transparentes las casas que la tapan desde donde estás y hace que en los finales Gabriela mire hacia ti
 const cabeza = new THREE.Vector3()
 function azimut() {
-    mundo.camera.getWorldPosition(cabeza); juego.updateMatrixWorld(true); juego.worldToLocal(cabeza)
+    mundo.camera.getWorldPosition(cabeza); juego.updateWorldMatrix(true, false); juego.worldToLocal(cabeza)
     const dx = cabeza.x - player.x, dz = cabeza.z - player.z
     if (dx * dx + dz * dz > 1e-6) CONFIG.camera.azimuth = THREE.MathUtils.radToDeg(Math.atan2(dx, dz))
 }

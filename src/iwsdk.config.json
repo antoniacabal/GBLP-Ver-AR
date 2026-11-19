@@ -33,7 +33,7 @@
       "physics": false,
       "sceneUnderstanding": { "showWireFrame": false },
       "environmentRaycast": true,
-      "spatialUI": true
+      "spatialUI": false
     }
   },
   "dev": {

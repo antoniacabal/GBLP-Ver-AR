@@ -15,7 +15,7 @@ export async function arrancar() {
     const { audio } = await import('../game/audio.js')
     const { actualizarMaqueta, mostrarFuera } = await import('./maqueta.js')
     const { SistemaColocacion } = await import('./colocacion.js') // colocar la plataforma sobre la mesa real (etapa 2)
-    const { SistemaPanel } = await import('./panel.js') // la interfaz del juego en un panel pegado a la plataforma (etapa 3)
+    const { SistemaPanel } = await import('./panel.js') // la interfaz del juego en un panel entre quien juega y la maqueta (etapa 3)
     mundo.registerSystem(sistemaJuego({ antes: mostrarFuera, paso: (dt, t) => { juego.cuadroJuego(dt); actualizarMaqueta(dt, t) } }))
     mundo.registerSystem(SistemaColocacion)
     mundo.registerSystem(SistemaPanel)
@@ -25,6 +25,10 @@ export async function arrancar() {
     mundo.registerSystem(SistemaBoton)
     const { SistemaGestos } = await import('./gestos.js') // respirar, minijuegos y salida rápida con las manos (etapa 6)
     mundo.registerSystem(SistemaGestos)
+    const { SistemaGlobos } = await import('./globos.js') // los diálogos en globos de cómic sobre quien habla
+    mundo.registerSystem(SistemaGlobos)
+    const { SistemaSalida } = await import('./salida.js') // el botón de salida rápida, en la mesa junto a quien juega
+    mundo.registerSystem(SistemaSalida)
     // ?debug: para revisar la realidad aumentada desde la consola (y las pruebas automáticas con el emulador)
     if (window.juego) Object.assign(window.juego, { mundo, xr: { colocacion: (await import('./colocacion.js')).colocacion, plataforma: (await import('./maqueta.js')).plataforma, mesa: (await import('./joystick.js')).mesa, manos: (await import('./manos.js')).manos, maqueta: await import('./maqueta.js'), entorno: await import('../game/environment.js'), espejo: (await import('./espejo.js')).espejo } })
     await elegir(mundo, audio)

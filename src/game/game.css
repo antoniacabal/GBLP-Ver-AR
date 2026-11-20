@@ -392,3 +392,4 @@ body.gx-mr-on .gx-full{display:none!important} /* en las gafas (y su vista previ
 .escena-xr{position:fixed;inset:0}
 /* En las gafas la interfaz se copia en el panel que flota sobre la maqueta (xr/panel.js) */
 html.gx-en-xr .gx{zoom:1.15} /* en las gafas, un poco más grande (el panel está a ~50 cm de los ojos; con 1.45 el tutorial se salía de la página y su botón no se veía) */
+html.gx-en-xr .gx-talk{visibility:hidden} /* en las gafas los diálogos van en globos sobre quien habla (xr/globos.js) */

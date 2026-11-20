@@ -23,6 +23,7 @@ La versión original para computador está en https://antoniacabal.github.io/gri
 | **Girar la mano** en el aire, como una perilla | Foco entre el ruido (el dial del sonido) |
 | **Las dos palmas** hacia adelante | Salida rápida |
 | Botón "Mover la maqueta" (esquina de atrás de la plataforma) | Volver a colocarla en otro lugar |
+| Botón "Salida rápida" (en la mesa, delante de la esquina de la plataforma) | Pausar y abrir la salida rápida (otra vez: volver al juego) |
 
 Los **controles** de Meta solo sirven para salir: **B / Y** abre la salida rápida; ahí, **A / X** para parar.
 
@@ -62,6 +63,8 @@ El juego (`src/game/`) es el mismo de la versión original: la historia, los est
 | `xr/colocacion.js` | La malla del escaneo, colocar con las manos apoyadas o con la retícula, recolocar, el ancla |
 | `xr/manos.js` | Lectura de las articulaciones de las manos (pellizco, puño, mano abierta, dedos, palma) |
 | `xr/panel.js` + `xr/espejo.js` | La interfaz HTML copiada en un panel 3D; fundidos y fondo morado |
+| `xr/globos.js` | Los diálogos en globos de cómic sobre quien habla |
+| `xr/salida.js` | El botón de salida rápida sobre la mesa |
 | `xr/joystick.js` · `xr/boton.js` | Los controles de la mesa |
 | `xr/gestos.js` | Gestos de las manos y controles solo para salir |
 

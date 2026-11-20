@@ -421,4 +421,15 @@ html.gx-en-xr .gx-paso-txt{font-size:1.1rem;line-height:1.3}
 html.gx-en-xr .gx-tutorial .gx-dialog,html.gx-en-xr .gx-choice .gx-dialog{width:min(94vw,52rem);max-width:none}
 html.gx-en-xr .gx-msg,html.gx-en-xr .gx-breath-hint,html.gx-en-xr .gx-aviso{font-size:1.25rem}
 html.gx-en-xr .gx-label{font-size:2rem}
+/* "Cómo se juega" en las gafas: un aviso grande con una flecha hacia la bitácora (ahí están los pasos), en vez de los dibujos */
+.gx-tut-bitacora{display:none}
+html.gx-en-xr .gx-tutorial .gx-list,html.gx-en-xr .gx-tutorial .gx-dialog>p,html.gx-en-xr .gx-tutorial .gx-more{display:none}
+html.gx-en-xr .gx-tut-bitacora{display:flex;align-items:center;justify-content:center;gap:1.6rem;margin:1.2rem 0 .6rem}
+html.gx-en-xr .gx-tut-bitacora p{display:flex;flex-direction:column;gap:.4rem;margin:0;font-size:1.5rem;line-height:1.3;text-align:left}
+html.gx-en-xr .gx-tut-bitacora strong{font-size:1.9rem;color:var(--color-principal,#F2C063)}
+html.gx-en-xr .gx-tut-bitacora svg{width:150px;height:66px;flex:none}
+html.gx-en-xr .gx-tutorial .gx-dialog h2{font-size:6rem} /* (Dongle: se ve pequeña para su tamaño) */
+html.gx-en-xr .gx-tutorial .gx-dialog .gx-sub{font-size:3rem}
+html.gx-en-xr .gx-tutorial .gx-dialog{width:min(94vw,46rem)}
+html.gx-en-xr .gx-gravedad-ayuda{font-size:1.35rem;line-height:1.35}
 html.gx-en-xr .gx-talk{visibility:hidden} /* en las gafas los diálogos van en globos sobre quien habla (xr/globos.js) */

@@ -46,7 +46,7 @@ export const INSTRUCCIONES = {
 export const INSTRUCCIONES_GAFAS = {
     hold: ['Cierra el puño para inhalar y sostener', null, 'Abre la mano para exhalar'],
     earth: ['Camina con el joystick hasta el pasto', null, null],
-    gravedad: [null, 'Pellizca en el aire con las dos manos, como sosteniendo una barra, e inclínala en contra de la caída', null],
+    gravedad: [null, 'Usa tus manos para equilibrarla: pellizca con las dos, como sosteniendo una barra, e inclínala hacia el otro lado', null],
     foco: [null, 'Gira la mano en el aire, como una perilla', null],
     conteo: [{ txt: 'Mira cuántos dedos tiene la mano (de 0 a 5)' },
         { img: `<img src="assets/minijuego/mano2.png" alt="">`, txt: 'Levanta tu mano y muestra los mismos dedos; quédate quieta un momento' },

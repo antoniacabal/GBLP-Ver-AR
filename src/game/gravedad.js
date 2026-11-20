@@ -19,6 +19,7 @@ import { audio } from './audio.js'
 import { haptics } from './haptics.js'
 
 const RECTO = 3.5    // grados de tolerancia para contar como "derecha" (con 2.5 era casi imposible)
+const NECESITA_GAFAS = 3 // (en las gafas, con las manos, un poco menos)
 const NECESITA = 3.5 // segundos derecha (acumulados) para salir de la crisis (antes 5: se hacía largo)
 const ZOOM = 2.6     // cuánto se acerca la cámara
 
@@ -88,9 +89,9 @@ export const gravedad = {
     get correccion() { return correccion }, // (para las pruebas)
     start() {
         activo = true; t = 0; derecho = 0; ganado = false; correccion = 0; teclas = 0; gamma0 = null; estabaRecto = false; arrastre = null
-        const conGiro = tactil() && 'DeviceOrientationEvent' in window
+        const conGiro = tactil() && 'DeviceOrientationEvent' in window && !document.documentElement.classList.contains('gx-en-xr') // (en las gafas no: se juega con las manos)
         botonGiro.hidden = !conGiro // en celular: la opción de jugar girándolo
-        ayuda.textContent = document.documentElement.classList.contains('gx-en-xr') ? 'Pellizca en el aire con las dos manos, como sosteniendo una barra, e inclínala en contra de la caída.' : tactil() ? 'Usa las flechas o arrastra, en contra de la caída.' : 'Arrastra o usa A / D, en contra de la caída.'
+        ayuda.textContent = document.documentElement.classList.contains('gx-en-xr') ? 'Usa tus manos para equilibrar a Gabriela: pellizca con las dos, como si sostuvieras una barra, e inclínala hacia el lado contrario de la caída.' : tactil() ? 'Usa las flechas o arrastra, en contra de la caída.' : 'Arrastra o usa A / D, en contra de la caída.'
         panel.hidden = false; gsap.fromTo(panel, { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.4, ease: 'power2.out' })
         // la cámara se acerca a Gabriela (main.js la sigue mientras runtime.zoomJugador)
         zoomAntes = CONFIG.camera.zoom; runtime.zoomJugador = true; gsap.to(CONFIG.camera, { zoom: ZOOM, duration: 1, ease: 'power2.inOut' })
@@ -119,8 +120,9 @@ export const gravedad = {
         gsap.set(burbuja, { x: Math.max(-1, Math.min(1, inclinacion / 20)) * 70 })
         burbuja.classList.toggle('gx-nivel-burbuja--recta', recto)
         const limite = document.documentElement.classList.contains("gx-en-xr") ? CONFIG.gravedad.timeoutGafas : CONFIG.gravedad.timeout // (en las gafas, más tiempo)
-        const timeLeft = Math.max(0, limite - t), fill = Math.min(1, derecho / NECESITA)
-        if (derecho >= NECESITA) { ganado = true; return { prompt: '', fill: 1, done: true, timeLeft } }
+        const meta = document.documentElement.classList.contains("gx-en-xr") ? NECESITA_GAFAS : NECESITA
+        const timeLeft = Math.max(0, limite - t), fill = Math.min(1, derecho / meta)
+        if (derecho >= (document.documentElement.classList.contains('gx-en-xr') ? NECESITA_GAFAS : NECESITA)) { ganado = true; return { prompt: '', fill: 1, done: true, timeLeft } }
         if (timeLeft <= 0) return { prompt: '', fill, done: false, timeLeft: 0 }
         return { prompt: '', label: recto ? 'Así, sostente' : 'No te dejes caer', fill, timeLeft }
     }

@@ -22,7 +22,7 @@ import { mundo } from './estado.js'
 import { sonido } from './sonidos.js'
 
 // 1. El globo. Lienzo de 1024 × 512: la cola termina abajo a la izquierda (PUNTA) y ese punto queda sobre la cabeza de quien habla
-const W = 1024, H = 512, PUNTA = [70, 500], BASE = 410, ANCHO = 0.2 // ANCHO: metros
+const W = 1024, H = 512, PUNTA = [70, 500], BASE = 410, ANCHO = 0.3 // ANCHO: metros (con 0,2 se leía pequeño desde la silla)
 const lienzo = document.createElement('canvas'); lienzo.width = W; lienzo.height = H
 const ctx = lienzo.getContext('2d'), textura = new THREE.CanvasTexture(lienzo)
 textura.colorSpace = THREE.SRGBColorSpace; textura.anisotropy = 4

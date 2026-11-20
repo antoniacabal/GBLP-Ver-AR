@@ -29,8 +29,10 @@ export async function arrancar() {
     mundo.registerSystem(SistemaGlobos)
     const { SistemaSalida } = await import('./salida.js') // el botón de salida rápida, en la mesa junto a quien juega
     mundo.registerSystem(SistemaSalida)
+    const { SistemaBitacora } = await import('./bitacora.js') // a los lados de la maqueta: los controles (izquierda) y la bitácora (derecha)
+    mundo.registerSystem(SistemaBitacora)
     // ?debug: para revisar la realidad aumentada desde la consola (y las pruebas automáticas con el emulador)
-    if (window.juego) Object.assign(window.juego, { mundo, xr: { colocacion: (await import('./colocacion.js')).colocacion, plataforma: (await import('./maqueta.js')).plataforma, mesa: (await import('./joystick.js')).mesa, manos: (await import('./manos.js')).manos, maqueta: await import('./maqueta.js'), entorno: await import('../game/environment.js'), espejo: (await import('./espejo.js')).espejo, gravedad: (await import('../game/gravedad.js')).gravedad, breathing: (await import('../game/breathing.js')).breathing } })
+    if (window.juego) Object.assign(window.juego, { mundo, xr: { colocacion: (await import('./colocacion.js')).colocacion, plataforma: (await import('./maqueta.js')).plataforma, mesa: (await import('./joystick.js')).mesa, manos: (await import('./manos.js')).manos, maqueta: await import('./maqueta.js'), entorno: await import('../game/environment.js'), espejo: (await import('./espejo.js')).espejo, gravedad: (await import('../game/gravedad.js')).gravedad, breathing: (await import('../game/breathing.js')).breathing, bitacora: await import('./bitacora.js') } })
     await elegir(mundo, audio)
     juego.empezarJuego()
 }

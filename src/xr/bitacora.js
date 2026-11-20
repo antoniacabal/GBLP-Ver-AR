@@ -1,0 +1,356 @@
+// Indice
+    // 0. Imports y utilidades de dibujo
+    // 1. Dónde van: a los lados de la maqueta (controles a la izquierda, bitácora a la derecha)
+    // 2. Panel de controles (izquierda)
+    // 3. La bitácora (derecha): un diario abierto con pestañas, como el de Phasmophobia pero con los colores del juego
+    //    3.1 Contenido: índice, minijuegos, respiración y grounding
+    //    3.2 Páginas de minijuegos: se van llenando a medida que aparecen
+    // 4. Señalar y hacer CLICK sobre la bitácora (rayo de la mano o del control)
+    // 5. Sistema (IWSDK)
+
+// En las gafas, a los dos lados de la maqueta (que sigue en el centro) flotan dos paneles, de frente a quien juega:
+//   [ CONTROLES ] — [ MAQUETA ] — [ BITÁCORA ]
+// · Controles: referencia permanente de cómo se juega, con CLICK bien explicado (apuntar con la línea de luz y juntar índice y pulgar).
+// · Bitácora: un diario abierto (dos páginas de papel cuadriculado, pestañas arriba y esquinas para pasar la página). Tiene el índice,
+//   los tutoriales de los minijuegos (cada uno aparece cuando Gabriela lo vive por primera vez; quedan guardados para consultarlos), la
+//   respiración guiada (los tiempos de la respiración cuadrada de la página: 4 · 4 · 4 · 4) y el grounding. No son minijuegos: se
+//   consultan cuando se quiera, sin puntos.
+// Se navega con la línea de luz (xr/panel.js) y CLICK: pellizco o gatillo del control.
+// Todo se dibuja en lienzos (texturas): se redibujan solo cuando algo cambia (la respiración se anima mientras está a la vista).
+
+// 0. Imports y utilidades
+import * as THREE from 'three'
+import { createSystem } from '@iwsdk/core'
+import { runtime } from '../game/config.js'
+import { breathing } from '../game/breathing.js'
+import { INSTRUCCIONES, INSTRUCCIONES_GAFAS } from '../game/instrucciones.js'
+import { plataforma } from './maqueta.js'
+import { colocacion } from './colocacion.js'
+
+const COL = { tinta: '#201826', tinta2: '#482642', papel: '#F4EAD8', papel2: '#E6D6BC', cuadro: 'rgba(113,112,138,0.22)', oro: '#F2C063', rojo: '#580213', lila: '#A6869B', menta: '#3E8F7C', tapa: '#2A2033' }
+const MANO = 'Dongle, Outfit, sans-serif', TITULO = '"Luckiest Guy", Outfit, sans-serif', LETRA = 'Outfit, sans-serif'
+function lienzo(w, h) {
+    const c = document.createElement('canvas'); c.width = w; c.height = h
+    const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8
+    return { c, g: c.getContext('2d'), t }
+}
+// texto en varios renglones dentro de un ancho; devuelve dónde terminó
+function parrafo(g, texto, x, y, ancho, alto) {
+    let l = '', yy = y
+    for (const p of texto.split(/\s+/)) {
+        const t = l ? l + ' ' + p : p
+        if (g.measureText(t).width > ancho && l) { g.fillText(l, x, yy); yy += alto; l = p } else l = t
+    }
+    if (l) { g.fillText(l, x, yy); yy += alto }
+    return yy
+}
+const redondo = (g, x, y, w, h, r) => { g.beginPath(); g.roundRect(x, y, w, h, r) }
+// la mano haciendo CLICK: índice y pulgar que se juntan, con la línea de luz saliendo hacia adelante
+function dibujoClick(g, x, y, s, colorLinea = COL.oro) {
+    g.save(); g.translate(x, y); g.scale(s, s); g.lineCap = 'round'; g.lineJoin = 'round'
+    g.strokeStyle = colorLinea; g.lineWidth = 6; g.setLineDash([14, 10]); g.beginPath(); g.moveTo(92, 34); g.lineTo(200, 0); g.stroke(); g.setLineDash([])
+    g.fillStyle = '#F2CBB0'; g.strokeStyle = COL.tinta; g.lineWidth = 5
+    g.beginPath(); g.moveTo(0, 120); g.quadraticCurveTo(-6, 70, 26, 52); g.quadraticCurveTo(52, 20, 86, 26); g.quadraticCurveTo(100, 30, 92, 44) // índice
+    g.quadraticCurveTo(70, 52, 74, 62); g.quadraticCurveTo(94, 70, 80, 84); g.quadraticCurveTo(54, 96, 50, 120); g.closePath(); g.fill(); g.stroke()
+    g.beginPath(); g.moveTo(40, 92); g.quadraticCurveTo(60, 70, 88, 46); g.stroke() // el pulgar que sube hasta la punta del índice
+    g.fillStyle = colorLinea; g.beginPath(); g.arc(90, 42, 9, 0, Math.PI * 2); g.fill() // el punto donde se tocan
+    g.restore()
+}
+
+// 1. Dónde van. Un grupo con el giro de los controles de la mesa (la plataforma está girada 45°: así +z apunta a quien juega).
+//    A cada lado, a 62 cm del centro y apoyados 3 cm sobre la mesa; cada cuadro giran (solo de lado) hacia la cabeza de quien juega
+const lados = new THREE.Group(); lados.name = 'lados'; lados.rotation.y = Math.PI / 4; plataforma.add(lados)
+const LADO_X = 0.62
+function plano(ancho, alto, textura) {
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(ancho, alto).translate(0, alto / 2, 0), new THREE.MeshBasicMaterial({ map: textura, transparent: true, toneMapped: false }))
+    const soporte = new THREE.Group(); soporte.add(m); m.rotation.x = -0.12 // (un poco inclinado hacia atrás, como un atril)
+    lados.add(soporte); return { m, soporte }
+}
+
+// 2. Panel de controles (izquierda): 30 × 42 cm
+const CW = 900, CH = 1260
+const ctrl = lienzo(CW, CH)
+const panelCtrl = plano(0.3, 0.42, ctrl.t); panelCtrl.soporte.position.set(-LADO_X, 0.03, 0.02); panelCtrl.m.name = 'panel-controles'
+const FILAS = [
+    ['Joystick', 'A la izquierda de la mesa: agárralo con la mano cerrada y empújalo para caminar.'],
+    ['Botón rojo', 'A la derecha: húndelo con el dedo para interactuar y avanzar.'],
+    ['Puño', 'Ciérralo para inhalar y sostener; abre la mano para exhalar.'],
+    ['Salida rápida', 'El botón blanco de la mesa (o las dos palmas hacia adelante).']
+]
+function dibujarControles() {
+    const g = ctrl.g; g.clearRect(0, 0, CW, CH)
+    redondo(g, 6, 6, CW - 12, CH - 12, 36); g.fillStyle = 'rgba(32,24,38,0.94)'; g.fill(); g.lineWidth = 5; g.strokeStyle = COL.oro; g.stroke()
+    g.textAlign = 'center'; g.textBaseline = 'alphabetic'; g.fillStyle = '#E4FFFF'; g.font = `64px ${TITULO}`; g.fillText('Controles', CW / 2, 104)
+    // CLICK, lo primero y lo más grande
+    redondo(g, 40, 140, CW - 80, 400, 28); g.fillStyle = COL.oro; g.fill()
+    g.fillStyle = COL.tinta; g.font = `76px ${TITULO}`; g.fillText('CLICK', CW / 2, 228)
+    g.font = `600 36px ${LETRA}`; g.fillText('para elegir o interactuar', CW / 2, 274)
+    dibujoClick(g, 150, 300, 1.45, COL.tinta2)
+    g.textAlign = 'left'; g.font = `600 33px ${LETRA}`
+    const y2 = parrafo(g, '1. Apunta con la línea de luz.', 470, 340, 380, 40)
+    parrafo(g, '2. Junta el índice y el pulgar, como un pellizco.', 470, y2 + 14, 380, 40)
+    // las demás, en filas
+    let y = 600
+    for (const [k, txt] of FILAS) {
+        g.font = `600 30px ${LETRA}`; const w = g.measureText(k).width + 40
+        redondo(g, 40, y - 38, w, 54, 12); g.fillStyle = '#E4FFFF'; g.fill()
+        g.fillStyle = COL.tinta; g.fillText(k, 60, y - 2)
+        g.fillStyle = '#E4FFFF'; g.font = `32px ${LETRA}`
+        y = parrafo(g, txt, 40, y + 56, CW - 80, 42) + 34
+    }
+    ctrl.t.needsUpdate = true
+}
+
+// 3. La bitácora (derecha): 58 × 38 cm, dos páginas
+const BW = 2048, BH = 1342
+const libroL = lienzo(BW, BH)
+const libro = plano(0.58, 0.38, libroL.t); libro.soporte.position.set(LADO_X, 0.03, 0.02); libro.m.name = 'bitacora'
+export const superficies = [libro.m, panelCtrl.m] // (xr/panel.js: la línea de luz llega hasta aquí)
+const PAG = [{ x: 60, y: 130, w: 940, h: 1150 }, { x: 1048, y: 130, w: 940, h: 1150 }]
+const PESTANAS = [['indice', 'Índice'], ['minijuegos', 'Minijuegos'], ['respiracion', 'Respiración'], ['grounding', 'Grounding']]
+export const estado = { tab: 'indice', mini: 0, hover: -1, nueva: false } // (exportado para las pruebas)
+let zonas = [] // { x, y, w, h, fn } en píxeles del lienzo
+
+// 3.1 Minijuegos: los cinco tutoriales que ya tiene el juego (los mismos dibujos y, en las gafas, las frases de las manos)
+const MINIS = [
+    { id: 'hold', nombre: 'Ejercicios de respiración', manos: 'Puño = inhalar y sostener · mano abierta = exhalar' },
+    { id: 'earth', nombre: 'Earthing físico', manos: 'Camina con el joystick hasta el pasto y quédate ahí' },
+    { id: 'gravedad', nombre: 'Reconstruir la gravedad', manos: 'Pellizca con las dos manos e inclina la barra' },
+    { id: 'foco', nombre: 'Foco entre el ruido', manos: 'Gira la mano en el aire, como una perilla' },
+    { id: 'conteo', nombre: 'Conteo de grounding', manos: 'Muestra los dedos con la mano levantada (o haz CLICK en el número)' }
+]
+const CLAVE = 'gblp-bitacora'
+const vistos = new Set((() => { try { return JSON.parse(localStorage.getItem(CLAVE)) || [] } catch { return [] } })())
+const guardar = () => { try { localStorage.setItem(CLAVE, JSON.stringify([...vistos])) } catch { /* sin almacenamiento */ } }
+const sinEtiquetas = (s) => s.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()
+const pasos = (id) => INSTRUCCIONES[id].map((p, i) => ({ img: p.img, txt: INSTRUCCIONES_GAFAS[id]?.[i] || sinEtiquetas(p.txt.replace(/<span class="gx-solo-tactil">[\s\S]*?<\/span>/g, '')) }))
+// los dibujos (SVG en texto) se vuelven imágenes; las partes del mouse y del celular no van (en las gafas no se usan)
+const imagenes = new Map()
+function imagen(html) {
+    if (imagenes.has(html)) return imagenes.get(html)
+    const img = new Image()
+    const src = html.match(/<img[^>]*src="([^"]+)"/)?.[1]
+    if (src) img.src = src
+    else img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(html.replace(/<g class="gx-solo-(teclado|tactil)">[\s\S]*?<\/g>/g, '').replace('<svg ', '<svg xmlns="http://www.w3.org/2000/svg" width="480" height="360" '))
+    img.onload = () => { sucio = true }
+    imagenes.set(html, img); return img
+}
+// una "foto" pegada con cinta, como las de la bitácora: el dibujo sobre fondo oscuro (los dibujos son claros)
+function foto(g, html, x, y, w, h, giro = 0) {
+    g.save(); g.translate(x + w / 2, y + h / 2); g.rotate(giro)
+    g.fillStyle = '#fff'; g.shadowColor = 'rgba(0,0,0,0.25)'; g.shadowBlur = 12; g.fillRect(-w / 2 - 10, -h / 2 - 10, w + 20, h + 20); g.shadowBlur = 0
+    g.fillStyle = COL.tapa; g.fillRect(-w / 2, -h / 2, w, h)
+    const img = imagen(html); if (img.complete && img.naturalWidth) { const k = Math.min(w / img.naturalWidth, h / img.naturalHeight); g.drawImage(img, -img.naturalWidth * k / 2, -img.naturalHeight * k / 2, img.naturalWidth * k, img.naturalHeight * k) }
+    g.fillStyle = 'rgba(242,192,99,0.75)'; g.fillRect(-46, -h / 2 - 24, 92, 30) // la cinta
+    g.restore()
+}
+
+// 3.2 Dibujar la bitácora
+let sucio = true
+function hoja(g, p) { // una página: papel cuadriculado, con sombra hacia el lomo
+    g.fillStyle = COL.papel; g.fillRect(p.x, p.y, p.w, p.h)
+    g.strokeStyle = COL.cuadro; g.lineWidth = 2; g.beginPath()
+    for (let x = p.x + 40; x < p.x + p.w; x += 40) { g.moveTo(x, p.y); g.lineTo(x, p.y + p.h) }
+    for (let y = p.y + 40; y < p.y + p.h; y += 40) { g.moveTo(p.x, y); g.lineTo(p.x + p.w, y) }
+    g.stroke()
+    const lomo = p.x < BW / 2 ? p.x + p.w : p.x, gr = g.createLinearGradient(lomo, 0, lomo + (p.x < BW / 2 ? -90 : 90), 0)
+    gr.addColorStop(0, 'rgba(32,24,38,0.28)'); gr.addColorStop(1, 'rgba(32,24,38,0)'); g.fillStyle = gr; g.fillRect(Math.min(lomo, lomo + (p.x < BW / 2 ? -90 : 90)), p.y, 90, p.h)
+}
+const zona = (x, y, w, h, fn) => { zonas.push({ x, y, w, h, fn }); return zonas.length - 1 }
+function titulo(g, p, t, sub) {
+    g.textAlign = 'left'; g.fillStyle = COL.tinta
+    let tam = 66; do { g.font = `${tam}px ${TITULO}` } while (g.measureText(t).width > p.w - 120 && (tam -= 4) > 30) // (se achica hasta caber)
+    g.fillText(t, p.x + 60, p.y + 110)
+    g.strokeStyle = COL.tinta; g.lineWidth = 4; g.beginPath(); g.moveTo(p.x + 60, p.y + 134); g.lineTo(p.x + p.w - 60, p.y + 134); g.stroke()
+    if (sub) { g.font = `64px ${MANO}`; g.fillStyle = COL.tinta2; g.fillText(sub, p.x + 60, p.y + 196) }
+}
+function casilla(g, x, y, marcada, hover) {
+    g.lineWidth = 4; g.strokeStyle = COL.tinta; g.fillStyle = hover ? 'rgba(242,192,99,0.5)' : 'transparent'; g.fillRect(x, y, 44, 44); g.strokeRect(x, y, 44, 44)
+    if (marcada) { g.lineWidth = 6; g.beginPath(); g.moveTo(x + 6, y + 6); g.lineTo(x + 38, y + 38); g.moveTo(x + 38, y + 6); g.lineTo(x + 6, y + 38); g.stroke() }
+}
+function esquina(g, derecha, activa) { // la esquina doblada de abajo: pasar la página
+    const p = PAG[derecha ? 1 : 0], s = 130, x = derecha ? p.x + p.w : p.x, y = p.y + p.h
+    const i = zona(derecha ? x - s : x, y - s, s, s, () => { if (activa) pasar(derecha ? 1 : -1) })
+    const dx = derecha ? -s : s, sobre = estado.hover === i && activa
+    g.fillStyle = COL.tapa; g.beginPath(); g.moveTo(x, y - s); g.lineTo(x, y); g.lineTo(x + dx, y); g.closePath(); g.fill() // (debajo de la punta: la tapa)
+    g.fillStyle = sobre ? COL.oro : COL.papel2; g.beginPath(); g.moveTo(x, y - s); g.lineTo(x + dx, y - s); g.lineTo(x + dx, y); g.closePath(); g.fill() // la punta doblada
+    g.strokeStyle = COL.tinta; g.lineWidth = 3; g.stroke()
+    g.fillStyle = COL.tinta; g.font = `72px ${TITULO}`; g.textAlign = 'center'; g.fillText(derecha ? '›' : '‹', x + dx * 0.66, y - s * 0.5)
+}
+function pasar(d) { if (estado.tab === 'minijuegos') { estado.mini = (estado.mini + d + MINIS.length) % MINIS.length; sucio = true } }
+
+function indice(g) {
+    const [a, b] = PAG
+    titulo(g, a, 'Bitácora', 'Lo que Gabriela va aprendiendo')
+    g.font = `58px ${MANO}`; g.fillStyle = COL.tinta
+    let y = parrafo(g, 'Aquí quedan las instrucciones de los minijuegos que vas encontrando y las técnicas para recuperar la calma. Puedes volver a leerlas cuando quieras.', a.x + 60, a.y + 290, a.w - 120, 60)
+    // cómo se usa: CLICK
+    redondo(g, a.x + 50, y + 30, a.w - 100, 380, 24); g.fillStyle = 'rgba(242,192,99,0.35)'; g.fill(); g.strokeStyle = COL.tinta; g.lineWidth = 3; g.stroke()
+    dibujoClick(g, a.x + 90, y + 120, 1.2, COL.tinta2)
+    g.fillStyle = COL.tinta; g.font = `52px ${TITULO}`; g.textAlign = 'left'; g.fillText('CLICK', a.x + 440, y + 120)
+    g.font = `52px ${MANO}`; parrafo(g, 'Apunta con la línea de luz y junta el índice y el pulgar sobre una pestaña o una esquina.', a.x + 440, y + 180, a.w - 520, 52)
+    // índice con casillas, como la lista de pruebas
+    titulo(g, b, 'Índice')
+    y = b.y + 230; g.font = `62px ${MANO}`
+    const fila = (txt, marcada, fn, sangria = 0) => {
+        const i = zona(b.x + 50 + sangria, y - 50, b.w - 100 - sangria, 66, fn)
+        casilla(g, b.x + 60 + sangria, y - 40, marcada, estado.hover === i)
+        g.fillStyle = estado.hover === i ? COL.rojo : COL.tinta; g.textAlign = 'left'; g.fillText(txt, b.x + 130 + sangria, y); y += 76
+    }
+    g.font = `40px ${TITULO}`; g.fillStyle = COL.tinta2; g.fillText(`Minijuegos (${MINIS.filter(m => vistos.has(m.id)).length} de ${MINIS.length})`, b.x + 60, y); y += 70
+    g.font = `62px ${MANO}`
+    MINIS.forEach((m, i) => fila(vistos.has(m.id) ? m.nombre : '? ? ?', vistos.has(m.id), () => { estado.tab = 'minijuegos'; estado.mini = i; sucio = true }, 30))
+    y += 20; g.font = `40px ${TITULO}`; g.fillStyle = COL.tinta2; g.fillText('Para recuperar la calma', b.x + 60, y); y += 70
+    g.font = `62px ${MANO}`
+    fila('Respiración guiada', true, () => { estado.tab = 'respiracion'; sucio = true }, 30)
+    fila('Grounding: conexión con el presente', true, () => { estado.tab = 'grounding'; sucio = true }, 30)
+}
+function minijuego(g) {
+    const [a, b] = PAG, m = MINIS[estado.mini], visto = vistos.has(m.id)
+    esquina(g, false, true); esquina(g, true, true)
+    if (!visto) {
+        titulo(g, a, '? ? ?', 'Página en blanco')
+        g.font = `60px ${MANO}`; g.fillStyle = COL.tinta2
+        parrafo(g, 'Este minijuego aparecerá cuando Gabriela lo necesite. Entonces su explicación quedará escrita aquí.', a.x + 60, a.y + 300, a.w - 120, 62)
+        titulo(g, b, `${estado.mini + 1} de ${MINIS.length}`)
+        return
+    }
+    const ps = pasos(m.id)
+    titulo(g, a, m.nombre, `Minijuego ${estado.mini + 1} de ${MINIS.length}`)
+    // tres pasos: dos en la página izquierda, uno en la derecha (cada uno, su foto y su frase)
+    const paso = (p, i, x, y) => {
+        foto(g, p.img, x, y, 330, 248, (i % 2 ? 1 : -1) * 0.03)
+        g.fillStyle = COL.tinta; g.font = `46px ${TITULO}`; g.textAlign = 'left'; g.fillText(`${i + 1}.`, x + 380, y + 50)
+        g.font = `58px ${MANO}`; parrafo(g, p.txt, x + 380, y + 110, 470, 56)
+    }
+    paso(ps[0], 0, a.x + 70, a.y + 260); paso(ps[1], 1, a.x + 70, a.y + 640)
+    titulo(g, b, 'Cómo se juega')
+    paso(ps[2], 2, b.x + 70, b.y + 230)
+    redondo(g, b.x + 50, b.y + 620, b.w - 100, 330, 24); g.fillStyle = 'rgba(242,192,99,0.35)'; g.fill(); g.strokeStyle = COL.tinta; g.lineWidth = 3; g.stroke()
+    g.fillStyle = COL.tinta; g.font = `46px ${TITULO}`; g.fillText('Con las manos', b.x + 90, b.y + 700)
+    g.font = `62px ${MANO}`; parrafo(g, m.manos, b.x + 90, b.y + 780, b.w - 180, 62)
+}
+// respiración guiada: la respiración cuadrada de la página (inhalar 4 s, retener 4 s, exhalar 4 s, pausa en vacío 4 s) y un círculo que
+// crece al inhalar, se queda al retener y se encoge al exhalar (como el medidor del juego)
+const FASES = [['INHALAR', 'Inhala lentamente por la nariz.'], ['MANTENER', 'Mantén los pulmones llenos de aire.'], ['EXHALAR', 'Suelta el aire pausadamente por la boca.'], ['REPETIR', 'Mantén los pulmones vacíos y vuelve a empezar.']]
+let tResp = 0
+function respiracion(g) {
+    const [a, b] = PAG
+    titulo(g, a, 'Respiración guiada', 'Respiración cuadrada: 4 · 4 · 4 · 4')
+    let y = a.y + 300
+    FASES.forEach(([f, txt], i) => {
+        g.fillStyle = [COL.menta, COL.oro, COL.lila, COL.tinta2][i]; g.beginPath(); g.arc(a.x + 100, y - 18, 34, 0, Math.PI * 2); g.fill()
+        g.fillStyle = '#fff'; g.font = `44px ${TITULO}`; g.textAlign = 'center'; g.fillText(i + 1, a.x + 100, y)
+        g.textAlign = 'left'; g.fillStyle = COL.tinta; g.font = `46px ${TITULO}`; g.fillText(f, a.x + 160, y - 4)
+        g.font = `30px ${LETRA}`; g.fillStyle = COL.tinta2; g.fillText('4 segundos', a.x + 600, y - 6)
+        g.font = `56px ${MANO}`; g.fillStyle = COL.tinta; y = parrafo(g, txt, a.x + 160, y + 58, a.w - 230, 54) + 50
+    })
+    g.font = `52px ${MANO}`; g.fillStyle = COL.tinta2
+    parrafo(g, 'En el juego: cierra el puño para inhalar y sostener; abre la mano para exhalar.', a.x + 60, a.y + a.h - 130, a.w - 120, 52)
+    // el círculo que respira
+    titulo(g, b, 'Sigue el círculo')
+    const t = tResp % 16, f = Math.floor(t / 4), k = (t % 4) / 4, ease = (x) => 0.5 - Math.cos(x * Math.PI) / 2
+    const r = 120 + 200 * (f === 0 ? ease(k) : f === 1 ? 1 : f === 2 ? 1 - ease(k) : 0), cx = b.x + b.w / 2, cy = b.y + 560
+    g.strokeStyle = COL.tinta; g.globalAlpha = 0.25; g.lineWidth = 4; g.setLineDash([10, 12]); g.beginPath(); g.arc(cx, cy, 320, 0, Math.PI * 2); g.stroke(); g.setLineDash([]); g.globalAlpha = 1
+    g.fillStyle = ['#9ff0de', COL.oro, '#d9bdf2', '#cfc4d6'][f]; g.beginPath(); g.arc(cx, cy, r, 0, Math.PI * 2); g.fill(); g.strokeStyle = COL.tinta; g.lineWidth = 5; g.stroke()
+    g.fillStyle = COL.tinta; g.textAlign = 'center'; g.font = `72px ${TITULO}`; g.fillText(FASES[f][0], cx, cy + 24)
+    g.font = `60px ${MANO}`; g.fillText(`${4 - Math.floor(t % 4)}`, cx, cy + 96)
+    // las cuatro fases debajo, la actual marcada
+    FASES.forEach(([n], i) => { g.globalAlpha = i === f ? 1 : 0.35; g.font = `40px ${TITULO}`; g.fillText(n, b.x + 140 + i * 220, b.y + 980) })
+    g.globalAlpha = 1
+}
+function grounding(g) {
+    const [a, b] = PAG
+    titulo(g, a, 'Grounding', 'Conexión con el presente')
+    g.font = `58px ${MANO}`; g.fillStyle = COL.tinta2
+    parrafo(g, 'Una herramienta para que Gabriela vuelva a poner la atención en su entorno.', a.x + 60, a.y + 290, a.w - 120, 58)
+    const frases = ['Mira a tu alrededor.', 'Reconoce dónde estás.', 'Estás aquí. Ahora.']
+    frases.forEach((f, i) => {
+        const y = a.y + 520 + i * 200
+        redondo(g, a.x + 60, y - 90, a.w - 120, 150, 20); g.fillStyle = i === 2 ? 'rgba(242,192,99,0.45)' : 'rgba(255,255,255,0.55)'; g.fill(); g.strokeStyle = COL.tinta; g.lineWidth = 3; g.stroke()
+        g.fillStyle = COL.tinta; g.font = `${i === 2 ? 58 : 52}px ${TITULO}`; g.textAlign = 'center'; g.fillText(f, a.x + a.w / 2, y + 4)
+    })
+    titulo(g, b, 'Pregúntate')
+    const icono = [ // ojo · oreja · mano
+        (x, y) => { g.beginPath(); g.ellipse(x, y, 60, 34, 0, 0, Math.PI * 2); g.stroke(); g.beginPath(); g.arc(x, y, 18, 0, Math.PI * 2); g.fill() },
+        (x, y) => { g.beginPath(); g.arc(x, y - 6, 40, Math.PI * 1.05, Math.PI * 2.3); g.quadraticCurveTo(x + 10, y + 50, x - 10, y + 52); g.stroke(); g.beginPath(); g.arc(x, y - 6, 16, Math.PI, Math.PI * 2.2); g.stroke() },
+        (x, y) => { g.beginPath(); g.roundRect(x - 34, y - 10, 68, 60, 16); g.stroke(); for (let i = 0; i < 4; i++) { g.beginPath(); g.roundRect(x - 34 + i * 18, y - 56, 14, 52, 7); g.stroke() } }
+    ]
+    ;['¿Qué puedes ver?', '¿Qué puedes escuchar?', '¿Qué puedes sentir?'].forEach((q, i) => {
+        const y = b.y + 340 + i * 260
+        g.strokeStyle = COL.tinta; g.fillStyle = COL.tinta; g.lineWidth = 6; icono[i](b.x + 150, y - 20)
+        g.textAlign = 'left'; g.font = `54px ${TITULO}`; g.fillText(q, b.x + 250, y, b.w - 300)
+    })
+}
+function dibujarLibro() {
+    const g = libroL.g; zonas = []
+    g.clearRect(0, 0, BW, BH)
+    // tapas (morado oscuro con borde dorado) y lomo
+    redondo(g, 20, 90, BW - 40, BH - 110, 34); g.fillStyle = COL.tapa; g.fill(); g.lineWidth = 6; g.strokeStyle = COL.oro; g.stroke()
+    // pestañas arriba de la página izquierda; la activa es del color del papel
+    PESTANAS.forEach(([id, n], i) => {
+        const x = 70 + i * 236, w = 226, activa = estado.tab === id
+        const z = zona(x, 14, w, 120, () => { estado.tab = id; if (id === 'minijuegos') estado.nueva = false; sucio = true })
+        g.fillStyle = activa ? COL.papel : estado.hover === z ? '#f7d99b' : COL.papel2
+        g.beginPath(); g.moveTo(x, 132); g.lineTo(x + 10, 30); g.quadraticCurveTo(x + 14, 16, x + 30, 16); g.lineTo(x + w - 30, 16); g.quadraticCurveTo(x + w - 14, 16, x + w - 10, 30); g.lineTo(x + w, 132); g.closePath(); g.fill()
+        g.strokeStyle = COL.tinta; g.lineWidth = 3; g.stroke()
+        g.fillStyle = COL.tinta; g.font = `${activa ? 58 : 54}px ${MANO}`; g.textAlign = 'center'; g.fillText(n, x + w / 2, 96)
+        if (id === 'minijuegos' && estado.nueva) { g.fillStyle = COL.rojo; g.beginPath(); g.arc(x + w - 26, 40, 14, 0, Math.PI * 2); g.fill() } // página nueva
+    })
+    PAG.forEach(p => hoja(g, p))
+    g.fillStyle = COL.tinta2; g.fillRect(BW / 2 - 6, PAG[0].y, 12, PAG[0].h) // el lomo
+    ;({ indice, minijuegos: minijuego, respiracion, grounding })[estado.tab](g)
+    // número de página
+    const n = { indice: 1, minijuegos: 3 + estado.mini * 2, respiracion: 13, grounding: 15 }[estado.tab]
+    g.fillStyle = COL.tinta2; g.font = `44px ${MANO}`; g.textAlign = 'center'; g.fillText(n, PAG[0].x + PAG[0].w / 2, PAG[0].y + PAG[0].h - 30); g.fillText(n + 1, PAG[1].x + PAG[1].w / 2, PAG[1].y + PAG[1].h - 30)
+    libroL.t.needsUpdate = true; sucio = false
+}
+dibujarControles(); dibujarLibro()
+export const lienzos = { libro: libroL.c, controles: ctrl.c } // (para las pruebas)
+export const irA = (tab, mini) => { estado.tab = tab; if (mini !== undefined) estado.mini = mini; sucio = true } // (para las pruebas)
+document.fonts?.ready.then(() => { dibujarControles(); sucio = true })
+
+// 4. Señalar y hacer CLICK: el rayo de cada mano (o control) contra la bitácora; el punto se pasa a píxeles del lienzo
+const raycaster = new THREE.Raycaster(), o = new THREE.Vector3(), d = new THREE.Vector3()
+function tocado(rayo) {
+    rayo.updateWorldMatrix(true, false); o.setFromMatrixPosition(rayo.matrixWorld); d.set(0, 0, -1).transformDirection(rayo.matrixWorld)
+    raycaster.set(o.addScaledVector(d, -0.2), d)
+    const h = raycaster.intersectObject(libro.m, false)[0]
+    if (!h) return -1
+    const x = h.uv.x * BW, y = (1 - h.uv.y) * BH
+    return zonas.findIndex(z => x >= z.x && x <= z.x + z.w && y >= z.y && y <= z.y + z.h)
+}
+
+// 5. Sistema
+const cab = new THREE.Vector3(), aqui = new THREE.Vector3()
+const MECH = (id) => ['earth', 'gravedad', 'foco', 'conteo'].includes(id) ? id : 'hold'
+export class SistemaBitacora extends createSystem({}) {
+    update(delta) {
+        const activo = !!this.world.session && colocacion.puesta && !colocacion.colocando && plataforma.visible
+        lados.visible = activo
+        if (!activo) return
+        // un minijuego nuevo: su página se escribe (y la pestaña lo avisa)
+        if (breathing.active && runtime.techId) {
+            const id = MECH(runtime.techId)
+            if (!vistos.has(id)) { vistos.add(id); guardar(); estado.nueva = true; estado.mini = MINIS.findIndex(m => m.id === id); sucio = true }
+        }
+        // de frente a quien juega (solo de lado)
+        this.world.camera.getWorldPosition(cab)
+        for (const s of [panelCtrl.soporte, libro.soporte]) {
+            s.getWorldPosition(aqui); const local = lados.worldToLocal(cab.clone())
+            s.rotation.y = Math.atan2(local.x - s.position.x, local.z - s.position.z)
+        }
+        // rayos: lo que se señala se resalta; CLICK (pellizco o gatillo) lo activa
+        const xr = this.world.input?.xr, rayos = this.world.playerSpaceEntities?.raySpaces
+        let hover = -1
+        for (const lado of ['left', 'right']) {
+            const rayo = rayos?.[lado]?.object3D
+            if (!rayo || !(xr?.isPrimary?.('hand', lado) || xr?.isPrimary?.('controller', lado))) continue
+            const i = tocado(rayo); if (i >= 0) hover = i
+            if (i >= 0 && xr.getSelectState(lado).start) zonas[i]?.fn()
+        }
+        if (hover !== estado.hover) { estado.hover = hover; sucio = true }
+        if (estado.tab === 'respiracion') { tResp += delta; if ((this.tAnim = (this.tAnim || 0) - delta) <= 0) { this.tAnim = 1 / 20; sucio = true } }
+        if (sucio) dibujarLibro()
+    }
+}

@@ -404,4 +404,12 @@ html.gx-en-xr .gx-pause{z-index:20} /* la salida rápida, encima de cualquier ot
 html.gx-en-xr .gx-pause .gx-dialog{zoom:1.35} /* la salida rápida, más grande en las gafas (se veía muy pequeña) */
 html.gx-en-xr .gx-flechas{display:none} /* gravedad: en las gafas se juega con las dos manos (xr/gestos.js), no con las flechas */
 .gx-conteo-veo{margin:.2rem 0 .4rem;font-size:1.3rem;font-weight:600;color:var(--color-principal,#F2C063)} /* conteo en las gafas: qué número se lee de tus dedos */
+/* la página de controles en las gafas: más grande, y CLICK destacado con su dibujo (la guía permanente está a la izquierda de la maqueta) */
+html.gx-en-xr .gx-controls .gx-dialog{width:min(94vw,62rem);max-width:none}
+html.gx-en-xr .gx-keys--xr{display:grid;grid-template-columns:1fr 1fr;gap:.7rem 1.4rem}
+html.gx-en-xr .gx-keys--xr li{font-size:1.05rem;line-height:1.3}
+html.gx-en-xr .gx-keys--xr .gx-keys-click{grid-column:1/-1;font-size:1.2rem}
+.gx-keys-click{background:var(--color-principal,#F2C063);color:#201826;border-radius:12px;padding:.5rem .8rem;align-items:center!important}
+.gx-keys-click strong{display:block;font-size:1.15em}
+.gx-click-dibujo svg{width:96px;height:64px;display:block}
 html.gx-en-xr .gx-talk{visibility:hidden} /* en las gafas los diálogos van en globos sobre quien habla (xr/globos.js) */

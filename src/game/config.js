@@ -7,7 +7,8 @@ export const CONFIG = {
     anxiety: { failPenalty: 0.12, shakeMax: 0.12, blurMax: 3, satMin: 0.5, postQuakeSat: 0.85, vignetteMax: 0.85, distort: 1 }, // distort: cuánto se deforma la ciudad con la ansiedad (0 = nada)
     camera: { azimuth: 45, elevation: 35.264, distance: 24, zoom: 1, view: 12, x: -4, y: 1, z: 0, follow: 3, lead: 3 }, // follow: suavidad · lead: cuánto mira por delante del personaje en la calle
     env: { light: 1, successGain: 0.15 },
-    gravedad: { timeout: 22 }, foco: { timeout: 22 }, // (antes 30 y 35: se hacían largos) reconstruir la gravedad y foco entre el ruido: segundos para lograrlo
+    gravedad: { timeout: 22, timeoutGafas: 35 }, foco: { timeout: 22 }, // (timeoutGafas: con las manos cuesta más; en las gafas hay más tiempo)
+    // (antes 30 y 35: se hacían largos) reconstruir la gravedad y foco entre el ruido: segundos para lograrlo
     conteo: { timeout: 15 }, // (antes 25: muy largo) conteo de grounding: segundos para los 5 aciertos (equivocarse no quita tiempo)
     earth: { need: 7, timeout: 15, drain: 1.2, relief: 0.1 }, npcs: { street: 50, bus: 3 }, // earthing: s sobre el pasto · tiempo límite real · cuánto se pierde por s fuera del pasto · NPCs
     player: { speed: 3.5, anxSpeed: 0.6, startX: -1.6, startZ: 0, reach: 1.8, screenRelative: false }, // screenRelative false: el teclado sigue las calles del mapa (W = arriba-derecha, D = abajo-derecha, S = abajo-izquierda, A = arriba-izquierda)

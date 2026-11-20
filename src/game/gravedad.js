@@ -118,7 +118,8 @@ export const gravedad = {
         if ((oido -= dt) <= 0) { oido = 0.25; audio.ruido.calma(Math.max(0, 1 - Math.abs(inclinacion) / 15) * 0.7 + Math.min(1, derecho / NECESITA) * 0.3) }
         gsap.set(burbuja, { x: Math.max(-1, Math.min(1, inclinacion / 20)) * 70 })
         burbuja.classList.toggle('gx-nivel-burbuja--recta', recto)
-        const timeLeft = Math.max(0, CONFIG.gravedad.timeout - t), fill = Math.min(1, derecho / NECESITA)
+        const limite = document.documentElement.classList.contains("gx-en-xr") ? CONFIG.gravedad.timeoutGafas : CONFIG.gravedad.timeout // (en las gafas, más tiempo)
+        const timeLeft = Math.max(0, limite - t), fill = Math.min(1, derecho / NECESITA)
         if (derecho >= NECESITA) { ganado = true; return { prompt: '', fill: 1, done: true, timeLeft } }
         if (timeLeft <= 0) return { prompt: '', fill, done: false, timeLeft: 0 }
         return { prompt: '', label: recto ? 'Así, sostente' : 'No te dejes caer', fill, timeLeft }

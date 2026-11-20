@@ -21,6 +21,7 @@ import { plataforma } from './maqueta.js'
 import { mesa, joystick } from './joystick.js'
 import { manos } from './manos.js'
 import { globo } from './globos.js'
+import { superficies } from './bitacora.js'
 import { colocacion } from './colocacion.js'
 import { mundo } from './estado.js'
 
@@ -112,6 +113,7 @@ function cercaDeLaMesa(rayo) {
 // 3.1 Rayos de luz: una línea dorada sale de cada mano (y de cada control de Meta) hacia donde apunta; si toca el panel o un globo de
 //     diálogo llega hasta ahí y brilla más. Así se ve qué se va a elegir. No sale de la mano que agarra el joystick, que está cerrada o
 //     que está junto a los controles de la mesa (ahí no se elige nada del panel)
+const seVe = (x) => { for (let p = x; p; p = p.parent) if (!p.visible) return false; return true }
 const LARGO = 0.45 // (sin tocar nada: 45 cm, tenue)
 const lineas = Object.fromEntries(['left', 'right'].map(l => {
     const m = new THREE.Mesh(new THREE.CylinderGeometry(0.0011, 0.0011, 1, 6).translate(0, 0.5, 0), new THREE.MeshBasicMaterial({ color: 0xf2c063, transparent: true, depthTest: false, depthWrite: false, toneMapped: false }))
@@ -122,7 +124,7 @@ function linea(lado, rayo, p) {
     const m = lineas[lado]
     rayo.updateWorldMatrix(true, false); o.setFromMatrixPosition(rayo.matrixWorld); d.set(0, 0, -1).transformDirection(rayo.matrixWorld)
     let largo = p ? Math.max(0.03, o.distanceTo(p.punto)) : 0
-    if (!largo && globo.visible) { rayoGlobo.set(o, d); const h = rayoGlobo.intersectObject(globo, false)[0]; if (h) largo = h.distance }
+    if (!largo) { rayoGlobo.set(o, d); const h = rayoGlobo.intersectObjects([globo, ...superficies].filter(seVe), false)[0]; if (h) largo = h.distance } // (o un globo, la bitácora o el panel de controles)
     m.visible = true; m.position.copy(o); m.quaternion.setFromUnitVectors(Y, d)
     m.scale.set(1, largo || LARGO, 1); m.material.opacity = largo ? 0.85 : 0.3
 }

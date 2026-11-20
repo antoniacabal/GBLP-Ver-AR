@@ -26,7 +26,7 @@ const lienzo = document.createElement('canvas'); lienzo.width = W; lienzo.height
 const ctx = lienzo.getContext('2d'), textura = new THREE.CanvasTexture(lienzo)
 textura.colorSpace = THREE.SRGBColorSpace; textura.anisotropy = 4
 const geo = new THREE.PlaneGeometry(1, H / W).translate(0.5 - PUNTA[0] / W, (PUNTA[1] / H - 0.5) * H / W, 0) // (el origen en la punta)
-const globo = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ map: textura, transparent: true, depthTest: false, depthWrite: false, toneMapped: false, side: THREE.DoubleSide }))
+export const globo = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ map: textura, transparent: true, depthTest: false, depthWrite: false, toneMapped: false, side: THREE.DoubleSide }))
 globo.name = 'globo'; globo.renderOrder = 11; globo.visible = false; globo.scale.setScalar(ANCHO); globo.frustumCulled = false
 mundo.scene.add(globo)
 
@@ -94,11 +94,11 @@ export class SistemaGlobos extends createSystem({}) {
         // sobre la cabeza, siempre de frente a quien juega
         dondeVa(nombre, punto); this.world.camera.getWorldPosition(cab)
         globo.position.copy(punto); globo.lookAt(cab)
-        // pellizcar apuntando al globo = "Continuar" (solo las manos: los controles de Meta no tocan la actividad)
+        // pellizcar apuntando al globo (o el gatillo de un control de Meta) = "Continuar"
         const xr = this.world.input?.xr, rayos = this.world.playerSpaceEntities?.raySpaces
         for (const lado of ['left', 'right']) {
             const rayo = rayos?.[lado]?.object3D
-            if (!xr?.isPrimary?.('hand', lado) || !rayo || !xr.getSelectState(lado).start) continue
+            if (!(xr?.isPrimary?.('hand', lado) || xr?.isPrimary?.('controller', lado)) || !rayo || !xr.getSelectState(lado).start) continue
             rayo.updateWorldMatrix(true, false); mtx.identity().extractRotation(rayo.matrixWorld)
             raycaster.ray.origin.setFromMatrixPosition(rayo.matrixWorld); raycaster.ray.direction.set(0, 0, -1).applyMatrix4(mtx).normalize()
             raycaster.ray.origin.addScaledVector(raycaster.ray.direction, -0.3)

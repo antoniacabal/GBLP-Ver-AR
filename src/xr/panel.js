@@ -10,14 +10,18 @@
 // juega y la maqueta, de frente, como la pantalla del juego original: los textos quedan sobre la maqueta, en el mismo lugar que en la
 // pantalla. Antes iba de pie detrás de la plataforma y los anuncios y diálogos se veían al fondo, lejos y pequeños.
 // Se elige apuntando con la mano y pellizcando: el pellizco llega a la página como un clic en ese mismo punto, así los botones, el
-// dial y los números funcionan sin cambiar el juego. Los controles de Meta no tocan el panel (solo sirven para salir).
+// dial y los números funcionan sin cambiar el juego. Una línea de luz sale de cada mano hacia donde apunta (3.1). Los controles de Meta
+// también pueden elegir en el panel (apuntar + gatillo), pero no mueven a Gabriela ni tocan los minijuegos.
 
 // 0. Imports
 import * as THREE from 'three'
 import { createSystem } from '@iwsdk/core'
 import { espejo, textura } from './espejo.js'
 import { plataforma } from './maqueta.js'
-import { mesa } from './joystick.js'
+import { mesa, joystick } from './joystick.js'
+import { manos } from './manos.js'
+import { globo } from './globos.js'
+import { colocacion } from './colocacion.js'
 import { mundo } from './estado.js'
 
 // 1. El panel: en la línea que va de la cabeza al centro de la maqueta, a algo más de la mitad del camino (entre 30 y 55 cm de los
@@ -105,6 +109,24 @@ function cercaDeLaMesa(rayo) {
     return mesa.children.some(c => c.getWorldPosition(w2).distanceTo(w1) < 0.16)
 }
 
+// 3.1 Rayos de luz: una línea dorada sale de cada mano (y de cada control de Meta) hacia donde apunta; si toca el panel o un globo de
+//     diálogo llega hasta ahí y brilla más. Así se ve qué se va a elegir. No sale de la mano que agarra el joystick, que está cerrada o
+//     que está junto a los controles de la mesa (ahí no se elige nada del panel)
+const LARGO = 0.45 // (sin tocar nada: 45 cm, tenue)
+const lineas = Object.fromEntries(['left', 'right'].map(l => {
+    const m = new THREE.Mesh(new THREE.CylinderGeometry(0.0011, 0.0011, 1, 6).translate(0, 0.5, 0), new THREE.MeshBasicMaterial({ color: 0xf2c063, transparent: true, depthTest: false, depthWrite: false, toneMapped: false }))
+    m.name = 'rayo-' + l; m.renderOrder = 12; m.visible = false; m.frustumCulled = false; mundo.scene.add(m); return [l, m]
+}))
+const Y = new THREE.Vector3(0, 1, 0), o = new THREE.Vector3(), d = new THREE.Vector3(), rayoGlobo = new THREE.Raycaster()
+function linea(lado, rayo, p) {
+    const m = lineas[lado]
+    rayo.updateWorldMatrix(true, false); o.setFromMatrixPosition(rayo.matrixWorld); d.set(0, 0, -1).transformDirection(rayo.matrixWorld)
+    let largo = p ? Math.max(0.03, o.distanceTo(p.punto)) : 0
+    if (!largo && globo.visible) { rayoGlobo.set(o, d); const h = rayoGlobo.intersectObject(globo, false)[0]; if (h) largo = h.distance }
+    m.visible = true; m.position.copy(o); m.quaternion.setFromUnitVectors(Y, d)
+    m.scale.set(1, largo || LARGO, 1); m.material.opacity = largo ? 0.85 : 0.3
+}
+
 // 4. Sistema del panel
 let tEspejo = 0
 export class SistemaPanel extends createSystem({}) {
@@ -117,7 +139,7 @@ export class SistemaPanel extends createSystem({}) {
         if (sesion !== this.sesion) { // en las gafas la interfaz se agranda un poco (se lee desde la mesa); en la pantalla, como siempre
             this.sesion = sesion; document.documentElement.classList.toggle('gx-en-xr', !!sesion)
         }
-        if (!sesion) { panel.visible = punto.visible = fundido.visible = velo.visible = vineta.visible = false; pegar = true; return }
+        if (!sesion) { panel.visible = punto.visible = fundido.visible = velo.visible = vineta.visible = lineas.left.visible = lineas.right.visible = false; pegar = true; return }
         fundidos(delta)
         // la interfaz se vuelve a copiar unas 24 veces por segundo (40 durante un minijuego, que se mueve más)
         if ((tEspejo -= delta) <= 0) {
@@ -126,13 +148,16 @@ export class SistemaPanel extends createSystem({}) {
             panel.visible = !espejo.vacio && plataforma.visible
         }
         if (panel.visible) colocar(this.world.camera, delta); else pegar = true
-        // manos: apuntar y pellizcar (los controles no: isPrimary('hand'))
+        // manos: apuntar y pellizcar · controles de Meta: apuntar y apretar el gatillo (solo para elegir en el panel y los globos: los controles
+        // siguen sin mover a Gabriela ni tocar los minijuegos)
         const xr = this.world.input?.xr, rayos = this.world.playerSpaceEntities?.raySpaces
         let visto = null
         for (const lado of ['left', 'right']) {
-            const mano = xr?.isPrimary?.('hand', lado), rayo = rayos?.[lado]?.object3D
-            if (!mano || !rayo) { if (agarre[lado]) this.soltar(lado); continue }
+            const mano = xr?.isPrimary?.('hand', lado), control = !mano && xr?.isPrimary?.('controller', lado), rayo = rayos?.[lado]?.object3D
+            if (!(mano || control) || !rayo) { lineas[lado].visible = false; if (agarre[lado]) this.soltar(lado); continue }
+            const m = manos[lado], ocupada = mano && ((m.ok && m.puno) || joystick.mano === m || cercaDeLaMesa(rayo))
             const p = apuntar(rayo), st = xr.getSelectState(lado)
+            if (ocupada || colocacion.colocando) lineas[lado].visible = false; else linea(lado, rayo, p)
             if (p && (!visto || agarre[lado])) visto = p
             if (st.start && p && !cercaDeLaMesa(rayo)) { const el = bajo(p.x, p.y); if (el) { agarre[lado] = { el, x: p.x, y: p.y }; evento('pointerover', el, p.x, p.y, 0); evento('pointerdown', el, p.x, p.y, 1) } }
             else if (st.active && agarre[lado] && p && (Math.abs(p.x - agarre[lado].x) > 0.5 || Math.abs(p.y - agarre[lado].y) > 0.5)) { // arrastrar (el dial, la plomada)

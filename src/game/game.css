@@ -400,4 +400,5 @@ html.gx-en-xr .gx,html.gx-en-xr .gx *{animation:none!important;transition:none!i
 html.gx-en-xr .gx-progreso{left:34%;right:34%;top:4.6rem;bottom:auto;height:8px;border-radius:999px;overflow:visible}
 html.gx-en-xr .gx-progreso-fill{border-radius:999px}
 html.gx-en-xr .gx-progreso-pct{bottom:auto;top:12px}
+html.gx-en-xr .gx-pause{z-index:20} /* la salida rápida, encima de cualquier otro pop-up (los controles, cómo se juega) */
 html.gx-en-xr .gx-talk{visibility:hidden} /* en las gafas los diálogos van en globos sobre quien habla (xr/globos.js) */

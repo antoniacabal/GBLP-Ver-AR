@@ -12,8 +12,8 @@
 // Gestos de las manos (etapa 6). El juego ya entiende la barra espaciadora (respirar), A / D (gravedad y foco) y los clics en los números
 // (conteo): los gestos se traducen a eso, así la lógica de los minijuegos no cambia (los tiempos y las condiciones son los de siempre).
 //   · puño cerrado ............ inhalar y sostener (la barra espaciadora apretada) · mano abierta: exhalar (soltarla)
-//   · las dos manos pellizcando e inclinando la barra entre ellas ... enderezar el marco (gravedad)
-//   · dedos levantados (una o dos manos), quietos un momento ......... elegir ese número (conteo)
+//   · las dos manos pellizcando e inclinando la barra entre ellas ... sostener a Gabriela en contra de la caída (gravedad)
+//   · la mano levantada mostrando dedos (una o dos), quieta un momento . elegir ese número (conteo)
 //   · la mano en el aire girando, como una perilla .................... girar el dial (foco)
 //   · las dos palmas abiertas hacia adelante .......................... salida rápida
 //   · pellizcar apuntando al panel ..................................... elegir (xr/panel.js)
@@ -25,6 +25,7 @@ import * as THREE from 'three'
 import { createSystem, Grabbed } from '@iwsdk/core'
 import { runtime } from '../game/config.js'
 import { breathing } from '../game/breathing.js'
+import { gravedad as juegoGravedad } from '../game/gravedad.js'
 import { colocacion } from './colocacion.js'
 import { mesa, joystick } from './joystick.js'
 import { manos, cabeza, leer, normalPalma } from './manos.js'
@@ -56,31 +57,43 @@ function respirar() {
     respirando = puno; tecla(puno ? 'keydown' : 'keyup', 'Space')
 }
 
-// 3. Gravedad: las dos manos pellizcando; si la barra entre ellas se inclina, se empuja el marco hacia ese lado (A / D).
-//    La mano derecha más arriba gira la barra hacia la izquierda: A (empuja a la izquierda)
-let empuje = 0
+// 3. Gravedad (dibujos "Balance"): las dos manos pellizcando en el aire, como si sostuvieran una barra. Lo inclinada que está la barra es
+//    la corrección, directa (como inclinar el celular en la versión de pantalla): manos parejas = no empuja; la derecha más arriba empuja
+//    hacia la izquierda; la izquierda más arriba, hacia la derecha. Antes se traducía a mantener A o D, que suma de a poco y era muy difícil.
+//    Aquí no importa si una mano baja cerca de los controles de la mesa (en el dibujo "Peso Der" la mano derecha queda abajo)
+let empuje = 0 // (ya no se usa A / D; queda para soltar una tecla si quedó apretada)
 function gravedad() {
     const L = manos.left, R = manos.right
-    const juega = breathing.active && runtime.techId === 'gravedad' && L.libre && R.libre && L.pellizco && R.pellizco
-    let d = 0
-    if (juega) {
-        const a = L.p['index-finger-tip'], b = R.p['index-finger-tip']
-        const ang = Math.atan2(b.y - a.y, Math.hypot(b.x - a.x, b.z - a.z))
-        d = ang > 0.12 ? -1 : ang < -0.12 ? 1 : 0
-    }
-    if (d === empuje) return
-    if (empuje) tecla('keyup', empuje < 0 ? 'KeyA' : 'KeyD')
-    empuje = d; if (d) tecla('keydown', d < 0 ? 'KeyA' : 'KeyD')
+    const juega = breathing.active && runtime.techId === 'gravedad'
+    const sostiene = juega && L.ok && R.ok && L.pellizco && R.pellizco && joystick.mano !== L && joystick.mano !== R
+    if (!sostiene) return juegoGravedad.manos(null)
+    const a = L.p['thumb-tip'], b = R.p['thumb-tip']
+    juegoGravedad.manos(THREE.MathUtils.radToDeg(Math.atan2(b.y - a.y, Math.hypot(b.x - a.x, b.z - a.z))))
 }
 
-// 4. Conteo: los dedos levantados de las dos manos; si la cuenta se queda igual 0.7 s, se elige ese número (si está entre las opciones).
-//    Para elegir otro hay que cambiar la cuenta
+// 4. Conteo (dibujos "Manos"): los dedos levantados de las manos que están de pie (levantadas, como en los dibujos; una mano en reposo no
+//    suma). La cuenta se suaviza (la que más se repite en el último cuarto de segundo: el seguimiento tiembla) y, si se queda igual,
+//    se elige ese número tras 0.9 s (si está entre las opciones). Para elegir otro hay que cambiar la cuenta. En el panel se ve qué número se lee
 let cuenta = -1, quieta = 0, elegida = -1
+const historia = []; let reloj = 0
+let veo = null
+function mostrarCuenta(n) { // "Muestras 3" debajo de la mano del minijuego (solo en las gafas)
+    const pan = document.querySelector('.gx-conteo'); if (!pan) return
+    if (!veo || !pan.contains(veo)) { veo = document.createElement('p'); veo.className = 'gx-conteo-veo'; pan.querySelector('.gx-conteo-ops')?.before(veo) }
+    veo.textContent = n < 0 ? 'Levanta la mano y muestra los dedos' : 'Muestras ' + n
+}
 function conteo(dt) {
-    if (!(breathing.active && runtime.techId === 'conteo') || !(manos.left.ok || manos.right.ok)) { cuenta = -1; elegida = -1; return }
-    const n = (manos.left.ok ? manos.left.dedos : 0) + (manos.right.ok ? manos.right.dedos : 0)
+    if (!(breathing.active && runtime.techId === 'conteo')) { cuenta = -1; elegida = -1; historia.length = 0; return }
+    const arriba = ['left', 'right'].map(l => manos[l]).filter(m => m.ok && m.arriba && joystick.mano !== m)
+    reloj += dt; historia.push({ v: arriba.length ? arriba.reduce((s, m) => s + m.dedos, 0) : -1, t: reloj })
+    while (historia.length > 3 && reloj - historia[0].t > 0.3) historia.shift()
+    const veces = {}; historia.forEach(({ v }) => { veces[v] = (veces[v] || 0) + 1 })
+    const [masV, cuantas] = Object.entries(veces).sort((a, b) => b[1] - a[1])[0]
+    const n = cuantas >= historia.length * 0.6 ? +masV : cuenta // (si no hay una clara, se queda la anterior)
+    mostrarCuenta(n)
+    if (n < 0) { cuenta = -1; quieta = 0; return }
     if (n !== cuenta) { cuenta = n; quieta = 0; if (n !== elegida) elegida = -1; return }
-    if ((quieta += dt) < 0.7 || elegida === n) return
+    if ((quieta += dt) < 0.9 || elegida === n) return
     const b = [...document.querySelectorAll('.gx-conteo-op')].find(b => b.textContent.trim() === String(n))
     if (b) { elegida = n; tocar(b) }
 }

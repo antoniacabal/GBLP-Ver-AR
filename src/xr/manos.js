@@ -4,9 +4,10 @@
 import * as THREE from 'three'
 
 const V = () => new THREE.Vector3()
+const pal = new THREE.Vector3(), ded = new THREE.Vector3()
 const ART = ['wrist', 'thumb-tip', 'index-finger-metacarpal', 'index-finger-phalanx-proximal', 'index-finger-tip', 'middle-finger-phalanx-proximal', 'middle-finger-tip',
     'ring-finger-phalanx-proximal', 'ring-finger-tip', 'pinky-finger-metacarpal', 'pinky-finger-phalanx-proximal', 'pinky-finger-tip']
-const crearMano = () => ({ ok: false, libre: false, p: Object.fromEntries(ART.map(n => [n, V()])), pellizco: false, puno: false, abierta: false, dedos: 0 })
+const crearMano = () => ({ ok: false, libre: false, p: Object.fromEntries(ART.map(n => [n, V()])), pellizco: false, puno: false, abierta: false, dedos: 0, arriba: false })
 export const manos = { left: crearMano(), right: crearMano() }
 export const cabeza = { p: V(), q: new THREE.Quaternion() }
 
@@ -28,8 +29,19 @@ export function leer(frame, ref, sesion) {
         const puntas = ['index-finger-tip', 'middle-finger-tip', 'ring-finger-tip', 'pinky-finger-tip'].reduce((s, n) => s + d(n, 'wrist'), 0) / 4
         m.puno = m.puno ? puntas < 0.11 : puntas < 0.085 // las cuatro puntas cerca de la muñeca
         m.abierta = puntas > 0.145
-        const larga = (f) => d(f + '-tip', 'wrist') > d(f + '-phalanx-proximal', 'wrist') + 0.04 // la punta bastante más lejos que su nudillo
-        m.dedos = ['index-finger', 'middle-finger', 'ring-finger', 'pinky-finger'].filter(larga).length + (d('thumb-tip', 'pinky-finger-metacarpal') > 0.085 ? 1 : 0)
+        // dedos levantados (dibujos "Manos"): un dedo cuenta si está estirado, es decir, si sigue la dirección de la palma (de la muñeca a su
+        // nudillo) y su punta queda más lejos que el nudillo. El pulgar cuenta si su punta está lejos de los nudillos del índice y del medio
+        // (doblado sobre la palma queda junto a ellos)
+        const larga = (f) => {
+            const k = P[f + '-phalanx-proximal'], t = P[f + '-tip']
+            pal.subVectors(k, P.wrist).normalize(); ded.subVectors(t, k)
+            return ded.length() > 0.025 && ded.normalize().dot(pal) > 0.72
+        }
+        const pulgar = d('thumb-tip', 'index-finger-phalanx-proximal') > 0.05 && d('thumb-tip', 'middle-finger-phalanx-proximal') > 0.07
+        m.dedos = ['index-finger', 'middle-finger', 'ring-finger', 'pinky-finger'].filter(larga).length + (pulgar ? 1 : 0)
+        // la mano levantada, de pie (como en los dibujos): de la muñeca a los nudillos apunta hacia arriba. Una mano en reposo (sobre la mesa,
+        // las piernas o colgando) no está de pie: así no suma dedos al conteo
+        pal.subVectors(P['middle-finger-phalanx-proximal'], P.wrist).normalize(); m.arriba = pal.y > 0.55
     }
 }
 

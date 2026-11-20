@@ -82,11 +82,15 @@ addEventListener('keydown', alTeclado); addEventListener('keyup', alTeclado)
 // 4. Minijuego ----------------------------------------------------------------------------------
 let activo = false, t = 0, derecho = 0, inclinacion = 0, oido = 0, estabaRecto = false, ganado = false, zoomAntes = 1
 export const gravedad = {
+    // en las gafas (xr/gestos.js): la inclinación en grados de la barra que sostienen las dos manos pellizcando, o null si no la sostienen.
+    // Es la corrección directa, como el giroscopio del celular (la derecha más arriba = empujar a la izquierda)
+    manos(grados) { if (activo && grados !== null) correccion = grados * 1.3 },
+    get correccion() { return correccion }, // (para las pruebas)
     start() {
         activo = true; t = 0; derecho = 0; ganado = false; correccion = 0; teclas = 0; gamma0 = null; estabaRecto = false; arrastre = null
         const conGiro = tactil() && 'DeviceOrientationEvent' in window
         botonGiro.hidden = !conGiro // en celular: la opción de jugar girándolo
-        ayuda.textContent = tactil() ? 'Usa las flechas o arrastra, en contra de la caída.' : 'Arrastra o usa A / D, en contra de la caída.'
+        ayuda.textContent = document.documentElement.classList.contains('gx-en-xr') ? 'Pellizca en el aire con las dos manos, como sosteniendo una barra, e inclínala en contra de la caída.' : tactil() ? 'Usa las flechas o arrastra, en contra de la caída.' : 'Arrastra o usa A / D, en contra de la caída.'
         panel.hidden = false; gsap.fromTo(panel, { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.4, ease: 'power2.out' })
         // la cámara se acerca a Gabriela (main.js la sigue mientras runtime.zoomJugador)
         zoomAntes = CONFIG.camera.zoom; runtime.zoomJugador = true; gsap.to(CONFIG.camera, { zoom: ZOOM, duration: 1, ease: 'power2.inOut' })

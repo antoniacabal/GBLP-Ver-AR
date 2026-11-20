@@ -54,6 +54,8 @@ function caja(el, cs, r, a) { // fondo y borde
     const conFondo = fondo && fondo !== 'rgba(0, 0, 0, 0)' && fondo !== 'transparent'
     const bw = parseFloat(cs.borderTopWidth) || 0, conBorde = bw > 0 && cs.borderTopStyle !== 'none' && cs.borderTopColor !== 'rgba(0, 0, 0, 0)'
     if (!conFondo && !conBorde) return
+    // en las gafas la tarjeta de la historia no lleva recuadro: el espacio entero se vuelve morado (xr/panel.js) y el texto flota
+    if (el.classList.contains('gx-card') && document.documentElement.classList.contains('gx-en-xr')) return
     // el fondo de los pop-ups oscurece toda la pantalla: en el panel tapaba la maqueta, así que va mucho más suave
     const k = el.classList.contains('gx-modal') ? 0.35 : 1
     const rr = Math.min(r.width / 2, r.height / 2, radio(cs.borderTopLeftRadius, r.width))

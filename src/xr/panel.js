@@ -59,15 +59,22 @@ const vineta = (() => {
 })()
 // solo los textos grandes oscurecen el cuarto (no los diálogos con mamá ni los avisos chiquitos)
 const TEXTOS = '.gx-card:not([hidden]), .gx-modal:not([hidden]), .gx-anuncio:not([hidden])'
-const hayTexto = () => !!document.querySelector(TEXTOS) || (!!elSusurro.textContent.trim() && parseFloat(getComputedStyle(elSusurro).opacity) > 0.05)
+const susurro = () => !!elSusurro.textContent.trim() && parseFloat(getComputedStyle(elSusurro).opacity) > 0.05
+const hayTexto = () => !!document.querySelector(TEXTOS) || susurro()
+// las tarjetas de la historia, el anuncio de la técnica y las frases sobre negro: todo el espacio alrededor se vuelve morado oscuro (también
+// la maqueta) y el texto flota solo, sin recuadro (xr/espejo.js no pinta el fondo de la tarjeta). Con los pop-ups la maqueta sigue a la vista
+const LLENO = '.gx-card:not([hidden]), .gx-anuncio:not([hidden])'
+const todoMorado = () => !!document.querySelector(LLENO) || susurro()
 const color = new THREE.Color()
 let veloT = 0
 function fundidos(dt) {
     const cs = getComputedStyle(elFundido), o = parseFloat(cs.opacity) || 0
     fundido.material.opacity = Math.min(o, 0.9); fundido.visible = o > 0.003 // (en realidad aumentada el negro nunca tapa del todo el cuarto real)
     color.setStyle(cs.backgroundColor || '#000'); fundido.material.color.copy(color)
-    veloT += ((hayTexto() ? 0.9 : 0) - veloT) * Math.min(1, dt * 3)
+    const lleno = todoMorado()
+    veloT += ((lleno ? 0.96 : hayTexto() ? 0.9 : 0) - veloT) * Math.min(1, dt * 3)
     velo.material.opacity = veloT; velo.visible = veloT > 0.01
+    velo.material.depthTest = !lleno // (sin prueba de profundidad tapa también la maqueta; el panel va encima)
     const v = parseFloat(elVineta.style.opacity) || 0
     vineta.material.opacity = Math.min(0.55, v * 0.7); vineta.visible = v > 0.01
 }

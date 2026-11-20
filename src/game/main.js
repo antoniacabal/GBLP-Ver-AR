@@ -343,7 +343,8 @@ addEventListener('keydown', (e) => e.code === 'KeyE' && !e.isTrusted && !e.repea
 const seenTutorials = new Set()
 // Tres imágenes con una frase corta por minijuego (instrucciones.js); el botón "?" las muestra otra vez
 // en las gafas, las frases dicen el gesto de la mano en vez del clic o las teclas
-const pasosDe = (mech) => !document.documentElement.classList.contains('gx-en-xr') ? INSTRUCCIONES[mech] : INSTRUCCIONES[mech].map((p, i) => INSTRUCCIONES_GAFAS[mech]?.[i] ? { ...p, txt: INSTRUCCIONES_GAFAS[mech][i] } : p)
+// en las gafas, cada paso puede cambiar su frase (texto) o su dibujo y su frase ({ img, txt })
+const pasosDe = (mech) => !document.documentElement.classList.contains('gx-en-xr') ? INSTRUCCIONES[mech] : INSTRUCCIONES[mech].map((p, i) => { const g = INSTRUCCIONES_GAFAS[mech]?.[i]; return !g ? p : typeof g === 'string' ? { ...p, txt: g } : { ...p, ...g } })
 const tutorialFor = (tech) => { const mech = tech.game || 'hold'; return { sub: mech === 'hold' ? 'Ejercicios de respiración' : tech.name, steps: pasosDe(mech), page: tech.page } }
 
 // 8. Máquina de estados

@@ -48,5 +48,7 @@ export const INSTRUCCIONES_GAFAS = {
     earth: ['Camina con el joystick hasta el pasto', null, null],
     gravedad: [null, 'Pellizca en el aire con las dos manos, como sosteniendo una barra, e inclínala en contra de la caída', null],
     foco: [null, 'Gira la mano en el aire, como una perilla', null],
-    conteo: [null, 'Levanta la mano y muestra esa cantidad de dedos (o pellizca el número)', null]
+    conteo: [{ txt: 'Mira cuántos dedos tiene la mano (de 0 a 5)' },
+        { img: `<img src="assets/minijuego/mano2.png" alt="">`, txt: 'Levanta tu mano y muestra los mismos dedos; quédate quieta un momento' },
+        { img: svg([0, 1, 2, 3, 4].map(i => `<circle cx="${20 + i * 20}" cy="45" r="8" fill="${C.oro}"/>`).join('')), txt: '5 aciertos y la crisis pasa' }]
 }

@@ -62,12 +62,13 @@ function init() {
 }
 
 // 4. Efectos de sonido
-function blip(freq, dur = 0.25, vol = 0.08, type = 'sine') {
+// en: segundos de espera (con el reloj del audio: así se encadenan notas sin temporizadores, que en las gafas se frenan)
+function blip(freq, dur = 0.25, vol = 0.08, type = 'sine', en = 0) {
     if (!ctx || !fxOn || !isFinite(freq)) return
-    const o = ctx.createOscillator(), g = ctx.createGain()
+    const o = ctx.createOscillator(), g = ctx.createGain(), t = ctx.currentTime + en
     o.type = type; o.frequency.value = freq
-    g.gain.setValueAtTime(vol, ctx.currentTime); g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + dur)
-    o.connect(g); g.connect(ctx.destination); o.start(); o.stop(ctx.currentTime + dur)
+    g.gain.setValueAtTime(0, ctx.currentTime); g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur)
+    o.connect(g); g.connect(ctx.destination); o.start(t); o.stop(t + dur)
 }
 function bell() { // campanita suave de la música tranquila (nota al azar de una escala pentatónica)
     const f = [523.25, 587.33, 659.25, 783.99, 880][Math.floor(Math.random() * 5)], t = ctx.currentTime

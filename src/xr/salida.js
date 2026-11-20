@@ -18,6 +18,7 @@ import { colocacion } from './colocacion.js'
 import { entidades } from './estado.js'
 import { runtime } from '../game/config.js'
 import { ui } from '../game/ui.js'
+import { sonido } from './sonidos.js'
 
 // 1. El botón: 15 cm delante del centro de la mesa y fuera de la plataforma (la esquina queda a 35 cm del centro del grupo de la mesa)
 export const LUGAR_SALIDA = new THREE.Vector3(0, 0, 0.42)
@@ -55,9 +56,9 @@ const ESPERA = 0.6, cab = new THREE.Vector3()
 // (durante un ejercicio de respiración el juego no deja abrir la salida rápida: antes el botón parecía no hacer nada; ahora lo dice)
 function alternar() {
     const pausa = document.querySelector('.gx-pause:not([hidden])')
-    if (pausa) return pausa.querySelector('[data-act="go"]')?.click() // ya abierta: vuelve al juego
-    if (runtime.state === 'BREATHING') return ui.aviso?.('La salida rápida se abre al terminar el ejercicio de respiración.')
-    document.querySelector('.gx-exit')?.click()
+    if (pausa) { sonido.salida(); return pausa.querySelector('[data-act="go"]')?.click() } // ya abierta: vuelve al juego
+    if (runtime.state === 'BREATHING') { sonido.no(); return ui.aviso?.('La salida rápida se abre al terminar el ejercicio de respiración.') }
+    sonido.salida(); document.querySelector('.gx-exit')?.click()
 }
 export class SistemaSalida extends createSystem({}) {
     init() {

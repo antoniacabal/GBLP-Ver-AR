@@ -274,9 +274,10 @@ export const ui = {
         if ((long || runtime.label) && p && p !== lastPrompt) msg.textContent = p
         lastPrompt = p
         // qué hacer con el clic en este momento: mantener (inhalar / retener) o soltar (exhalar / pausa)
+        const gafas = document.documentElement.classList.contains('gx-en-xr') // (en las gafas se respira con la mano: xr/gestos.js)
         const h = step || !runtime.action ? '' : runtime.action === 'hold'
-            ? (isTouch() ? 'Mantén presionado Interactuar' : 'Mantén el clic o la barra espaciadora')
-            : (isTouch() ? 'Suelta el botón Interactuar' : 'Suelta el clic')
+            ? (gafas ? 'Cierra el puño' : isTouch() ? 'Mantén presionado Interactuar' : 'Mantén el clic o la barra espaciadora')
+            : (gafas ? 'Abre la mano' : isTouch() ? 'Suelta el botón Interactuar' : 'Suelta el clic')
         if (h !== lastHint) { lastHint = h; hint.textContent = h; hint.dataset.action = runtime.action }
     },
     fade(o, d = 1, cb) { gsap.to(fadeEl, { opacity: o, duration: d, onComplete: cb }) },

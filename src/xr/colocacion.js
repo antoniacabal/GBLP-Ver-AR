@@ -25,6 +25,7 @@ import { runtime } from '../game/config.js'
 import { mundo, entidades } from './estado.js'
 import { plataforma } from './maqueta.js'
 import { manos, normalPalma, centroPalma } from './manos.js'
+import { sonido } from './sonidos.js'
 
 export const LADO = 0.5, ALTO = 0.02 // plataforma de 50 cm, 2 cm sobre la mesa
 const DORADO = 0xf2c063, LILA = 0xa6869b, MORADO = 0x201826
@@ -222,7 +223,7 @@ export class SistemaColocacion extends createSystem({
         plataforma.quaternion.setFromAxisAngle(new THREE.Vector3(0, 1, 0), a - Math.PI / 4)
         if (this.entPlataforma.hasComponent(XRAnchor)) this.entPlataforma.setValue(XRAnchor, 'attached', false)
         else this.entPlataforma.addComponent(XRAnchor) // IWSDK la engancha al ancla real: no se corre aunque el seguimiento se reajuste
-        estado.puesta = true; plataforma.visible = true; this.terminar()
+        estado.puesta = true; plataforma.visible = true; this.terminar(); sonido.colocar()
     }
     // las dos manos apoyadas: la vista previa delante de ellas; si se quedan quietas QUIETAS s, ahí va la plataforma
     apoyadas(delta) {
@@ -259,7 +260,7 @@ export class SistemaColocacion extends createSystem({
         // recolocar: al presionar el botón de la esquina
         const presionado = this.entBoton.hasComponent(Pressed)
         recolocar.getObjectByName('tapa').position.y = presionado ? 0.008 : 0.012
-        if (presionado && !this.antesPresionado && estado.puesta) this.empezar()
+        if (presionado && !this.antesPresionado && estado.puesta) { sonido.toque(); this.empezar() }
         this.antesPresionado = presionado
         if (!estado.colocando) return
         // si cambia lo que hay en cada lado (soltaste los controles y aparecieron las manos, o al revés), las retículas se rehacen: el

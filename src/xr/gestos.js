@@ -26,9 +26,11 @@ import { createSystem, Grabbed } from '@iwsdk/core'
 import { runtime } from '../game/config.js'
 import { breathing } from '../game/breathing.js'
 import { gravedad as juegoGravedad } from '../game/gravedad.js'
+import { conteo as juegoConteo } from '../game/conteo.js'
 import { colocacion } from './colocacion.js'
 import { mesa, joystick } from './joystick.js'
 import { manos, cabeza, leer, normalPalma } from './manos.js'
+import { sonido } from './sonidos.js'
 export { manos }
 
 const V = () => new THREE.Vector3()
@@ -61,11 +63,12 @@ function respirar() {
 //    la corrección, directa (como inclinar el celular en la versión de pantalla): manos parejas = no empuja; la derecha más arriba empuja
 //    hacia la izquierda; la izquierda más arriba, hacia la derecha. Antes se traducía a mantener A o D, que suma de a poco y era muy difícil.
 //    Aquí no importa si una mano baja cerca de los controles de la mesa (en el dibujo "Peso Der" la mano derecha queda abajo)
-let empuje = 0 // (ya no se usa A / D; queda para soltar una tecla si quedó apretada)
+let barra = false, empuje = 0 // (ya no se usa A / D; queda para soltar una tecla si quedó apretada)
 function gravedad() {
     const L = manos.left, R = manos.right
     const juega = breathing.active && runtime.techId === 'gravedad'
     const sostiene = juega && L.ok && R.ok && L.pellizco && R.pellizco && joystick.mano !== L && joystick.mano !== R
+    if (sostiene !== barra) { barra = sostiene; (sostiene ? sonido.agarrar : sonido.soltar)() } // (se oye al tomar y soltar la barra)
     if (!sostiene) return juegoGravedad.manos(null)
     const a = L.p['thumb-tip'], b = R.p['thumb-tip']
     juegoGravedad.manos(THREE.MathUtils.radToDeg(Math.atan2(b.y - a.y, Math.hypot(b.x - a.x, b.z - a.z))))
@@ -94,8 +97,7 @@ function conteo(dt) {
     if (n < 0) { cuenta = -1; quieta = 0; return }
     if (n !== cuenta) { cuenta = n; quieta = 0; if (n !== elegida) elegida = -1; return }
     if ((quieta += dt) < 0.9 || elegida === n) return
-    const b = [...document.querySelectorAll('.gx-conteo-op')].find(b => b.textContent.trim() === String(n))
-    if (b) { elegida = n; tocar(b) }
+    elegida = n; juegoConteo.mostrar(n) // (si es la cantidad de la mano, acierto; si no, no pasa nada: se puede corregir)
 }
 
 // 5. Foco: la mano en el aire, como si girara una perilla (dibujo "Sonido"): el giro de la muñeca, visto desde quien juega, gira el
@@ -128,7 +130,7 @@ function salida(dt) {
     const L = manos.left, R = manos.right
     const ok = L.libre && R.libre && L.abierta && R.abierta && palmaAdelante(L, true) && palmaAdelante(R, false)
     palmas = ok ? palmas + dt : 0
-    if (palmas > 0.7 && !esperaSalida && !runtime.paused && runtime.state !== 'BREATHING') { palmas = 0; esperaSalida = 2.5; document.querySelector('.gx-exit')?.click() }
+    if (palmas > 0.7 && !esperaSalida && !runtime.paused && runtime.state !== 'BREATHING') { palmas = 0; esperaSalida = 2.5; sonido.salida(); document.querySelector('.gx-exit')?.click() }
 }
 
 // 7. Controles de Meta: no tocan la maqueta ni la actividad; solo sirven para salir.

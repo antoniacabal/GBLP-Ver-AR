@@ -19,6 +19,7 @@ import { mom } from '../game/npcs.js'
 import { runtime } from '../game/config.js'
 import { plataforma } from './maqueta.js'
 import { mundo } from './estado.js'
+import { sonido } from './sonidos.js'
 
 // 1. El globo. Lienzo de 1024 × 512: la cola termina abajo a la izquierda (PUNTA) y ese punto queda sobre la cabeza de quien habla
 const W = 1024, H = 512, PUNTA = [70, 500], BASE = 410, ANCHO = 0.2 // ANCHO: metros
@@ -102,7 +103,7 @@ export class SistemaGlobos extends createSystem({}) {
             rayo.updateWorldMatrix(true, false); mtx.identity().extractRotation(rayo.matrixWorld)
             raycaster.ray.origin.setFromMatrixPosition(rayo.matrixWorld); raycaster.ray.direction.set(0, 0, -1).applyMatrix4(mtx).normalize()
             raycaster.ray.origin.addScaledVector(raycaster.ray.direction, -0.3)
-            if (raycaster.intersectObject(globo, false).length) { talkNext?.click(); break }
+            if (raycaster.intersectObject(globo, false).length) { sonido.click(); talkNext?.click(); break }
         }
     }
 }

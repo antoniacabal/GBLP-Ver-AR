@@ -3,7 +3,15 @@
     // 1. El panel: la interfaz del juego entre quien juega y la maqueta
     // 2. Fundido, fondo morado y viñeta (alrededor de la cabeza)
     // 3. Pellizcar el panel con el rayo de la mano
-    // 4. Sistema del panel (IWSDK)
+    // si el rayo está sobre un globo de diálogo o la bitácora, el pellizco es para ellos (xr/globos.js, xr/bitacora.js), no para el panel:
+// si no, contaba dos veces (el panel está detrás de los globos y un pellizco saltaba dos frases)
+function enOtraCosa(rayo) {
+    rayo.updateWorldMatrix(true, false); o.setFromMatrixPosition(rayo.matrixWorld); d.set(0, 0, -1).transformDirection(rayo.matrixWorld)
+    rayoGlobo.set(o.addScaledVector(d, -0.2), d)
+    return rayoGlobo.intersectObjects([globo, ...superficies].filter(seVe), false).length > 0
+}
+
+// 4. Sistema del panel (IWSDK)
 
 // La interfaz en las gafas. La página HTML no se ve dentro de la sesión inmersiva, así que la interfaz del juego (narrativa.html y ui.js:
 // diálogos, tarjetas, pop-ups, el medidor de respiración y los minijuegos) se copia en un panel (xr/espejo.js) que flota entre quien
@@ -22,12 +30,14 @@ import { mesa, joystick } from './joystick.js'
 import { manos } from './manos.js'
 import { globo } from './globos.js'
 import { superficies } from './bitacora.js'
+import { sonido } from './sonidos.js'
 import { colocacion } from './colocacion.js'
 import { mundo } from './estado.js'
 
-// 1. El panel: en la línea que va de la cabeza al centro de la maqueta, a algo más de la mitad del camino (entre 30 y 55 cm de los
-//    ojos) y siempre de frente. Su ancho crece con la distancia: se ve del mismo tamaño (unos 55°, como una pantalla) estés donde estés
-const CERCA = 0.62, MIN = 0.3, MAX = 0.55, ANGULO = 1.05 // (ANGULO: ancho del panel / distancia a los ojos)
+// 1. El panel: en la línea que va de la cabeza a un punto por encima de la maqueta, siempre de frente, a 0,8–1,2 m de los ojos (la
+//    distancia que recomienda Meta para paneles que se usan con rayo: más cerca de 0,8 m cansa la vista; antes estaba a 30–55 cm).
+//    Su ancho crece con la distancia: se ve del mismo tamaño (unos 66°) estés donde estés
+const LEJOS = 1.25, MIN = 0.8, MAX = 1.2, ANGULO = 1.3 // (ANGULO: ancho del panel / distancia a los ojos; con 1.05 los textos se leían pequeños)
 const panel = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ map: textura, transparent: true, depthTest: false, depthWrite: false, toneMapped: false }))
 panel.name = 'panel'; panel.renderOrder = 10; panel.visible = false
 // (sin prueba de profundidad: así los edificios altos de la calle no tapan los textos)
@@ -36,8 +46,8 @@ const cab = new THREE.Vector3(), centro = new THREE.Vector3(), meta = new THREE.
 let ancho = 0.4, pegar = true
 function colocar(camara, dt) {
     camara.getWorldPosition(cab)
-    plataforma.getWorldPosition(centro); centro.y += 0.16 // (un poco por encima de la plataforma: así los avisos quedan sobre la maqueta)
-    const d = cab.distanceTo(centro), dist = Math.min(MAX, Math.max(MIN, d * CERCA))
+    plataforma.getWorldPosition(centro); centro.y += 0.3 // (por encima de la maqueta: los avisos quedan arriba de ella y no la tapan tanto)
+    const d = cab.distanceTo(centro), dist = Math.min(MAX, Math.max(MIN, d * LEJOS))
     meta.subVectors(centro, cab).setLength(dist).add(cab)
     mira.position.copy(meta); mira.lookAt(cab); qMeta.copy(mira.quaternion)
     const a = pegar ? 1 : 1 - Math.exp(-dt * 6); pegar = false // (suave: sin temblar con la cabeza)
@@ -96,8 +106,8 @@ const agarre = { left: null, right: null } // lo que cada mano está apretando e
 function apuntar(rayo) {
     rayo.updateWorldMatrix(true, false); mtx.identity().extractRotation(rayo.matrixWorld)
     raycaster.ray.origin.setFromMatrixPosition(rayo.matrixWorld); raycaster.ray.direction.set(0, 0, -1).applyMatrix4(mtx).normalize()
-    // (el rayo empieza 40 cm detrás de la mano: el panel está a unos 40 cm de los ojos y la mano a veces queda más allá de él)
-    raycaster.ray.origin.addScaledVector(raycaster.ray.direction, -0.4)
+    // (el rayo empieza 20 cm detrás de la mano: por si la mano queda muy cerca o un poco más allá del panel)
+    raycaster.ray.origin.addScaledVector(raycaster.ray.direction, -0.2)
     const hit = panel.visible && raycaster.intersectObject(panel, false)[0]
     return hit ? { x: hit.uv.x * innerWidth, y: (1 - hit.uv.y) * innerHeight, punto: hit.point } : null
 }
@@ -161,7 +171,7 @@ export class SistemaPanel extends createSystem({}) {
             const p = apuntar(rayo), st = xr.getSelectState(lado)
             if (ocupada || colocacion.colocando) lineas[lado].visible = false; else linea(lado, rayo, p)
             if (p && (!visto || agarre[lado])) visto = p
-            if (st.start && p && !cercaDeLaMesa(rayo)) { const el = bajo(p.x, p.y); if (el) { agarre[lado] = { el, x: p.x, y: p.y }; evento('pointerover', el, p.x, p.y, 0); evento('pointerdown', el, p.x, p.y, 1) } }
+            if (st.start && p && !cercaDeLaMesa(rayo) && !enOtraCosa(rayo)) { const el = bajo(p.x, p.y); if (el) { if (el.closest('button, a, [role="button"], .gx-conteo-op, .gx-act')) sonido.click(); agarre[lado] = { el, x: p.x, y: p.y }; evento('pointerover', el, p.x, p.y, 0); evento('pointerdown', el, p.x, p.y, 1) } }
             else if (st.active && agarre[lado] && p && (Math.abs(p.x - agarre[lado].x) > 0.5 || Math.abs(p.y - agarre[lado].y) > 0.5)) { // arrastrar (el dial, la plomada)
                 const a = agarre[lado]; a.x = p.x; a.y = p.y; evento('pointermove', a.el, a.x, a.y, 1)
             }

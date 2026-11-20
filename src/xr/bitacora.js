@@ -26,6 +26,7 @@ import { breathing } from '../game/breathing.js'
 import { INSTRUCCIONES, INSTRUCCIONES_GAFAS } from '../game/instrucciones.js'
 import { plataforma } from './maqueta.js'
 import { colocacion } from './colocacion.js'
+import { sonido } from './sonidos.js'
 
 const COL = { tinta: '#201826', tinta2: '#482642', papel: '#F4EAD8', papel2: '#E6D6BC', cuadro: 'rgba(113,112,138,0.22)', oro: '#F2C063', rojo: '#580213', lila: '#A6869B', menta: '#3E8F7C', tapa: '#2A2033' }
 const MANO = 'Dongle, Outfit, sans-serif', TITULO = '"Luckiest Guy", Outfit, sans-serif', LETRA = 'Outfit, sans-serif'
@@ -117,13 +118,17 @@ const MINIS = [
     { id: 'earth', nombre: 'Earthing físico', manos: 'Camina con el joystick hasta el pasto y quédate ahí' },
     { id: 'gravedad', nombre: 'Reconstruir la gravedad', manos: 'Pellizca con las dos manos e inclina la barra' },
     { id: 'foco', nombre: 'Foco entre el ruido', manos: 'Gira la mano en el aire, como una perilla' },
-    { id: 'conteo', nombre: 'Conteo de grounding', manos: 'Muestra los dedos con la mano levantada (o haz CLICK en el número)' }
+    { id: 'conteo', nombre: 'Conteo de grounding', manos: 'Levanta tu mano y muestra los mismos dedos que la mano del dibujo (de 0 a 5)' }
 ]
 const CLAVE = 'gblp-bitacora'
 const vistos = new Set((() => { try { return JSON.parse(localStorage.getItem(CLAVE)) || [] } catch { return [] } })())
 const guardar = () => { try { localStorage.setItem(CLAVE, JSON.stringify([...vistos])) } catch { /* sin almacenamiento */ } }
 const sinEtiquetas = (s) => s.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()
-const pasos = (id) => INSTRUCCIONES[id].map((p, i) => ({ img: p.img, txt: INSTRUCCIONES_GAFAS[id]?.[i] || sinEtiquetas(p.txt.replace(/<span class="gx-solo-tactil">[\s\S]*?<\/span>/g, '')) }))
+// (en las gafas un paso puede cambiar su frase, o su dibujo y su frase: { img, txt })
+const pasos = (id) => INSTRUCCIONES[id].map((p, i) => {
+    const g = INSTRUCCIONES_GAFAS[id]?.[i], o = typeof g === 'string' ? { txt: g } : g || {}
+    return { img: o.img || p.img, txt: o.txt || sinEtiquetas(p.txt.replace(/<span class="gx-solo-tactil">[\s\S]*?<\/span>/g, '')) }
+})
 // los dibujos (SVG en texto) se vuelven imágenes; las partes del mouse y del celular no van (en las gafas no se usan)
 const imagenes = new Map()
 function imagen(html) {
@@ -347,7 +352,7 @@ export class SistemaBitacora extends createSystem({}) {
             const rayo = rayos?.[lado]?.object3D
             if (!rayo || !(xr?.isPrimary?.('hand', lado) || xr?.isPrimary?.('controller', lado))) continue
             const i = tocado(rayo); if (i >= 0) hover = i
-            if (i >= 0 && xr.getSelectState(lado).start) zonas[i]?.fn()
+            if (i >= 0 && xr.getSelectState(lado).start) { sonido.pagina(); zonas[i]?.fn() }
         }
         if (hover !== estado.hover) { estado.hover = hover; sucio = true }
         if (estado.tab === 'respiracion') { tResp += delta; if ((this.tAnim = (this.tAnim || 0) - delta) <= 0) { this.tAnim = 1 / 20; sucio = true } }

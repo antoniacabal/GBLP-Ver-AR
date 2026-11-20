@@ -106,10 +106,14 @@ addEventListener('resize', () => acomodar())
 let aciertos = 0, errores = 0, t = 0, objetivo = -1, ganado = false, perdido = false, ocupado = false
 const mezclar = (a) => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]] } return a }
 const DOS_MANOS = 0.35 // probabilidad de que la ronda tenga dos manos (se cuenta hasta 10)
+// en las gafas se responde mostrando los dedos con una mano (xr/gestos.js): solo rondas de una mano (de 0 a 5; un 7 con una mano no se
+// puede), sin los botones de números ni los círculos de errores (mostrar otra cantidad no es un error: solo no avanza)
+const gafas = () => document.documentElement.classList.contains('gx-en-xr')
+const titulo = panel.querySelector('.gx-conteo-titulo')
 function ronda(primera = false) {
     // una mano (0 a 5) o, a veces, dos manos (hasta 10). Nunca el mismo total dos veces seguidas
     let dedos, n
-    do { dedos = Math.random() < DOS_MANOS ? [1 + Math.floor(Math.random() * 5), Math.floor(Math.random() * 6)] : [Math.floor(Math.random() * 6)]; n = dedos[0] + (dedos[1] ?? 0) } while (n === objetivo)
+    do { dedos = Math.random() < DOS_MANOS && !gafas() ? [1 + Math.floor(Math.random() * 5), Math.floor(Math.random() * 6)] : [Math.floor(Math.random() * 6)]; n = dedos[0] + (dedos[1] ?? 0) } while (n === objetivo)
     objetivo = n
     const dos = dedos.length === 2
     manoEl.classList.toggle('gx-conteo-mano--dos', dos)
@@ -154,7 +158,11 @@ function elegir(b, v) {
 }
 
 export const conteo = {
+    // en las gafas: la cantidad de dedos que se está mostrando (xr/gestos.js, cuando se queda quieta). Si es la de la mano, es un acierto
+    mostrar(n) { if (gafas() && n === objetivo) elegir(manoEl, n) },
     start() {
+        titulo.textContent = gafas() ? 'Muestra con tu mano los mismos dedos' : '¿Cuántos dedos ves?'
+        panel.classList.toggle('gx-conteo--gafas', gafas())
         aciertos = 0; errores = 0; t = 0; objetivo = -1; ganado = false; perdido = false; ocupado = false
         ;[...vidasEl.children].forEach(i => i.classList.remove('gx-conteo-vida--mal'))
         acomodar(false); panel.hidden = false
@@ -164,7 +172,7 @@ export const conteo = {
     stop() { panel.hidden = true; salirCrisis(); audio.ruido.stop() },
     update(dt) {
         t += dt
-        const timeLeft = Math.max(0, CONFIG.conteo.timeout - t), fill = aciertos / META
+        const timeLeft = Math.max(0, (gafas() ? CONFIG.conteo.timeoutGafas : CONFIG.conteo.timeout) - t), fill = aciertos / META
         if (ganado) return { prompt: '', fill: 1, done: true, timeLeft }
         if (timeLeft <= 0 || perdido) return { prompt: '', fill, done: false, timeLeft }
         return { prompt: '', label: `${aciertos} de ${META}`, fill, timeLeft }

@@ -19,6 +19,7 @@ import { createSystem, PokeInteractable, Pressed } from '@iwsdk/core'
 import { colocacion } from './colocacion.js'
 import { LUGAR } from './joystick.js'
 import { entidades } from './estado.js'
+import { sonido } from './sonidos.js'
 
 // 1. El botón
 const base = new THREE.Group(); base.name = 'boton'; base.position.copy(LUGAR.boton)
@@ -62,7 +63,7 @@ export class SistemaBoton extends createSystem({}) {
         // la tapa baja y sube suave; se ilumina mientras está abajo
         tapa.position.y += ((ahora ? ABAJO : ARRIBA) - tapa.position.y) * Math.min(1, delta * 30)
         tapa.material.emissive.setHex(ahora ? 0x7a2a0a : 0x2a0a02)
-        if (ahora && !this.presionado && !this.espera) { this.espera = ESPERA; interactuar() } // (un toque = una acción)
+        if (ahora && !this.presionado && !this.espera) { this.espera = ESPERA; sonido.toque(); interactuar() } // (un toque = una acción)
         this.presionado = ahora
     }
 }

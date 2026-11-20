@@ -23,6 +23,7 @@ import { plataforma } from './maqueta.js'
 import { colocacion } from './colocacion.js'
 import { entidades } from './estado.js'
 import { manos, huecoMano } from './manos.js'
+import { sonido } from './sonidos.js'
 
 // 1. Los controles de la mesa. La plataforma está girada 45° (para que el juego se vea como la cámara isométrica del original), así
 //    que quien juega tiene de frente una esquina. Este grupo deshace ese giro: su +z apunta a quien juega. El joystick va a la izquierda
@@ -106,6 +107,7 @@ export class SistemaJoystick extends createSystem({ bola: { required: [OneHandGr
         const cerrada = activo && conManos && !pellizcada && manoCerrada(this.world.player)
         if (!activo || pellizcada) joystick.mano = null
         const agarrada = pellizcada || cerrada
+        if (agarrada !== !!this.antesAgarrada) { this.antesAgarrada = agarrada; (agarrada ? sonido.agarrar : sonido.soltar)() } // (se oye al agarrarlo y al soltarlo)
         if (agarrada) { // dentro de un círculo (el agarre limita a un cuadrado)
             off.set(bola.position.x, 0, bola.position.z); if (off.length() > RADIO) off.setLength(RADIO)
             bola.position.set(off.x, ALTO_BOLA, off.z)

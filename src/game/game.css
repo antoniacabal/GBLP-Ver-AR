@@ -391,7 +391,7 @@ body.gx-mr-on .gx-full{display:none!important} /* en las gafas (y su vista previ
 /* IWSDK pone su lienzo dentro de #escena-xr y toma su tamaño: si nace en 0 x 0, los primeros cuadros fallan */
 .escena-xr{position:fixed;inset:0}
 /* En las gafas la interfaz se copia en el panel que flota sobre la maqueta (xr/panel.js) */
-html.gx-en-xr .gx{zoom:1.15} /* en las gafas, un poco más grande (el panel está a ~50 cm de los ojos; con 1.45 el tutorial se salía de la página y su botón no se veía) */
+html.gx-en-xr .gx{zoom:1.15} /* en las gafas, un poco más grande (el panel se ve del mismo tamaño a cualquier distancia; con 1.45 el tutorial se salía de la página y su botón no se veía) */
 /* En una sesión de realidad aumentada las Quest dejan de dibujar la página: las animaciones y transiciones de CSS se congelan en su primer
    cuadro. Los pop-ups (que entran con un fundido desde opacidad 0) quedaban invisibles en el panel y la barra de progreso sin llenarse.
    En las gafas no hay animaciones de CSS: todo aparece de una vez (las de GSAP sí siguen, porque xr/mundo.js mueve su reloj) */
@@ -412,4 +412,13 @@ html.gx-en-xr .gx-keys--xr .gx-keys-click{grid-column:1/-1;font-size:1.2rem}
 .gx-keys-click{background:var(--color-principal,#F2C063);color:#201826;border-radius:12px;padding:.5rem .8rem;align-items:center!important}
 .gx-keys-click strong{display:block;font-size:1.15em}
 .gx-click-dibujo svg{width:96px;height:64px;display:block}
+/* conteo en las gafas: se responde mostrando los dedos (sin los botones de números ni los círculos de errores) */
+html.gx-en-xr .gx-conteo--gafas .gx-conteo-ops,html.gx-en-xr .gx-conteo--gafas .gx-conteo-vidas{display:none}
+html.gx-en-xr .gx-conteo-titulo{font-size:1.5rem}
+/* textos más grandes y legibles en las gafas: pop-ups, cómo se juega, la pregunta del MIO, la respiración y los mensajes */
+html.gx-en-xr .gx-dialog p{font-size:1.15rem;line-height:1.4}
+html.gx-en-xr .gx-paso-txt{font-size:1.1rem;line-height:1.3}
+html.gx-en-xr .gx-tutorial .gx-dialog,html.gx-en-xr .gx-choice .gx-dialog{width:min(94vw,52rem);max-width:none}
+html.gx-en-xr .gx-msg,html.gx-en-xr .gx-breath-hint,html.gx-en-xr .gx-aviso{font-size:1.25rem}
+html.gx-en-xr .gx-label{font-size:2rem}
 html.gx-en-xr .gx-talk{visibility:hidden} /* en las gafas los diálogos van en globos sobre quien habla (xr/globos.js) */

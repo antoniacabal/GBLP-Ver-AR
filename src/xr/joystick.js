@@ -30,7 +30,7 @@ import { sonido } from './sonidos.js'
 //    de esa esquina y el botón (etapa 5) a la derecha, fuera de la plataforma y al alcance de las manos
 export const mesa = new THREE.Group(); mesa.name = 'controles-mesa'
 mesa.rotation.y = Math.PI / 4
-export const LUGAR = { joystick: new THREE.Vector3(-0.22, 0, 0.3), boton: new THREE.Vector3(0.22, 0, 0.3) }
+export const LUGAR = { joystick: new THREE.Vector3(-0.24, 0, 0.42), boton: new THREE.Vector3(0.24, 0, 0.42) } // (delante del borde de la plataforma, que está a 34 cm del centro)
 const MAT = (c, o = {}) => new THREE.MeshStandardMaterial({ color: c, roughness: 0.6, ...o })
 
 // 2. El joystick

@@ -610,7 +610,8 @@ function transparentar(dt, px, pz) {
     for (const fa of transparentes) {
         const gx = fa.g.position.x - px, gz = fa.g.position.z - pz
         const tapa = Math.hypot(gx, gz) < 5 && gx * camDir.x + gz * camDir.y > 0.5
-        const quiere = tapa ? 0.22 : 1; fa.o ??= 1
+        // (en las gafas no: la maqueta se mira desde arriba y se rodea con la cabeza; las casas siempre se ven enteras)
+        const quiere = tapa && !document.documentElement.classList.contains('gx-en-xr') ? 0.22 : 1; fa.o ??= 1
         if (Math.abs(fa.o - quiere) < 0.005) continue
         fa.o += (quiere - fa.o) * Math.min(1, dt * 6); if (Math.abs(fa.o - quiere) < 0.01) fa.o = quiere
         fa.mats.forEach(m => { m.opacity = fa.o; m.depthWrite = fa.o > 0.99 })

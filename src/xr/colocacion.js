@@ -23,17 +23,18 @@ import { createSystem, EnvironmentRaycastTarget, RaycastSpace, XRAnchor, XRPlane
 import gsap from 'gsap'
 import { runtime } from '../game/config.js'
 import { mundo, entidades } from './estado.js'
-import { plataforma } from './maqueta.js'
+import { plataforma, LADO_BASE } from './maqueta.js'
 import { manos, normalPalma, centroPalma } from './manos.js'
 import { sonido } from './sonidos.js'
 
-export const LADO = 0.5, ALTO = 0.02 // plataforma de 50 cm, 2 cm sobre la mesa
+export const LADO = LADO_BASE, ALTO = 0.02 // plataforma de 68 cm (xr/maqueta.js), 2 cm sobre la mesa
 const DORADO = 0xf2c063, LILA = 0xa6869b, MORADO = 0x201826
 const estado = { colocando: false, puesta: false }
 export const colocacion = estado
 
-// 1. La plataforma: una losa morada con el borde dorado (los colores del juego). El juego se apoya encima (y = 0 de la plataforma)
-const base = new THREE.Group(); base.name = 'base'
+// 1. La plataforma: una losa morada con el borde dorado (los colores del juego). El juego se apoya encima (y = 0 de la plataforma).
+//    La losa está derecha frente a quien juega (girada 45° dentro de la plataforma, como los controles de la mesa); la maqueta no gira
+const base = new THREE.Group(); base.name = 'base'; base.rotation.y = Math.PI / 4
 {
     const losa = new THREE.Mesh(new THREE.BoxGeometry(LADO, ALTO, LADO), new THREE.MeshStandardMaterial({ color: MORADO, roughness: 0.85 }))
     losa.position.y = -ALTO / 2 - 0.0015 // (1.5 mm debajo del piso del juego: sin parpadeo entre los dos)
@@ -53,7 +54,7 @@ function crearReticula() {
 }
 const reticulas = { left: null, right: null }
 
-// 3. Botón de recolocar: un botón pequeño (2.4 cm) en la esquina de atrás a la derecha de la plataforma. Encima lleva un rótulo que
+// 3. Botón de recolocar: un botón pequeño (2.4 cm) a la derecha de la plataforma, hacia quien juega. Encima lleva un rótulo que
 //    dice qué es ("Mover la maqueta"), siempre de frente a quien juega (sin él no se entendía para qué estaba)
 const recolocar = new THREE.Group(); recolocar.name = 'recolocar'
 {
@@ -61,7 +62,10 @@ const recolocar = new THREE.Group(); recolocar.name = 'recolocar'
     caja.position.y = 0.005
     const tapa = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.008, 24), new THREE.MeshStandardMaterial({ color: LILA, emissive: 0x1a0f1a }))
     tapa.position.y = 0.012; tapa.name = 'tapa'
-    recolocar.add(caja, tapa); recolocar.position.set(LADO / 2 - 0.03, 0, -LADO / 2 + 0.03)
+    recolocar.add(caja, tapa)
+    // a la derecha de la plataforma, hacia quien juega (antes en la esquina de atrás: quedaba muy lejos). En coordenadas de la mesa (+z hacia
+    // quien juega), pasadas a la plataforma, que está girada 45° respecto a ella. Lejos del botón rojo para no tocarlo sin querer
+    recolocar.position.set(LADO / 2 + 0.07, 0, 0.16).applyAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI / 4)
 }
 const rotulo = (() => {
     const c = document.createElement('canvas'); c.width = 320; c.height = 80
@@ -119,7 +123,7 @@ function dondeVa(planos, cabezaMundo, out) {
         if (d > -0.01 && d < mejor) { mejor = d; y = nP.y }
     }
     // (la plataforma va girada 45°: su esquina queda frente a los dedos)
-    return out.copy(medio).addScaledVector(haciaDelante, 0.1 + LADO * Math.SQRT1_2 + 0.02).setY(y)
+    return out.copy(medio).addScaledVector(haciaDelante, 0.1 + LADO / 2 + 0.02).setY(y)
 }
 
 // el letrero mientras se coloca: un rótulo pequeño, abajo y delante de la vista (sigue la cabeza con suavidad, sin pegarse a ella)
@@ -236,7 +240,7 @@ export class SistemaColocacion extends createSystem({
         apoyo.t += delta
         dondeVa(this.queries.planos.entities, cab, this.lugar)
         vista.visible = true; vista.position.copy(this.lugar).setY(this.lugar.y + 0.004)
-        vista.quaternion.setFromAxisAngle(up.set(0, 1, 0), Math.atan2(cab.x - this.lugar.x, cab.z - this.lugar.z) - Math.PI / 4) // (como quedará)
+        vista.quaternion.setFromAxisAngle(up.set(0, 1, 0), Math.atan2(cab.x - this.lugar.x, cab.z - this.lugar.z)) // (como quedará: derecha, de frente)
         const k = Math.min(1, apoyo.t / QUIETAS); relleno.scale.set(LADO * k, 1, LADO * k)
         vista.userData.pintar(k >= 1 ? DORADO : LILA)
         if (k >= 1) { this.ponerEn(this.lugar); return true }

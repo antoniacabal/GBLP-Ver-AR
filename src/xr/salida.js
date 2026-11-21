@@ -21,7 +21,7 @@ import { ui } from '../game/ui.js'
 import { sonido } from './sonidos.js'
 
 // 1. El botón: 15 cm delante del centro de la mesa y fuera de la plataforma (la esquina queda a 35 cm del centro del grupo de la mesa)
-export const LUGAR_SALIDA = new THREE.Vector3(0, 0, 0.42)
+export const LUGAR_SALIDA = new THREE.Vector3(0, 0, 0.46)
 const base = new THREE.Group(); base.name = 'salida'; base.position.copy(LUGAR_SALIDA)
 const tapa = new THREE.Mesh(new THREE.CylinderGeometry(0.024, 0.024, 0.014, 32), new THREE.MeshStandardMaterial({ color: 0xe4ffff, roughness: 0.5, emissive: 0x1a2a2a }))
 {

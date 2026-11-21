@@ -9,7 +9,7 @@ La versión original para computador está en https://antoniacabal.github.io/gri
 ## Cómo se usa
 
 1. En las gafas Meta Quest (3 o 3S), abre la URL en el navegador, pulsa **Empezar**, acepta la advertencia y luego **Entrar en realidad aumentada**. Acepta el permiso de espacio.
-2. **Colocar:** las superficies que detectan las gafas se ven como una malla. **Apoya las dos manos abiertas sobre la mesa**: delante de ellas aparece el contorno de la plataforma y se llena de dorado; si las dejas quietas un momento, aparece la plataforma (50 cm, 2 cm sobre la mesa), anclada al espacio real. También puedes apuntar con una mano a una superficie y **pellizcar** cuando el aro se vea dorado.
+2. **Colocar:** las superficies que detectan las gafas se ven como una malla. **Apoya las dos manos abiertas sobre la mesa**: delante de ellas aparece el contorno de la plataforma y se llena de dorado; si las dejas quietas un momento, aparece la plataforma (68 cm, 2 cm sobre la mesa), anclada al espacio real. También puedes apuntar con una mano a una superficie y **pellizcar** cuando el aro se vea dorado.
 3. **Jugar con las manos:**
 
 | Interacción | Qué hace |

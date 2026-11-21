@@ -27,7 +27,11 @@ plataforma.add(escala); escala.add(juego); mundo.scene.add(plataforma)
 plataforma.position.set(0, 0.76, -0.35) // provisional: frente a quien juega, a la altura de una mesa (la etapa 2 la pone sobre la mesa real)
 
 // 2. El recuadro de cada espacio: en la calle sigue a Gabriela; en el cuarto, la sala y el MIO es la caja del espacio entero
-export const MEDIO_CALLE = 0.24, MEDIO = 0.24 // media plataforma (m): unos 50 cm de lado
+export const MEDIO_CALLE = 0.24, MEDIO = 0.24 // la escala de la maqueta: lo que cabía en la plataforma de 50 cm (no cambia)
+// El cuadrado de la plataforma está derecho frente a quien juega (sus bordes paralelos a la mesa), pero la maqueta sigue girada 45°
+// (la vista isométrica del juego original). Para que los cuartos quepan enteros con ese giro, el cuadrado mide 68 cm de lado
+export const LADO_BASE = 0.68, MEDIA_BASE = LADO_BASE / 2 - 0.01 // (lo que se ve: 1 cm adentro del borde)
+const ESCALA = 27 // unidades del juego por metro, en todos los espacios
 const cajas = {}
 function cajaDe(sp) {
     if (cajas[sp]) return cajas[sp]
@@ -85,15 +89,19 @@ export function actualizarMaqueta(dt, t) {
     if (salto || !dt) C.set(cx, 0, cz) // (al cambiar de espacio, detrás del fundido, se pone de una vez)
     else { const a = 1 - Math.exp(-dt * comodidad.seguir); C.x += (cx - C.x) * a; C.z += (cz - C.z) * a }
     // escala: la calle siempre igual de grande (Gabriela del mismo tamaño); adentro, el espacio entero cabe en la plataforma
-    k = (calle ? 27 : Math.max(caja.hx, caja.hz) / MEDIO) / Math.pow(zj, 0.7)
+    // la misma escala en todos los espacios (Gabriela siempre del mismo tamaño): antes, adentro, el espacio se agrandaba hasta llenar la
+    // plataforma y el cuarto empezaba muy cerca. Solo si un espacio no cupiera (girado 45° dentro del cuadrado derecho ocupa (hx + hz) / √2
+    // hacia cada lado) se achica lo justo
+    k = (calle ? ESCALA : Math.max(ESCALA, (caja.hx + caja.hz) * Math.SQRT1_2 / MEDIA_BASE)) / Math.pow(zj, 0.7)
     // temblor (sismo, frenón del MIO, sustos): se mueve solo el contenido de la maqueta, suave. La vista nunca tiembla
     const s = Math.min(comodidad.temblorMax, (runtime.quake * 0.5 + runtime.stress * 0.06) * comodidad.temblor)
     J.set((Math.sin(t * 19) + Math.sin(t * 11)) * 0.5 * s, 0, (Math.cos(t * 17) + Math.sin(t * 7)) * 0.5 * s)
     escala.scale.setScalar(1 / k)
     juego.position.set(-(C.x + J.x), 0, -(C.z + J.z))
-    Object.assign(recuadro, { x: calle ? C.x : caja.x, z: calle ? C.z : caja.z, hx: calle ? MEDIO_CALLE * k : caja.hx, hz: calle ? MEDIO_CALLE * k : caja.hz, k })
+    // (en la calle, lo que se ve es el cuadrado derecho: en el mapa, girado, cubre hasta MEDIA_BASE·√2 hacia cada lado)
+    Object.assign(recuadro, { x: calle ? C.x : caja.x, z: calle ? C.z : caja.z, hx: calle ? MEDIA_BASE * Math.SQRT2 * k : caja.hx, hz: calle ? MEDIA_BASE * Math.SQRT2 * k : caja.hz, k })
     // el recuadro en la plataforma (metros): en la calle, centrado; adentro, donde cae la caja del espacio (fijo aunque tiemble el juego)
-    recortar(calle ? 0 : (caja.x - C.x) / k, calle ? 0 : (caja.z - C.z) / k, recuadro.hx / k, recuadro.hz / k, dt)
+    recortar(calle, calle ? 0 : (caja.x - C.x) / k, calle ? 0 : (caja.z - C.z) / k, recuadro.hx / k, recuadro.hz / k, dt)
     azimut()
     esconderFuera()
 }
@@ -104,8 +112,15 @@ export const planos = [0, 1, 2, 3, 4].map(() => new THREE.Plane())
 const LOCAL = [[1, 0, 0], [-1, 0, 0], [0, 0, 1], [0, 0, -1], [0, 1, 0]].map(n => new THREE.Plane(new THREE.Vector3(...n), 0))
 mundo.renderer.localClippingEnabled = true
 let tMateriales = 0
-function recortar(cx, cz, hx, hz, dt) {
-    LOCAL[0].constant = -(cx - hx); LOCAL[1].constant = cx + hx; LOCAL[2].constant = -(cz - hz); LOCAL[3].constant = cz + hz
+// en la calle se recorta por el cuadrado derecho (sus bordes van a 45° de los ejes de la maqueta); adentro, por la caja del espacio
+const DIAG = [[-1, -1], [-1, 1], [1, -1], [1, 1]].map(([x, z]) => new THREE.Vector3(x, 0, z).normalize())
+const EJES = [[1, 0, 0], [-1, 0, 0], [0, 0, 1], [0, 0, -1]].map(n => new THREE.Vector3(...n))
+function recortar(calle, cx, cz, hx, hz, dt) {
+    if (calle) DIAG.forEach((n, i) => { LOCAL[i].normal.copy(n); LOCAL[i].constant = MEDIA_BASE })
+    else {
+        EJES.forEach((n, i) => LOCAL[i].normal.copy(n))
+        LOCAL[0].constant = -(cx - hx); LOCAL[1].constant = cx + hx; LOCAL[2].constant = -(cz - hz); LOCAL[3].constant = cz + hz
+    }
     LOCAL[4].constant = 0.0005 // (y nada por debajo de la plataforma)
     plataforma.updateWorldMatrix(true, false) // (solo la cadena hasta la plataforma: recalcular todo el juego cada cuadro costaba mucho)
     planos.forEach((p, i) => p.copy(LOCAL[i]).applyMatrix4(plataforma.matrixWorld))

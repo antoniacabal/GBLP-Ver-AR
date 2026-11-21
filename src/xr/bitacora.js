@@ -61,7 +61,7 @@ function dibujoClick(g, x, y, s, colorLinea = COL.oro) {
 // 1. Dónde van. Un grupo con el giro de los controles de la mesa (la plataforma está girada 45°: así +z apunta a quien juega).
 //    A cada lado, a 62 cm del centro y apoyados 3 cm sobre la mesa; cada cuadro giran (solo de lado) hacia la cabeza de quien juega
 const lados = new THREE.Group(); lados.name = 'lados'; lados.rotation.y = Math.PI / 4; plataforma.add(lados)
-const LADO_X = 0.62
+const LADO_X = 0.74 // (la plataforma mide 68 cm: los paneles quedan a su lado sin taparla)
 function plano(ancho, alto, textura) {
     const m = new THREE.Mesh(new THREE.PlaneGeometry(ancho, alto).translate(0, alto / 2, 0), new THREE.MeshBasicMaterial({ map: textura, transparent: true, toneMapped: false }))
     const soporte = new THREE.Group(); soporte.add(m); m.rotation.x = -0.12 // (un poco inclinado hacia atrás, como un atril)

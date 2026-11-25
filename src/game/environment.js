@@ -603,9 +603,11 @@ const plantillas = (o) => {
 }
 // Casas del lado cercano: tapan casi la mitad del andén desde la cámara y Gabriela se perdía detrás de ellas (parecía atorada). Cuando pasa
 // por detrás de una (a menos de 5 m y con la casa entre ella y la cámara), la casa se vuelve casi transparente; al alejarse, vuelve
-const transparentes = [], camDir = new THREE.Vector2()
+const transparentes = [], rellenos = [], camDir = new THREE.Vector2()
 function transparentar(dt, px, pz) {
     if (runtime.space !== 'STREET' || px === undefined) return
+    const enGafas = document.documentElement.classList.contains('gx-en-xr')
+    if (rellenos.length && rellenos[0].visible !== enGafas) rellenos.forEach(r => { r.visible = enGafas }) // (los edificios macizos, en las gafas)
     const az = THREE.MathUtils.degToRad(CONFIG.camera.azimuth); camDir.set(Math.sin(az), Math.cos(az)) // hacia dónde está la cámara (en el piso)
     for (const fa of transparentes) {
         const gx = fa.g.position.x - px, gz = fa.g.position.z - pz
@@ -647,6 +649,12 @@ const PAREDES = ['Pared 1', 'Edificio1', 'Cadera clara']
             })
             MODELS.push(pair)
             if (cerca) transparentes.push(fa)
+            // relleno: los modelos de los edificios son solo las caras que veía la cámara del juego original; desde arriba y por detrás, en la
+            // maqueta, se veían vacíos por dentro. Un bloque macizo del color de su pared, justo por dentro del modelo (solo en las gafas)
+            const ancho = e.ancho * k, fondo = e.fondo * k, altura = e.alto * k
+            const relleno = new THREE.Mesh(new THREE.BoxGeometry(ancho * 0.97, altura * 0.97, fondo * 0.97), cache[MUROS[v % MUROS.length].join('')] ||= mat(...MUROS[v % MUROS.length], { flatShading: false }))
+            relleno.position.set(dx, altura * 0.97 / 2, frente - fondo / 2); relleno.visible = false; relleno.name = 'relleno'
+            g.add(relleno); rellenos.push(relleno)
         })
     })
 }

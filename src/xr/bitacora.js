@@ -113,7 +113,7 @@ const PAG = [{ x: 60, y: 130, w: 940, h: 1150 }, { x: 1048, y: 130, w: 940, h: 1
 // 'guiada' y 'presente' son las páginas de las técnicas; las demás, la de cada minijuego (MINIS)
 // cuatro pestañas: Minijuegos (los cinco tutoriales), Grounding (las técnicas para recuperar la calma) y Ajustes (efectos, sonido y mover
 // la maqueta). 'presente' y 'guiada' son las páginas de las técnicas; las demás, la de cada minijuego (MINIS)
-const PESTANAS = [['indice', 'Índice'], ['minijuegos', 'Minijuegos'], ['grounding', 'Grounding'], ['ajustes', 'Ajustes']]
+const PESTANAS = [['indice', 'Índice'], ['minijuegos', 'Minijuegos'], ['grounding', 'Saber más'], ['ajustes', 'Ajustes']] // ("Grounding" se confundía con el minijuego)
 const SECCION = { minijuegos: ['hold', 'earth', 'gravedad', 'foco', 'conteo'], grounding: ['anclaje', 'caminar', 'sentidos', 'guiada', 'respira1', 'respira2'], ajustes: ['ajustes'] }
 const seccionDe = () => 'minijuegos'
 export const estado = { tab: 'indice', pag: 0, hover: -1, nueva: '' } // nueva: la pestaña con una página recién escrita (exportado para las pruebas)
@@ -211,7 +211,7 @@ function indice(g) {
         g.fillStyle = estado.hover === i ? COL.rojo : COL.tinta; g.textAlign = 'left'; g.fillText(txt, b.x + 130 + sangria, y); y += 62
     }
     const NOMBRE = { anclaje: 'Anclaje al presente', caminar: 'Earthing y gravedad', sentidos: 'Foco y contar lo que ves', guiada: 'Respiración cuadrada guiada', respira1: 'Pausa y respira', respira2: 'Más respiraciones', ajustes: 'Efectos, sonido y mover la maqueta' }
-    for (const [tab, titulo2] of [['minijuegos', 'Minijuegos'], ['grounding', 'Grounding'], ['ajustes', 'Ajustes']]) {
+    for (const [tab, titulo2] of [['minijuegos', 'Minijuegos'], ['grounding', 'Saber más: técnicas de calma'], ['ajustes', 'Ajustes']]) {
         g.font = `40px ${TITULO}`; g.fillStyle = COL.tinta2; g.textAlign = 'left'; g.fillText(titulo2, b.x + 60, y); y += 60
         g.font = `50px ${MANO}`
         SECCION[tab].forEach((id, i) => {
@@ -240,9 +240,13 @@ function minijuego(g, id) {
     paso(ps[0], 0, a.x + 70, a.y + 260); paso(ps[1], 1, a.x + 70, a.y + 640)
     titulo(g, b, 'Cómo se juega')
     paso(ps[2], 2, b.x + 70, b.y + 230)
-    redondo(g, b.x + 50, b.y + 620, b.w - 100, 330, 24); g.fillStyle = 'rgba(242,192,99,0.35)'; g.fill(); g.strokeStyle = COL.tinta; g.lineWidth = 3; g.stroke()
+    // (la letra se achica hasta que el texto quepa en el recuadro; antes se salía por abajo)
+    let tam = 62; g.font = tam + 'px ' + MANO
+    while (tam > 40 && medirParrafo(g, m.manos, b.w - 180, tam, 0) > 360) { tam -= 4; g.font = tam + 'px ' + MANO }
+    const altoCaja = Math.max(330, 130 + medirParrafo(g, m.manos, b.w - 180, tam, 0) + 30)
+    redondo(g, b.x + 50, b.y + 620, b.w - 100, altoCaja, 24); g.fillStyle = 'rgba(242,192,99,0.35)'; g.fill(); g.strokeStyle = COL.tinta; g.lineWidth = 3; g.stroke()
     g.fillStyle = COL.tinta; g.font = `46px ${TITULO}`; g.fillText('Con las manos', b.x + 90, b.y + 700)
-    g.font = `62px ${MANO}`; parrafo(g, m.manos, b.x + 90, b.y + 780, b.w - 180, 62)
+    g.font = tam + 'px ' + MANO; parrafo(g, m.manos, b.x + 90, b.y + 780, b.w - 180, tam)
 }
 // respiración guiada: la respiración cuadrada de la página (inhalar 4 s, retener 4 s, exhalar 4 s, pausa en vacío 4 s) y un círculo que
 // crece al inhalar, se queda al retener y se encoge al exhalar (como el medidor del juego)

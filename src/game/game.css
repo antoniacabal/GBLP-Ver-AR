@@ -391,7 +391,7 @@ body.gx-mr-on .gx-full{display:none!important} /* en las gafas (y su vista previ
 /* IWSDK pone su lienzo dentro de #escena-xr y toma su tamaño: si nace en 0 x 0, los primeros cuadros fallan */
 .escena-xr{position:fixed;inset:0}
 /* En las gafas la interfaz se copia en el panel que flota sobre la maqueta (xr/panel.js) */
-html.gx-en-xr .gx{zoom:1.15} /* en las gafas, un poco más grande (el panel se ve del mismo tamaño a cualquier distancia; con 1.45 el tutorial se salía de la página y su botón no se veía) */
+html.gx-en-xr .gx{zoom:var(--zoom-xr,1.15)} /* en las gafas, un poco más grande (el panel se ve del mismo tamaño a cualquier distancia; con 1.45 el tutorial se salía de la página y su botón no se veía) */
 /* En una sesión de realidad aumentada las Quest dejan de dibujar la página: las animaciones y transiciones de CSS se congelan en su primer
    cuadro. Los pop-ups (que entran con un fundido desde opacidad 0) quedaban invisibles en el panel y la barra de progreso sin llenarse.
    En las gafas no hay animaciones de CSS: todo aparece de una vez (las de GSAP sí siguen, porque xr/mundo.js mueve su reloj) */
@@ -401,7 +401,6 @@ html.gx-en-xr .gx-progreso{left:34%;right:34%;top:4.6rem;bottom:auto;height:8px;
 html.gx-en-xr .gx-progreso-fill{border-radius:999px}
 html.gx-en-xr .gx-progreso-pct{bottom:auto;top:12px}
 html.gx-en-xr .gx-pause{z-index:20} /* la salida rápida, encima de cualquier otro pop-up (los controles, cómo se juega) */
-html.gx-en-xr .gx-pause .gx-dialog{zoom:1.35} /* la salida rápida, más grande en las gafas (se veía muy pequeña) */
 html.gx-en-xr .gx-flechas{display:none} /* gravedad: en las gafas se juega con las dos manos (xr/gestos.js), no con las flechas */
 .gx-conteo-veo{margin:.2rem 0 .4rem;font-size:1.3rem;font-weight:600;color:var(--color-principal,#F2C063)} /* conteo en las gafas: qué número se lee de tus dedos */
 /* la página de controles en las gafas: más grande, y CLICK destacado con su dibujo (la guía permanente está a la izquierda de la maqueta) */
@@ -432,4 +431,12 @@ html.gx-en-xr .gx-tutorial .gx-dialog h2{font-size:6rem} /* (Dongle: se ve peque
 html.gx-en-xr .gx-tutorial .gx-dialog .gx-sub{font-size:3rem}
 html.gx-en-xr .gx-tutorial .gx-dialog{width:min(94vw,46rem)}
 html.gx-en-xr .gx-gravedad-ayuda{font-size:1.35rem;line-height:1.35}
+/* en las gafas: sin la salida rápida ni el "Saltar" del panel (la salida rápida es el botón de la mesa; el botón rojo avanza) */
+html.gx-en-xr .gx-exit,html.gx-en-xr .gx-saltar{display:none!important}
+/* la salida rápida en las gafas: el título y las dos opciones, grandes */
+html.gx-en-xr .gx-pause .gx-dialog>p,html.gx-en-xr .gx-pause .gx-sub,html.gx-en-xr .gx-pause .gx-audio,html.gx-en-xr .gx-pause .gx-ver-controles{display:none!important}
+html.gx-en-xr .gx-pause .gx-dialog{width:min(94vw,44rem);max-width:none}
+html.gx-en-xr .gx-pause .gx-dialog h2{font-size:6.5rem}
+html.gx-en-xr .gx-pause .gx-act{font-size:3.6rem}
+html.gx-en-xr .gx-pause .gx-actions{justify-content:space-between;gap:2rem;margin-top:1rem}
 html.gx-en-xr .gx-talk{visibility:hidden} /* en las gafas los diálogos van en globos sobre quien habla (xr/globos.js) */

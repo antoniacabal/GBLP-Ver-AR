@@ -29,7 +29,7 @@ import { gravedad as juegoGravedad } from '../game/gravedad.js'
 import { conteo as juegoConteo } from '../game/conteo.js'
 import { colocacion } from './colocacion.js'
 import { mesa, joystick } from './joystick.js'
-import { manos, cabeza, leer, normalPalma } from './manos.js'
+import { manos, cabeza, leer, normalPalma, centroPalma } from './manos.js'
 import { sonido } from './sonidos.js'
 export { manos }
 
@@ -63,14 +63,19 @@ function respirar() {
 //    la corrección, directa (como inclinar el celular en la versión de pantalla): manos parejas = no empuja; la derecha más arriba empuja
 //    hacia la izquierda; la izquierda más arriba, hacia la derecha. Antes se traducía a mantener A o D, que suma de a poco y era muy difícil.
 //    Aquí no importa si una mano baja cerca de los controles de la mesa (en el dibujo "Peso Der" la mano derecha queda abajo)
+const nB = V(), pA = V(), pB = V()
 let barra = false, empuje = 0 // (ya no se usa A / D; queda para soltar una tecla si quedó apretada)
 function gravedad() {
     const L = manos.left, R = manos.right
     const juega = breathing.active && runtime.techId === 'gravedad'
-    const sostiene = juega && L.ok && R.ok && L.pellizco && R.pellizco && joystick.mano !== L && joystick.mano !== R
-    if (sostiene !== barra) { barra = sostiene; (sostiene ? sonido.agarrar : sonido.soltar)() } // (se oye al tomar y soltar la barra)
+    const libres = juega && L.ok && R.ok && joystick.mano !== L && joystick.mano !== R
+    // dos formas: la barra (las dos pellizcando) o la balanza (las dos abiertas, con las palmas hacia abajo o hacia arriba, como platillos)
+    const conBarra = libres && L.pellizco && R.pellizco
+    const conBalanza = libres && !conBarra && L.abierta && R.abierta && Math.abs(normalPalma(L, 'left', nB).y) > 0.6 && Math.abs(normalPalma(R, 'right', nB).y) > 0.6
+    const sostiene = conBarra || conBalanza
+    if (sostiene !== barra) { barra = sostiene; (sostiene ? sonido.agarrar : sonido.soltar)() } // (se oye al tomar y soltar)
     if (!sostiene) return juegoGravedad.manos(null)
-    const a = L.p['thumb-tip'], b = R.p['thumb-tip']
+    const a = conBarra ? L.p['thumb-tip'] : centroPalma(L, pA), b = conBarra ? R.p['thumb-tip'] : centroPalma(R, pB)
     juegoGravedad.manos(THREE.MathUtils.radToDeg(Math.atan2(b.y - a.y, Math.hypot(b.x - a.x, b.z - a.z))))
 }
 

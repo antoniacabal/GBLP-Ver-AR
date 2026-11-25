@@ -38,8 +38,8 @@ function cajaDe(sp) {
     if (sp === 'BUS' && SEATS.length) { // (el grupo del MIO trae también la ciudad que pasa por las ventanas: se arma con las bancas)
         const xs = SEATS.map(s => s.x), zs = SEATS.map(s => s.z), x0 = Math.min(...xs), x1 = Math.max(...xs), z0 = Math.min(...zs), z1 = Math.max(...zs)
         // (incluye la franja de ciudad que pasa por las ventanas, en el lado -z a unos 7 unidades: así se ve el viaje)
-        const za = Math.min(z0 - 1, -8.6), zb = z1 + 1
-        return (cajas[sp] = { x: (x0 + x1) / 2, z: (za + zb) / 2, hx: (x1 - x0) / 2 + 1.6, hz: (zb - za) / 2 })
+        const za = Math.min(z0 - 1, -8.6), zb = z1 + 1, xa = x0 - 1.8, xb = x1 + 3.4 // (adelante, +x, va el conductor: antes quedaba afuera)
+        return (cajas[sp] = { x: (xa + xb) / 2, z: (za + zb) / 2, hx: (xb - xa) / 2, hz: (zb - za) / 2 })
     }
     const b = medir(sp)
     if (b.isEmpty()) return { x: CONFIG.camera.x, z: CONFIG.camera.z, hx: 6, hz: 6, provisional: true }
@@ -97,7 +97,9 @@ export function actualizarMaqueta(dt, t) {
     const s = Math.min(comodidad.temblorMax, (runtime.quake * 0.5 + runtime.stress * 0.06) * comodidad.temblor)
     J.set((Math.sin(t * 19) + Math.sin(t * 11)) * 0.5 * s, 0, (Math.cos(t * 17) + Math.sin(t * 7)) * 0.5 * s)
     escala.scale.setScalar(1 / k)
-    juego.position.set(-(C.x + J.x), 0, -(C.z + J.z))
+    // (el MIO por dentro tiene el piso en y = 0 pero la calle y las ruedas más abajo: se sube todo para que no queden debajo de la plataforma)
+    juego.position.set(-(C.x + J.x), sp === 'BUS' ? 1.1 : 0, -(C.z + J.z))
+    suelo.visible = calle && document.documentElement.classList.contains('gx-en-xr'); suelo.position.set(C.x, -0.01, C.z) // (justo debajo de la calle y encima del corte de abajo de la plataforma)
     // (en la calle, lo que se ve es el cuadrado derecho: en el mapa, girado, cubre hasta MEDIA_BASE·√2 hacia cada lado)
     Object.assign(recuadro, { x: calle ? C.x : caja.x, z: calle ? C.z : caja.z, hx: calle ? MEDIA_BASE * Math.SQRT2 * k : caja.hx, hz: calle ? MEDIA_BASE * Math.SQRT2 * k : caja.hz, k })
     // el recuadro en la plataforma (metros): en la calle, centrado; adentro, donde cae la caja del espacio (fijo aunque tiemble el juego)
@@ -105,6 +107,12 @@ export function actualizarMaqueta(dt, t) {
     azimut()
     esconderFuera()
 }
+
+// 2.1 El suelo de la calle en las gafas: la cámara del juego original nunca miraba detrás de las casas ni los lotes vacíos; desde arriba,
+//     en la maqueta, ahí se veía la losa (parecía que el suelo desaparecía). Un plano neutro (no verde: el verde es el pasto del minijuego)
+//     debajo de todo, que sigue a Gabriela
+const suelo = new THREE.Mesh(new THREE.PlaneGeometry(70, 70).rotateX(-Math.PI / 2), new THREE.MeshStandardMaterial({ color: 0x6a6170, roughness: 1 }))
+suelo.name = 'suelo-calle'; suelo.visible = false; juego.add(suelo)
 
 // 3.1 Recorte: lo que sale del recuadro no se dibuja (planos de corte en los materiales del juego). No se recorta todo lo que se dibuja
 //     (renderer.clippingPlanes): eso cortaría también las manos, la plataforma y la interfaz de IWSDK

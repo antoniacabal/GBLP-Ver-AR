@@ -204,7 +204,7 @@ export const player = {
         else if (sitting) group.position.y = seatY - 0.46 // la cadera queda sobre el cojín (las piernas, dobladas hacia el frente)
         // de pie, caminando, con miedo o saltando: el cuerpo se apoya en la suela más baja de la pose de este cuadro (prota.piso). Antes era una
         // fórmula fija del paso (alturaPaso) y al caminar los zapatos se metían hasta 4 cm en el piso. En el salto se suma el arco del aire
-        else group.position.y = (runtime.space === 'STREET' ? sueloCalle(group.position.x, group.position.z) : PISO[runtime.space] ?? 0) + 0.002 - prota.piso() + Math.max(0, salto?.y ?? 0)
+        else group.position.y = (runtime.space === 'STREET' ? sueloCalle(group.position.x, group.position.z) : PISO[runtime.space] ?? 0) + 0.002 - prota.piso() + Math.max(0, salto?.y ?? 0) + (runtime.elevar || 0) // (elevar: sobre la plataforma del equilibrio, gravedad.js)
         // sentada, la maleta va sobre las piernas (en la espalda atravesaba el espaldar de la silla)
         backpack.position.set(0, sitting ? -0.14 : 0, sitting ? 0.66 : 0); correas.forEach(c => { c.visible = !sitting })
         backpack.visible = conMaleta && !(sitting && enMesa) // sentada a la mesa no tiene la maleta en las piernas (en el MIO sí)

@@ -17,6 +17,25 @@ import gsap from 'gsap'
 import { CONFIG, runtime } from './config.js'
 import { audio } from './audio.js'
 import { haptics } from './haptics.js'
+import * as THREE from 'three'
+import { scene } from './scene.js'
+import { player } from './player.js'
+
+// 2.1 En las gafas: Gabriela se para sobre una plataforma elevada (una tabla sobre un pie) que se inclina hacia donde se cae. Con las
+//     manos (xr/gestos.js) se endereza: cuando la sostienes derecha, la tabla queda nivelada. Conecta el movimiento de tus manos con lo
+//     que pasa en la maqueta
+const ELEVA = 0.6
+const balanza = new THREE.Group(), tabla = new THREE.Group(); balanza.visible = false; balanza.name = 'balanza'
+{
+    const madera = new THREE.MeshStandardMaterial({ color: 0xa16a49, roughness: 0.8 }), oscuro = new THREE.MeshStandardMaterial({ color: 0x482642, roughness: 0.9 })
+    const losa = new THREE.Mesh(new THREE.BoxGeometry(2.6, 0.14, 1.3), madera); losa.position.y = -0.07
+    const borde = new THREE.Mesh(new THREE.BoxGeometry(2.7, 0.04, 1.4), new THREE.MeshStandardMaterial({ color: 0xf2c063, roughness: 0.6 })); borde.position.y = -0.16
+    tabla.add(losa, borde); tabla.position.y = ELEVA
+    const pie = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.5, ELEVA - 0.18, 12), oscuro); pie.position.y = (ELEVA - 0.18) / 2
+    balanza.add(tabla, pie)
+}
+scene.add(balanza)
+const enGafas = () => document.documentElement.classList.contains('gx-en-xr')
 
 const RECTO = 3.5    // grados de tolerancia para contar como "derecha" (con 2.5 era casi imposible)
 const NECESITA_GAFAS = 3 // (en las gafas, con las manos, un poco menos)
@@ -91,16 +110,17 @@ export const gravedad = {
         activo = true; t = 0; derecho = 0; ganado = false; correccion = 0; teclas = 0; gamma0 = null; estabaRecto = false; arrastre = null
         const conGiro = tactil() && 'DeviceOrientationEvent' in window && !document.documentElement.classList.contains('gx-en-xr') // (en las gafas no: se juega con las manos)
         botonGiro.hidden = !conGiro // en celular: la opción de jugar girándolo
-        ayuda.textContent = document.documentElement.classList.contains('gx-en-xr') ? 'Usa tus manos para equilibrar a Gabriela: pellizca con las dos, como si sostuvieras una barra, e inclínala hacia el lado contrario de la caída.' : tactil() ? 'Usa las flechas o arrastra, en contra de la caída.' : 'Arrastra o usa A / D, en contra de la caída.'
+        ayuda.textContent = document.documentElement.classList.contains('gx-en-xr') ? 'Usa tus manos como una balanza: ábrelas con las palmas hacia abajo y sube la del lado contrario a la caída (o pellizca con las dos, como una barra).' : tactil() ? 'Usa las flechas o arrastra, en contra de la caída.' : 'Arrastra o usa A / D, en contra de la caída.'
         panel.hidden = false; gsap.fromTo(panel, { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.4, ease: 'power2.out' })
         // la cámara se acerca a Gabriela (main.js la sigue mientras runtime.zoomJugador)
         zoomAntes = CONFIG.camera.zoom; runtime.zoomJugador = true; gsap.to(CONFIG.camera, { zoom: ZOOM, duration: 1, ease: 'power2.inOut' })
         runtime.tambaleo = 0
+        if (enGafas()) { balanza.visible = true; runtime.elevar = ELEVA } // (sobre la plataforma elevada)
         audio.ruido.start()
     },
     stop() {
         activo = false; panel.hidden = true; removeEventListener('deviceorientation', alGiro)
-        runtime.tambaleo = undefined; runtime.zoomJugador = false
+        runtime.tambaleo = undefined; runtime.zoomJugador = false; balanza.visible = false; runtime.elevar = 0
         gsap.to(CONFIG.camera, { zoom: zoomAntes, duration: 0.9, ease: 'power2.inOut' })
         gsap.to(runtime, { dutch: 0, duration: 0.8, ease: 'power2.out' })     // el horizonte vuelve a su lugar
         audio.ruido.stop(); if (ganado) audio.suspiro()                         // Gabriela suspira
@@ -116,6 +136,11 @@ export const gravedad = {
         // Gabriela se tambalea hacia donde se cae y el horizonte se inclina con ella; el ruido se calma mientras más derecha
         runtime.tambaleo = Math.max(-1, Math.min(1, inclinacion / 20))
         runtime.dutch = inclinacion * Math.PI / 180 * 0.4; runtime.dutchSway = 0
+        if (balanza.visible) { // la tabla debajo de Gabriela, de frente a la cámara (quien juega), inclinada hacia donde se cae
+            const p = player.group.position; balanza.position.set(p.x, p.y - ELEVA - (runtime.elevar ? 0 : 0), p.z)
+            balanza.position.y = p.y - ELEVA + 0.002; balanza.rotation.y = CONFIG.camera.azimuth * Math.PI / 180
+            tabla.rotation.z = -Math.max(-1, Math.min(1, inclinacion / 25)) * 0.35
+        }
         if ((oido -= dt) <= 0) { oido = 0.25; audio.ruido.calma(Math.max(0, 1 - Math.abs(inclinacion) / 15) * 0.7 + Math.min(1, derecho / NECESITA) * 0.3) }
         gsap.set(burbuja, { x: Math.max(-1, Math.min(1, inclinacion / 20)) * 70 })
         burbuja.classList.toggle('gx-nivel-burbuja--recta', recto)

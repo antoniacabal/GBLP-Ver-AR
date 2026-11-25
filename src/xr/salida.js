@@ -23,9 +23,10 @@ import { sonido } from './sonidos.js'
 // 1. El botón: 15 cm delante del centro de la mesa y fuera de la plataforma (la esquina queda a 35 cm del centro del grupo de la mesa)
 export const LUGAR_SALIDA = new THREE.Vector3(0, 0, 0.46)
 const base = new THREE.Group(); base.name = 'salida'; base.position.copy(LUGAR_SALIDA)
-const tapa = new THREE.Mesh(new THREE.CylinderGeometry(0.024, 0.024, 0.014, 32), new THREE.MeshStandardMaterial({ color: 0xe4ffff, roughness: 0.5, emissive: 0x1a2a2a }))
+const tapa = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.014, 0.045), // (rectangular: una tecla ancha, fácil de tocar)
+    new THREE.MeshStandardMaterial({ color: 0xe4ffff, roughness: 0.5, emissive: 0x1a2a2a }))
 {
-    const caja = new THREE.Mesh(new THREE.CylinderGeometry(0.033, 0.037, 0.012, 32), new THREE.MeshStandardMaterial({ color: 0x580213, roughness: 0.7 }))
+    const caja = new THREE.Mesh(new THREE.BoxGeometry(0.118, 0.012, 0.063), new THREE.MeshStandardMaterial({ color: 0x580213, roughness: 0.7 }))
     caja.position.y = 0.006
     // las dos rayas de "pausa" sobre la tapa (como el ícono de la salida rápida en el panel)
     const raya = new THREE.BoxGeometry(0.006, 0.002, 0.02), mat = new THREE.MeshBasicMaterial({ color: 0x580213 })

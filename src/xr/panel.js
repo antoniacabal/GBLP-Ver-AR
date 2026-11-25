@@ -11,6 +11,22 @@ function enOtraCosa(rayo) {
     return rayoGlobo.intersectObjects([globo, ...superficies].filter(seVe), false).length > 0
 }
 
+// la interfaz en las gafas: un poco más grande (zoom 1.15), pero nunca más de lo que cabe en la ventana del navegador de las gafas (que
+// puede ser más baja que la del computador): si no cabía, los pop-ups se cortaban y sus textos quedaban por fuera del recuadro
+function ajustarZoom() { document.documentElement.style.setProperty('--zoom-xr', (1.15 * Math.min(1, innerHeight / 720, innerWidth / 1280)).toFixed(3)) }
+addEventListener('resize', ajustarZoom)
+
+// las manos (las mallas que dibuja IWSDK: l_handMeshNode / r_handMeshNode) siempre encima de la maqueta y de los paneles: sin prueba de
+// profundidad y con un orden de dibujo alto. Antes se metían dentro de la maqueta y desaparecían. No cambia cómo funcionan (es solo el dibujo)
+function manosEncima(player) {
+    player.traverse(o => {
+        if (!o.isSkinnedMesh || !/handMeshNode/.test(o.name) || o.userData.encima) return
+        o.userData.encima = true; o.renderOrder = 1000 + (o.renderOrder >= 999 ? 1 : 0)
+        for (const m of [o.material].flat()) { m.depthTest = false; m.depthWrite = false; m.needsUpdate = true }
+    })
+}
+let tManos = 0
+
 // 4. Sistema del panel (IWSDK)
 
 // La interfaz en las gafas. La página HTML no se ve dentro de la sesión inmersiva, así que la interfaz del juego (narrativa.html y ui.js:
@@ -30,6 +46,7 @@ import { mesa, joystick } from './joystick.js'
 import { manos } from './manos.js'
 import { globo } from './globos.js'
 import { superficies } from './bitacora.js'
+import { ajustes } from './ajustes.js'
 import { sonido } from './sonidos.js'
 import { colocacion } from './colocacion.js'
 import { mundo } from './estado.js'
@@ -91,7 +108,7 @@ function fundidos(dt) {
     velo.material.opacity = veloT; velo.visible = veloT > 0.01
     velo.material.depthTest = !lleno // (sin prueba de profundidad tapa también la maqueta; el panel va encima)
     const v = parseFloat(elVineta.style.opacity) || 0
-    vineta.material.opacity = Math.min(0.55, v * 0.7); vineta.visible = v > 0.01
+    vineta.material.opacity = Math.min(0.55, v * 0.7); vineta.visible = v > 0.01 && ajustes.efectos // (los ajustes pueden apagarla)
 }
 
 // 3. Pellizcar el panel: el rayo de cada mano; si toca el panel, el pellizco es un clic de la página en ese punto
@@ -150,9 +167,13 @@ export class SistemaPanel extends createSystem({}) {
         const sesion = this.world.session
         if (sesion !== this.sesion) { // en las gafas la interfaz se agranda un poco (se lee desde la mesa); en la pantalla, como siempre
             this.sesion = sesion; document.documentElement.classList.toggle('gx-en-xr', !!sesion)
+            // en las gafas "Parar" dice a dónde lleva (la página principal)
+            const parar = document.querySelector('.gx-pause [data-act="stop"] span'); if (parar) parar.textContent = sesion ? 'Volver a la página' : 'Parar'
+            ajustarZoom()
         }
         if (!sesion) { panel.visible = punto.visible = fundido.visible = velo.visible = vineta.visible = lineas.left.visible = lineas.right.visible = false; pegar = true; return }
         fundidos(delta)
+        if ((tManos -= delta) <= 0) { tManos = 1; manosEncima(this.world.player) }
         // la interfaz se vuelve a copiar unas 24 veces por segundo (40 durante un minijuego, que se mueve más)
         if ((tEspejo -= delta) <= 0) {
             tEspejo = document.body.classList.contains('gx-minijuego') ? 1 / 40 : 1 / 24

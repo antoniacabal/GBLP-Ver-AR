@@ -34,15 +34,15 @@ export const LUGAR = { joystick: new THREE.Vector3(-0.24, 0, 0.42), boton: new T
 const MAT = (c, o = {}) => new THREE.MeshStandardMaterial({ color: c, roughness: 0.6, ...o })
 
 // 2. El joystick
-export const RADIO = 0.04, ALTO_BOLA = 0.085 // (alto para que la mano cerrada lo rodee)
+export const RADIO = 0.03, ALTO_BOLA = 0.07 // (más pequeño que antes: recorridos más cortos, menos cansancio en el brazo)
 const base = new THREE.Group(); base.name = 'joystick'; base.position.copy(LUGAR.joystick)
 {
-    const disco = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.05, 0.012, 32), MAT(0x201826)); disco.position.y = 0.006
-    const aro = new THREE.Mesh(new THREE.TorusGeometry(0.047, 0.003, 8, 40).rotateX(Math.PI / 2), MAT(0xf2c063, { emissive: 0x5a3e0c })); aro.position.y = 0.013
+    const disco = new THREE.Mesh(new THREE.CylinderGeometry(0.037, 0.041, 0.012, 32), MAT(0x201826)); disco.position.y = 0.006
+    const aro = new THREE.Mesh(new THREE.TorusGeometry(0.039, 0.003, 8, 40).rotateX(Math.PI / 2), MAT(0xf2c063, { emissive: 0x5a3e0c })); aro.position.y = 0.013
     base.add(disco, aro)
 }
-const palo = new THREE.Mesh(new THREE.CylinderGeometry(0.009, 0.009, 1, 14), MAT(0x71708a)); base.add(palo)
-const bola = new THREE.Mesh(new THREE.SphereGeometry(0.021, 24, 16), MAT(0xf2c063, { emissive: 0x2e2006 }))
+const palo = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.008, 1, 14), MAT(0x71708a)); base.add(palo)
+const bola = new THREE.Mesh(new THREE.SphereGeometry(0.018, 24, 16), MAT(0xf2c063, { emissive: 0x2e2006 }))
 bola.name = 'bola'; bola.position.set(0, ALTO_BOLA, 0)
 const Y = new THREE.Vector3(0, 1, 0)
 function ponerPalo() { // el palito va de la base a la bola (se inclina con ella)
@@ -67,11 +67,16 @@ function aJoystick(off) {
 //    joystick.mano: la mano que lo tiene (los gestos no la cuentan: cerrar la mano aquí no es respirar)
 export const joystick = { mano: null }
 const hueco = new THREE.Vector3(), bolaMundo = new THREE.Vector3(), agarre = new THREE.Vector3(), refAMundo = new THREE.Matrix4()
-function manoCerrada(player) {
+// El agarre queda firme: solo se suelta al abrir la mano del todo o si el seguimiento la pierde más de 0.4 s (antes, al levantar o
+// mover un poco la mano, el puño dejaba de leerse un instante y el joystick se soltaba)
+let perdida = 0
+function manoCerrada(player, dt) {
     refAMundo.copy(player.matrixWorld)
     const m = joystick.mano
-    if (m) { // ¿sigue cerrada?
-        if (!m.ok || !m.puno) { joystick.mano = null; return false }
+    if (m) { // ¿sigue agarrándolo?
+        perdida = m.ok ? 0 : perdida + dt
+        if ((m.ok && m.abierta) || perdida > 0.4) { joystick.mano = null; return false }
+        if (!m.ok) return true // (perdida un momento: se queda donde estaba)
         huecoMano(m, hueco).applyMatrix4(refAMundo).add(agarre)
         base.worldToLocal(hueco); bola.position.set(hueco.x, ALTO_BOLA, hueco.z)
         return true
@@ -104,7 +109,7 @@ export class SistemaJoystick extends createSystem({ bola: { required: [OneHandGr
         mesa.visible = activo
         const xr = this.world.input?.xr, conManos = !!(xr?.isPrimary?.('hand', 'left') || xr?.isPrimary?.('hand', 'right'))
         const pellizcada = activo && this.entBola.hasComponent(Grabbed)
-        const cerrada = activo && conManos && !pellizcada && manoCerrada(this.world.player)
+        const cerrada = activo && conManos && !pellizcada && manoCerrada(this.world.player, delta)
         if (!activo || pellizcada) joystick.mano = null
         const agarrada = pellizcada || cerrada
         if (agarrada !== !!this.antesAgarrada) { this.antesAgarrada = agarrada; (agarrada ? sonido.agarrar : sonido.soltar)() } // (se oye al agarrarlo y al soltarlo)

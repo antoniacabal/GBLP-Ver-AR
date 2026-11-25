@@ -32,6 +32,22 @@ const tapa = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.016, 32), n
     base.add(caja, aro)
 }
 const ARRIBA = 0.022, ABAJO = 0.014 // la tapa se hunde 8 mm
+// el rótulo "Interactuar", de pie detrás del botón y siempre de frente a quien juega
+const rotulo = (() => {
+    const c = document.createElement('canvas'); c.width = 320; c.height = 80
+    const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace
+    const dibujar = () => {
+        const g = c.getContext('2d'); g.clearRect(0, 0, 320, 80)
+        g.fillStyle = 'rgba(191,78,36,0.95)'; g.beginPath(); g.roundRect(4, 4, 312, 72, 36); g.fill()
+        g.strokeStyle = '#F2C063'; g.lineWidth = 3; g.stroke()
+        g.fillStyle = '#E4FFFF'; g.font = '600 38px Outfit, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('Interactuar', 160, 42)
+        t.needsUpdate = true
+    }
+    dibujar(); document.fonts?.ready.then(dibujar)
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(0.072, 0.018), new THREE.MeshBasicMaterial({ map: t, transparent: true, depthWrite: false, toneMapped: false }))
+    m.position.set(0, 0.06, 0); base.add(m); return m
+})()
+const cab = new THREE.Vector3()
 tapa.position.y = ARRIBA
 
 // 2. Qué hace. Primero lo que está en pantalla: un pop-up con un solo botón de "Empezar" (los controles, cómo se juega) o la tarjeta
@@ -65,5 +81,6 @@ export class SistemaBoton extends createSystem({}) {
         tapa.material.emissive.setHex(ahora ? 0x7a2a0a : 0x2a0a02)
         if (ahora && !this.presionado && !this.espera) { this.espera = ESPERA; sonido.toque(); interactuar() } // (un toque = una acción)
         this.presionado = ahora
+        if (activo) { this.world.camera.getWorldPosition(cab); rotulo.lookAt(cab) }
     }
 }

@@ -260,6 +260,7 @@ export class SistemaColocacion extends createSystem({
         }
         recolocar.visible = !!sesion && estado.puesta
         if (!sesion) return
+        if (estado.recolocar) { estado.recolocar = false; if (estado.puesta && !estado.colocando) { sonido.toque(); this.empezar() } } // (pedido desde los ajustes de la bitácora)
         if (recolocar.visible) { this.world.camera.getWorldPosition(cab); rotulo.lookAt(cab) } // (el rótulo, de frente a quien juega)
         // recolocar: al presionar el botón de la esquina
         const presionado = this.entBoton.hasComponent(Pressed)

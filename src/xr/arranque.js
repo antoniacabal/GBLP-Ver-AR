@@ -32,7 +32,7 @@ export async function arrancar() {
     const { SistemaBitacora } = await import('./bitacora.js') // a los lados de la maqueta: los controles (izquierda) y la bitácora (derecha)
     mundo.registerSystem(SistemaBitacora)
     // ?debug: para revisar la realidad aumentada desde la consola (y las pruebas automáticas con el emulador)
-    if (window.juego) Object.assign(window.juego, { mundo, xr: { colocacion: (await import('./colocacion.js')).colocacion, plataforma: (await import('./maqueta.js')).plataforma, mesa: (await import('./joystick.js')).mesa, manos: (await import('./manos.js')).manos, maqueta: await import('./maqueta.js'), entorno: await import('../game/environment.js'), espejo: (await import('./espejo.js')).espejo, gravedad: (await import('../game/gravedad.js')).gravedad, breathing: (await import('../game/breathing.js')).breathing, bitacora: await import('./bitacora.js'), ui: (await import('../game/ui.js')).ui } })
+    if (window.juego) Object.assign(window.juego, { mundo, xr: { colocacion: (await import('./colocacion.js')).colocacion, plataforma: (await import('./maqueta.js')).plataforma, mesa: (await import('./joystick.js')).mesa, manos: (await import('./manos.js')).manos, maqueta: await import('./maqueta.js'), entorno: await import('../game/environment.js'), espejo: (await import('./espejo.js')).espejo, gravedad: (await import('../game/gravedad.js')).gravedad, breathing: (await import('../game/breathing.js')).breathing, bitacora: await import('./bitacora.js'), ui: (await import('../game/ui.js')).ui, ajustes: await import('./ajustes.js') } })
     await elegir(mundo, audio)
     juego.empezarJuego()
 }

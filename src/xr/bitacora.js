@@ -26,6 +26,7 @@ import { breathing } from '../game/breathing.js'
 import { INSTRUCCIONES, INSTRUCCIONES_GAFAS } from '../game/instrucciones.js'
 import { plataforma } from './maqueta.js'
 import { colocacion } from './colocacion.js'
+import { ajustes, alternarEfectos, alternarSonido, moverMaqueta } from './ajustes.js'
 import { sonido } from './sonidos.js'
 
 const COL = { tinta: '#201826', tinta2: '#482642', papel: '#F4EAD8', papel2: '#E6D6BC', cuadro: 'rgba(113,112,138,0.22)', oro: '#F2C063', rojo: '#580213', lila: '#A6869B', menta: '#3E8F7C', tapa: '#2A2033' }
@@ -110,17 +111,19 @@ export const superficies = [libro.m, panelCtrl.m] // (xr/panel.js: la línea de 
 const PAG = [{ x: 60, y: 130, w: 940, h: 1150 }, { x: 1048, y: 130, w: 940, h: 1150 }]
 // tres pestañas; cada sección tiene sus páginas (se pasan con las esquinas): la técnica y, después, los tutoriales de sus minijuegos.
 // 'guiada' y 'presente' son las páginas de las técnicas; las demás, la de cada minijuego (MINIS)
-const PESTANAS = [['indice', 'Índice'], ['respiracion', 'Respiración'], ['grounding', 'Grounding']]
-const SECCION = { respiracion: ['guiada', 'hold'], grounding: ['presente', 'earth', 'gravedad', 'foco', 'conteo'] }
-const seccionDe = (id) => id === 'hold' ? 'respiracion' : 'grounding'
+// cuatro pestañas: Minijuegos (los cinco tutoriales), Grounding (las técnicas para recuperar la calma) y Ajustes (efectos, sonido y mover
+// la maqueta). 'presente' y 'guiada' son las páginas de las técnicas; las demás, la de cada minijuego (MINIS)
+const PESTANAS = [['indice', 'Índice'], ['minijuegos', 'Minijuegos'], ['grounding', 'Grounding'], ['ajustes', 'Ajustes']]
+const SECCION = { minijuegos: ['hold', 'earth', 'gravedad', 'foco', 'conteo'], grounding: ['presente', 'guiada'], ajustes: ['ajustes'] }
+const seccionDe = () => 'minijuegos'
 export const estado = { tab: 'indice', pag: 0, hover: -1, nueva: '' } // nueva: la pestaña con una página recién escrita (exportado para las pruebas)
 let zonas = [] // { x, y, w, h, fn } en píxeles del lienzo
 
 // 3.1 Minijuegos: los cinco tutoriales que ya tiene el juego (los mismos dibujos y, en las gafas, las frases de las manos)
 const MINIS = [
-    { id: 'hold', nombre: 'Ejercicios de respiración', manos: 'Puño = inhalar y sostener · mano abierta = exhalar' },
+    { id: 'hold', nombre: 'Ejercicios de respiración', manos: 'Pon una mano frente a ti. Ciérrala en un puño para inhalar y sostener el aire; ábrela para exhalar. Sigue el aro del círculo' },
     { id: 'earth', nombre: 'Earthing físico', manos: 'Camina con el joystick hasta el pasto y quédate ahí' },
-    { id: 'gravedad', nombre: 'Reconstruir la gravedad', manos: 'Usa tus manos para equilibrar a Gabriela: pellizca con las dos e inclina la barra hacia el lado contrario de la caída' },
+    { id: 'gravedad', nombre: 'Reconstruir la gravedad', manos: 'Abre las dos manos como una balanza (palmas hacia abajo) y sube la del lado contrario a la caída. También sirve pellizcar con las dos, como una barra' },
     { id: 'foco', nombre: 'Foco entre el ruido', manos: 'Gira la mano en el aire, como una perilla' },
     { id: 'conteo', nombre: 'Conteo de grounding', manos: 'Levanta tu mano y muestra los mismos dedos que la mano del dibujo (de 0 a 5)' }
 ]
@@ -207,19 +210,19 @@ function indice(g) {
         casilla(g, b.x + 60 + sangria, y - 40, marcada, estado.hover === i)
         g.fillStyle = estado.hover === i ? COL.rojo : COL.tinta; g.textAlign = 'left'; g.fillText(txt, b.x + 130 + sangria, y); y += 76
     }
-    const NOMBRE = { guiada: 'Respiración guiada', presente: 'Conexión con el presente' }
-    for (const [tab, titulo2] of [['respiracion', 'Respiración'], ['grounding', 'Grounding']]) {
+    const NOMBRE = { guiada: 'Respiración guiada', presente: 'Conexión con el presente', ajustes: 'Efectos, sonido y mover la maqueta' }
+    for (const [tab, titulo2] of [['minijuegos', 'Minijuegos'], ['grounding', 'Grounding'], ['ajustes', 'Ajustes']]) {
         g.font = `44px ${TITULO}`; g.fillStyle = COL.tinta2; g.textAlign = 'left'; g.fillText(titulo2, b.x + 60, y); y += 70
         g.font = `58px ${MANO}`
         SECCION[tab].forEach((id, i) => {
             const tecnica = !!NOMBRE[id], visto = tecnica || vistos.has(id)
-            fila(tecnica ? NOMBRE[id] : visto ? 'Minijuego: ' + MINIS.find(m => m.id === id).nombre : 'Minijuego: ? ? ?', visto, () => ir(tab, i), 30)
+            fila(tecnica ? NOMBRE[id] : visto ? MINIS.find(m => m.id === id).nombre : '? ? ?', visto, () => ir(tab, i), 30)
         })
-        y += 16
+        y += 6
     }
 }
 function minijuego(g, id) {
-    const [a, b] = PAG, m = MINIS.find(x => x.id === id), visto = vistos.has(m.id), donde = `${estado.tab === 'respiracion' ? 'Respiración' : 'Grounding'} · minijuego`
+    const [a, b] = PAG, m = MINIS.find(x => x.id === id), visto = vistos.has(m.id), donde = `Minijuego ${SECCION.minijuegos.indexOf(id) + 1} de ${SECCION.minijuegos.length}`
     if (!visto) {
         titulo(g, a, '? ? ?', 'Página en blanco')
         g.font = `60px ${MANO}`; g.fillStyle = COL.tinta2
@@ -293,6 +296,27 @@ function grounding(g) {
         g.textAlign = 'left'; g.font = `54px ${TITULO}`; g.fillText(q, b.x + 250, y, b.w - 300)
     })
 }
+// Ajustes: tres botones grandes (se activan con CLICK como todo en la bitácora) y, en la otra página, qué hace cada uno
+function paginaAjustes(g) {
+    const [a, b] = PAG
+    titulo(g, a, 'Ajustes', 'Haz CLICK en un botón')
+    const boton = (y, texto, encendido, fn) => {
+        const i = zona(a.x + 60, y, a.w - 120, 190, () => { fn(); sucio = true })
+        redondo(g, a.x + 60, y, a.w - 120, 190, 28)
+        g.fillStyle = estado.hover === i ? COL.oro : encendido === false ? COL.papel2 : 'rgba(242,192,99,0.45)'; g.fill(); g.lineWidth = 5; g.strokeStyle = COL.tinta; g.stroke()
+        g.fillStyle = COL.tinta; g.textAlign = 'left'; g.font = '54px ' + TITULO; g.fillText(texto, a.x + 110, y + 90)
+        if (encendido !== undefined) { g.font = '58px ' + MANO; g.fillStyle = encendido ? COL.menta : COL.rojo; g.fillText(encendido ? 'Encendido' : 'Apagado', a.x + 110, y + 150) }
+    }
+    boton(a.y + 280, 'Efectos visuales', ajustes.efectos, alternarEfectos)
+    boton(a.y + 520, 'Sonido', ajustes.sonido, alternarSonido)
+    boton(a.y + 760, 'Mover la maqueta', undefined, moverMaqueta)
+    titulo(g, b, 'Qué hace cada uno')
+    g.textAlign = 'left'; g.fillStyle = COL.tinta
+    const nota = (y, t, txt) => { g.font = '44px ' + TITULO; g.fillText(t, b.x + 60, y); g.font = '56px ' + MANO; return parrafo(g, txt, b.x + 60, y + 64, b.w - 120, 56) }
+    let y = nota(b.y + 260, 'Efectos visuales', 'Los temblores de la maqueta, los edificios que se deforman y la sombra alrededor de la vista. Sin ellos todo se ve más tranquilo.')
+    y = nota(y + 40, 'Sonido', 'La música y los efectos de sonido.')
+    nota(y + 40, 'Mover la maqueta', 'Vuelve a colocarla en otra mesa o sobre un libro: apoya las manos donde la quieras.')
+}
 function dibujarLibro() {
     const g = libroL.g; zonas = []
     g.clearRect(0, 0, BW, BH)
@@ -312,9 +336,11 @@ function dibujarLibro() {
     g.fillStyle = COL.tinta2; g.fillRect(BW / 2 - 6, PAG[0].y, 12, PAG[0].h) // el lomo
     const pagina = SECCION[estado.tab]?.[estado.pag]
     if (!pagina) indice(g)
+    else if (pagina === 'ajustes') paginaAjustes(g)
     else { if (pagina === 'guiada') respiracion(g); else if (pagina === 'presente') grounding(g); else minijuego(g, pagina); esquina(g, false, true); esquina(g, true, true) }
-    // número de página (las del índice, luego las de respiración y luego las de grounding)
-    const n = !pagina ? 1 : 3 + 2 * ((estado.tab === 'grounding' ? SECCION.respiracion.length : 0) + estado.pag)
+    // número de página (el índice, luego los minijuegos, el grounding y los ajustes)
+    const antes = { minijuegos: 0, grounding: SECCION.minijuegos.length, ajustes: SECCION.minijuegos.length + SECCION.grounding.length }
+    const n = !pagina ? 1 : 3 + 2 * (antes[estado.tab] + estado.pag)
     g.fillStyle = COL.tinta2; g.font = `44px ${MANO}`; g.textAlign = 'center'; g.fillText(n, PAG[0].x + PAG[0].w / 2, PAG[0].y + PAG[0].h - 30); g.fillText(n + 1, PAG[1].x + PAG[1].w / 2, PAG[1].y + PAG[1].h - 30)
     libroL.t.needsUpdate = true; sucio = false
 }
@@ -342,9 +368,14 @@ export class SistemaBitacora extends createSystem({}) {
         const activo = !!this.world.session && colocacion.puesta && !colocacion.colocando && plataforma.visible
         lados.visible = activo
         if (!activo) return
+        // la bitácora aparece después del sismo (antes, la mañana de Gabriela va sin ella); el panel de controles está siempre
+        libro.soporte.visible = !!runtime.postQuake
         // un minijuego empieza: la bitácora se abre en su página (para consultarla mientras se juega). La primera vez además se escribe
         // (y la pestaña lo avisa). Antes solo cambiaba de página la primera vez y podía quedarse en otra página en blanco
-        const jugando = breathing.active && runtime.techId ? MECH(runtime.techId) : null
+        // (también apenas se abre su "Cómo se juega": la bitácora ya muestra la página mientras se lee el aviso)
+        const tut = document.querySelector('.gx-tutorial:not([hidden]) .gx-sub')?.textContent.trim()
+        const delAviso = tut ? (tut === 'Ejercicios de respiración' ? 'hold' : MINIS.find(m => m.nombre === tut)?.id) : null
+        const jugando = delAviso || (breathing.active && runtime.techId ? MECH(runtime.techId) : null)
         if (jugando && jugando !== this.jugando) {
             const tab = seccionDe(jugando)
             if (!vistos.has(jugando)) { vistos.add(jugando); guardar() }

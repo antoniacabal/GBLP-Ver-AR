@@ -114,7 +114,7 @@ const PAG = [{ x: 60, y: 130, w: 940, h: 1150 }, { x: 1048, y: 130, w: 940, h: 1
 // cuatro pestañas: Minijuegos (los cinco tutoriales), Grounding (las técnicas para recuperar la calma) y Ajustes (efectos, sonido y mover
 // la maqueta). 'presente' y 'guiada' son las páginas de las técnicas; las demás, la de cada minijuego (MINIS)
 const PESTANAS = [['indice', 'Índice'], ['minijuegos', 'Minijuegos'], ['grounding', 'Grounding'], ['ajustes', 'Ajustes']]
-const SECCION = { minijuegos: ['hold', 'earth', 'gravedad', 'foco', 'conteo'], grounding: ['presente', 'guiada'], ajustes: ['ajustes'] }
+const SECCION = { minijuegos: ['hold', 'earth', 'gravedad', 'foco', 'conteo'], grounding: ['anclaje', 'caminar', 'sentidos', 'guiada', 'respira1', 'respira2'], ajustes: ['ajustes'] }
 const seccionDe = () => 'minijuegos'
 export const estado = { tab: 'indice', pag: 0, hover: -1, nueva: '' } // nueva: la pestaña con una página recién escrita (exportado para las pruebas)
 let zonas = [] // { x, y, w, h, fn } en píxeles del lienzo
@@ -208,12 +208,12 @@ function indice(g) {
     const fila = (txt, marcada, fn, sangria = 0) => {
         const i = zona(b.x + 50 + sangria, y - 50, b.w - 100 - sangria, 66, fn)
         casilla(g, b.x + 60 + sangria, y - 40, marcada, estado.hover === i)
-        g.fillStyle = estado.hover === i ? COL.rojo : COL.tinta; g.textAlign = 'left'; g.fillText(txt, b.x + 130 + sangria, y); y += 76
+        g.fillStyle = estado.hover === i ? COL.rojo : COL.tinta; g.textAlign = 'left'; g.fillText(txt, b.x + 130 + sangria, y); y += 62
     }
-    const NOMBRE = { guiada: 'Respiración guiada', presente: 'Conexión con el presente', ajustes: 'Efectos, sonido y mover la maqueta' }
+    const NOMBRE = { anclaje: 'Anclaje al presente', caminar: 'Earthing y gravedad', sentidos: 'Foco y contar lo que ves', guiada: 'Respiración cuadrada guiada', respira1: 'Pausa y respira', respira2: 'Más respiraciones', ajustes: 'Efectos, sonido y mover la maqueta' }
     for (const [tab, titulo2] of [['minijuegos', 'Minijuegos'], ['grounding', 'Grounding'], ['ajustes', 'Ajustes']]) {
-        g.font = `44px ${TITULO}`; g.fillStyle = COL.tinta2; g.textAlign = 'left'; g.fillText(titulo2, b.x + 60, y); y += 70
-        g.font = `58px ${MANO}`
+        g.font = `40px ${TITULO}`; g.fillStyle = COL.tinta2; g.textAlign = 'left'; g.fillText(titulo2, b.x + 60, y); y += 60
+        g.font = `50px ${MANO}`
         SECCION[tab].forEach((id, i) => {
             const tecnica = !!NOMBRE[id], visto = tecnica || vistos.has(id)
             fila(tecnica ? NOMBRE[id] : visto ? MINIS.find(m => m.id === id).nombre : '? ? ?', visto, () => ir(tab, i), 30)
@@ -250,7 +250,7 @@ const FASES = [['INHALAR', 'Inhala lentamente por la nariz.'], ['MANTENER', 'Man
 let tResp = 0
 function respiracion(g) {
     const [a, b] = PAG
-    titulo(g, a, 'Respiración guiada', 'Respiración cuadrada: 4 · 4 · 4 · 4')
+    titulo(g, a, 'Respiración cuadrada', 'Paso a paso: 4 · 4 · 4 · 4')
     let y = a.y + 300
     FASES.forEach(([f, txt], i) => {
         g.fillStyle = [COL.menta, COL.oro, COL.lila, COL.tinta2][i]; g.beginPath(); g.arc(a.x + 100, y - 18, 34, 0, Math.PI * 2); g.fill()
@@ -273,28 +273,46 @@ function respiracion(g) {
     FASES.forEach(([n], i) => { g.globalAlpha = i === f ? 1 : 0.35; g.font = `40px ${TITULO}`; g.fillText(n, b.x + 140 + i * 220, b.y + 980) })
     g.globalAlpha = 1
 }
-function grounding(g) {
-    const [a, b] = PAG
-    titulo(g, a, 'Grounding', 'Conexión con el presente')
-    g.font = `58px ${MANO}`; g.fillStyle = COL.tinta2
-    parrafo(g, 'Una herramienta para que Gabriela vuelva a poner la atención en su entorno.', a.x + 60, a.y + 290, a.w - 120, 58)
-    const frases = ['Mira a tu alrededor.', 'Reconoce dónde estás.', 'Estás aquí. Ahora.']
-    frases.forEach((f, i) => {
-        const y = a.y + 520 + i * 200
-        redondo(g, a.x + 60, y - 90, a.w - 120, 150, 20); g.fillStyle = i === 2 ? 'rgba(242,192,99,0.45)' : 'rgba(255,255,255,0.55)'; g.fill(); g.strokeStyle = COL.tinta; g.lineWidth = 3; g.stroke()
-        g.fillStyle = COL.tinta; g.font = `${i === 2 ? 58 : 52}px ${TITULO}`; g.textAlign = 'center'; g.fillText(f, a.x + a.w / 2, y + 4)
+// Las técnicas de verdad: los textos de la página "Técnicas de respiración" (respiracion-consciente.html), tal cual, en páginas de dos
+// lados. Cada lado: un título, un subtítulo opcional y sus bloques (un nombre y su texto)
+const TECNICAS = {
+    anclaje: { izq: { titulo: 'Anclaje al presente', sub: 'Vuelve a pisar tierra firme', bloques: [{ t: '', txt: "El grounding (o enraizamiento) reúne un conjunto de técnicas psicológicas de anclaje de la atención que permiten redirigir la mente hacia el momento presente e interrumpir el ruido mental o los estados de pánico. Al enfocar deliberadamente los sentidos y el cuerpo en estímulos concretos del entorno, ayudamos al sistema nervioso a salir del estado de alarma y recuperar estabilidad." }] },
+        der: { titulo: 'Formas de anclarte', bloques: [{ t: 'Anclaje postural y propioceptivo', txt: "Siéntate de forma erguida o ponte de pie manteniendo ambos pies firmemente plantados sobre el suelo, distanciados a la anchura de las caderas, y activa levemente la musculatura de las piernas para sentir el peso y la estabilidad de la tierra bajo tu cuerpo. También resulta efectivo presionar los muslos contra la silla o caminar descalzo percibiendo de manera consciente las distintas texturas del piso." }, { t: 'Earthing físico y anclaje plantar', txt: "El contacto directo del cuerpo con la superficie es una de las herramientas de estabilización propioceptiva más potentes." }, { t: 'Observación de objetos ancla', txt: "Tomar un objeto cercano (como una piedra, una llave o una taza) y describir mentalmente o en voz alta su peso, temperatura, forma y rugosidad. Mantener la atención en características tangibles ayuda al cerebro a verificar que la amenaza del temblor ha pasado y que el entorno actual es seguro." }] } },
+    caminar: { izq: { titulo: 'Earthing en movimiento', sub: 'Meditación caminando', bloques: [{ t: '', txt: "El earthing también se puede hacer caminando: avanza muy despacio, sintiendo cómo cada parte del pie toca el suelo (talón, planta, dedos) y acompaña cada paso con la respiración. Si puedes, hazlo descalzo sobre pasto o tierra. Es una buena opción cuando quedarse quieto se hace difícil y el cuerpo pide moverse." }] },
+        der: { titulo: 'Reconstruir la gravedad', bloques: [{ t: 'Para qué sirve', txt: "Para la sensación de que el suelo sigue temblando o de que todo está inclinado (el mareo pos-sismo). Calibrar el equilibrio con una referencia física le recuerda al oído interno dónde está la vertical." }, { t: 'Cómo practicarlo', txt: "Busca una línea recta y firme (el marco de una puerta, la esquina de una pared). Ponte de pie con los pies separados, mira la línea y alinea tu cuerpo con ella. Si sientes que te vas hacia un lado, haz una fuerza suave hacia el lado contrario hasta sentirte derecho, y quédate ahí respirando lento unos segundos." }] } },
+    sentidos: { izq: { titulo: 'Foco entre el ruido', bloques: [{ t: 'Para qué sirve', txt: "Para la sobrecarga de sonidos después del sismo (sirenas, alarmas, retumbos, zumbido en los oídos) que no deja pensar. Escoger un solo sonido seguro y constante entre el caos le da a la atención un lugar donde descansar." }, { t: 'Cómo practicarlo', txt: "Cierra los ojos y busca un sonido que se repita de forma tranquila: un reloj, una gota, el viento, tu propia respiración. Síguelo con toda la atención; cuando la mente se vaya a otro ruido, vuelve a ese sonido sin juzgarte. Poco a poco el resto queda de fondo." }] },
+        der: { titulo: 'Contar lo que ves', bloques: [{ t: 'Para qué sirve', txt: "Para los momentos en que el entorno se siente lejano o irreal (disociación). Contar estímulos concretos obliga a la mente a mirar lo que de verdad está pasando ahora." }, { t: 'Cómo practicarlo', txt: "Cuenta en voz alta cosas que tengas delante: tus dedos uno por uno, cinco objetos de un color, las patas de una silla. Hazlo despacio y nombra cada cosa. Si te ayuda, combínalo con la regla 5-4-3-2-1 (cinco cosas que ves, cuatro que tocas, tres que oyes, dos que hueles, una que saboreas)." }] } },
+    respira1: { izq: { titulo: 'Pausa y respira', sub: 'Tu temporizador de calma', bloques: [{ t: '', txt: "El control de la respiración genera una respuesta biológica directa sobre el sistema nervioso parasimpático: al alargar la exhalación más que la inhalación, disminuye la frecuencia cardíaca y se regula la sobreactivación fisiológica del pánico." }, { t: 'Respiración diafragmática (abdominal)', txt: "Inhala lentamente por la nariz entre 3 y 4 segundos, dirigiendo el aire hacia el abdomen para que se expanda la barriga sin mover el pecho, y suelta el aire por la boca entre 4 y 6 segundos sintiendo cómo se vacía." }] },
+        der: { titulo: 'Respiraciones', bloques: [{ t: 'Respiración cuadrada (box breathing)', txt: "Un ciclo estructurado en 4 tiempos iguales: inhala por la nariz en 4 segundos, retén el aire 4 segundos, exhala por la boca en 4 segundos y mantén los pulmones vacíos 4 segundos. Repite por varios minutos." }, { t: 'Exhalación prolongada (ritmo 4-6 u 4-8)', txt: "Inhala por la nariz contando mentalmente hasta 4 y exhala despacio por la boca contando hasta 6 o 8 segundos. Esta exhalación extendida es una de las vías más rápidas para inducir la calma." }, { t: 'Respiración con labios fruncidos', txt: "Ayuda a bajar la frecuencia respiratoria y a manejar la falta de aire o la ansiedad. Inhala suavemente por la nariz contando hasta 2, frunce los labios como si fueras a soplar una vela y exhala despacio por la boca contando hasta 4 (el doble de lo que duró la inhalación)." }] } },
+    respira2: { izq: { titulo: 'Más respiraciones', bloques: [{ t: 'Respiración igualitaria (4-4)', txt: "Inhala 4 segundos y exhala 4 segundos. Es sencilla y uniforme, ideal para principiantes, descansos cortos o meditación: equilibra cuerpo y mente y se puede practicar en cualquier lugar." }, { t: 'Relajación profunda (4-4-6-2)', txt: "Inhala 4 segundos, mantén el aire 4, exhala en 6 y haz una pausa de 2. Su ritmo suave y calmante sirve en descansos del trabajo o para aliviar el estrés: activa la respuesta de relajación y reduce la tensión." }] },
+        der: { titulo: 'Para calmarse rápido', bloques: [{ t: 'Técnica 4-7-8 (respiración relajante)', txt: "Pensada para provocar una relajación profunda y facilitar el sueño. Inhala por la nariz en 4 segundos llevando el aire al abdomen, sostén la respiración 7 segundos y exhala por la boca durante 8 segundos con un soplido suave. Haz de 4 a 8 repeticiones." }, { t: 'Suspiro fisiológico', txt: "Una técnica rápida para bajar el estrés del momento y reajustar el dióxido de carbono en los pulmones. Inhala profundo por la nariz llenando el abdomen; sin soltar el aire, toma un segundo sorbo corto por la nariz para terminar de llenar los pulmones y exhala muy despacio por la boca." }] } }
+}
+// una página de técnica: el texto se achica lo justo para caber en el papel (en la letra de la página, legible)
+function paginaTecnica(g, id) {
+    const pg = TECNICAS[id]
+    ;[[PAG[0], pg.izq], [PAG[1], pg.der]].forEach(([p, lado]) => {
+        titulo(g, p, lado.titulo, lado.sub)
+        const y0 = p.y + (lado.sub ? 270 : 220), limite = p.y + p.h - 170
+        for (let tam = 46; tam >= 30; tam -= 2) {
+            // primero se mide (sin dibujar) y, si cabe, se dibuja
+            const medir = (dibujar) => {
+                let y = y0
+                for (const b of lado.bloques) {
+                    if (b.t) { g.font = (tam + 4) + 'px ' + TITULO; if (dibujar) { g.fillStyle = COL.tinta2; g.textAlign = 'left'; g.fillText(b.t, p.x + 60, y, p.w - 120) } y += tam + 22 }
+                    g.font = '500 ' + tam + 'px ' + LETRA; g.fillStyle = COL.tinta; g.textAlign = 'left'
+                    y = dibujar ? parrafo(g, b.txt, p.x + 60, y, p.w - 120, tam * 1.32) : medirParrafo(g, b.txt, p.w - 120, tam * 1.32, y)
+                    y += tam * 0.7
+                }
+                return y
+            }
+            if (medir(false) <= limite || tam === 30) { medir(true); break }
+        }
     })
-    titulo(g, b, 'Pregúntate')
-    const icono = [ // ojo · oreja · mano
-        (x, y) => { g.beginPath(); g.ellipse(x, y, 60, 34, 0, 0, Math.PI * 2); g.stroke(); g.beginPath(); g.arc(x, y, 18, 0, Math.PI * 2); g.fill() },
-        (x, y) => { g.beginPath(); g.arc(x, y - 6, 40, Math.PI * 1.05, Math.PI * 2.3); g.quadraticCurveTo(x + 10, y + 50, x - 10, y + 52); g.stroke(); g.beginPath(); g.arc(x, y - 6, 16, Math.PI, Math.PI * 2.2); g.stroke() },
-        (x, y) => { g.beginPath(); g.roundRect(x - 34, y - 10, 68, 60, 16); g.stroke(); for (let i = 0; i < 4; i++) { g.beginPath(); g.roundRect(x - 34 + i * 18, y - 56, 14, 52, 7); g.stroke() } }
-    ]
-    ;['¿Qué puedes ver?', '¿Qué puedes escuchar?', '¿Qué puedes sentir?'].forEach((q, i) => {
-        const y = b.y + 340 + i * 260
-        g.strokeStyle = COL.tinta; g.fillStyle = COL.tinta; g.lineWidth = 6; icono[i](b.x + 150, y - 20)
-        g.textAlign = 'left'; g.font = `54px ${TITULO}`; g.fillText(q, b.x + 250, y, b.w - 300)
-    })
+}
+function medirParrafo(g, texto, ancho, alto, y) {
+    let l = ''
+    for (const p of texto.split(/\s+/)) { const t = l ? l + ' ' + p : p; if (g.measureText(t).width > ancho && l) { y += alto; l = p } else l = t }
+    return l ? y + alto : y
 }
 // Ajustes: tres botones grandes (se activan con CLICK como todo en la bitácora) y, en la otra página, qué hace cada uno
 function paginaAjustes(g) {
@@ -337,7 +355,7 @@ function dibujarLibro() {
     const pagina = SECCION[estado.tab]?.[estado.pag]
     if (!pagina) indice(g)
     else if (pagina === 'ajustes') paginaAjustes(g)
-    else { if (pagina === 'guiada') respiracion(g); else if (pagina === 'presente') grounding(g); else minijuego(g, pagina); esquina(g, false, true); esquina(g, true, true) }
+    else { if (pagina === 'guiada') respiracion(g); else if (TECNICAS[pagina]) paginaTecnica(g, pagina); else minijuego(g, pagina); esquina(g, false, true); esquina(g, true, true) }
     // número de página (el índice, luego los minijuegos, el grounding y los ajustes)
     const antes = { minijuegos: 0, grounding: SECCION.minijuegos.length, ajustes: SECCION.minijuegos.length + SECCION.grounding.length }
     const n = !pagina ? 1 : 3 + 2 * (antes[estado.tab] + estado.pag)

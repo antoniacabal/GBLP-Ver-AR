@@ -102,8 +102,8 @@ export function actualizarMaqueta(dt, t) {
     suelo.visible = calle && document.documentElement.classList.contains('gx-en-xr'); suelo.position.set(C.x, -0.01, C.z) // (justo debajo de la calle y encima del corte de abajo de la plataforma)
     // (en la calle, lo que se ve es el cuadrado derecho: en el mapa, girado, cubre hasta MEDIA_BASE·√2 hacia cada lado)
     Object.assign(recuadro, { x: calle ? C.x : caja.x, z: calle ? C.z : caja.z, hx: calle ? MEDIA_BASE * Math.SQRT2 * k : caja.hx, hz: calle ? MEDIA_BASE * Math.SQRT2 * k : caja.hz, k })
-    // el recuadro en la plataforma (metros): en la calle, centrado; adentro, donde cae la caja del espacio (fijo aunque tiemble el juego)
-    recortar(calle, calle ? 0 : (caja.x - C.x) / k, calle ? 0 : (caja.z - C.z) / k, recuadro.hx / k, recuadro.hz / k, dt)
+    // lo que se dibuja: todo lo que cae dentro del cuadrado de la plataforma
+    recortar(dt)
     azimut()
     esconderFuera()
 }
@@ -120,15 +120,11 @@ export const planos = [0, 1, 2, 3, 4].map(() => new THREE.Plane())
 const LOCAL = [[1, 0, 0], [-1, 0, 0], [0, 0, 1], [0, 0, -1], [0, 1, 0]].map(n => new THREE.Plane(new THREE.Vector3(...n), 0))
 mundo.renderer.localClippingEnabled = true
 let tMateriales = 0
-// en la calle se recorta por el cuadrado derecho (sus bordes van a 45° de los ejes de la maqueta); adentro, por la caja del espacio
+// se recorta por el borde del cuadrado derecho (sus bordes van a 45° de los ejes de la maqueta), en todos los espacios. Antes, adentro,
+// se recortaba por la caja medida del cuarto, la sala o el MIO, y en las gafas a veces cortaba la cama y parte del cuarto
 const DIAG = [[-1, -1], [-1, 1], [1, -1], [1, 1]].map(([x, z]) => new THREE.Vector3(x, 0, z).normalize())
-const EJES = [[1, 0, 0], [-1, 0, 0], [0, 0, 1], [0, 0, -1]].map(n => new THREE.Vector3(...n))
-function recortar(calle, cx, cz, hx, hz, dt) {
-    if (calle) DIAG.forEach((n, i) => { LOCAL[i].normal.copy(n); LOCAL[i].constant = MEDIA_BASE })
-    else {
-        EJES.forEach((n, i) => LOCAL[i].normal.copy(n))
-        LOCAL[0].constant = -(cx - hx); LOCAL[1].constant = cx + hx; LOCAL[2].constant = -(cz - hz); LOCAL[3].constant = cz + hz
-    }
+function recortar(dt) {
+    DIAG.forEach((n, i) => { LOCAL[i].normal.copy(n); LOCAL[i].constant = MEDIA_BASE })
     LOCAL[4].constant = 0.0005 // (y nada por debajo de la plataforma)
     plataforma.updateWorldMatrix(true, false) // (solo la cadena hasta la plataforma: recalcular todo el juego cada cuadro costaba mucho)
     planos.forEach((p, i) => p.copy(LOCAL[i]).applyMatrix4(plataforma.matrixWorld))

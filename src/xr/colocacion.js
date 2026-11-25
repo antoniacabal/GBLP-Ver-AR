@@ -258,7 +258,7 @@ export class SistemaColocacion extends createSystem({
                 this.world.scene.attach(plataforma); plataforma.position.set(0, 0.76, -0.35); plataforma.quaternion.identity()
             }
         }
-        recolocar.visible = !!sesion && estado.puesta
+        recolocar.visible = false // (ya no va en la mesa: "Mover la maqueta" está en los Ajustes de la bitácora)
         if (!sesion) return
         if (estado.recolocar) { estado.recolocar = false; if (estado.puesta && !estado.colocando) { sonido.toque(); this.empezar() } } // (pedido desde los ajustes de la bitácora)
         if (recolocar.visible) { this.world.camera.getWorldPosition(cab); rotulo.lookAt(cab) } // (el rótulo, de frente a quien juega)

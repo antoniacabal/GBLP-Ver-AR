@@ -372,7 +372,8 @@ body.gx-mr-on canvas.webgl{filter:none!important}
 .mr-inicio{position:fixed;inset:0;z-index:20;display:flex;align-items:center;justify-content:center;padding:1.5rem;background:radial-gradient(ellipse at center,rgba(32,24,38,.92),rgba(10,5,14,.98));color:#E4FFFF;font-family:'Outfit',sans-serif}
 .mr-inicio[hidden]{display:none}
 .mr-inicio-caja{max-width:34rem;display:flex;flex-direction:column;align-items:center;gap:1.1rem;text-align:center}
-.mr-inicio h2{margin:0;font-size:clamp(2.4rem,7vw,3.6rem);line-height:1}
+.mr-inicio h2{margin:0;font-size:clamp(1.6rem,6vw,3.6rem);line-height:1} /* (con las dos partes del mismo alto, en el celular el título no cabía con 2.4rem) */
+.mr-inicio h2 .titulo-grietas{font-size:1.41em}.mr-inicio h2 .titulo-resto{font-size:1.25em} /* las dos partes del título con letras de la misma altura (la letra de "Grietas" es más baja: 61 contra 69 a igual tamaño). En el resto de la página "Grietas" va más grande a propósito */
 .mr-inicio p{color:#E4FFFF;font-family:inherit} /* (style.css pinta los párrafos de oscuro) */
 .mr-inicio-texto{margin:0;font-size:1.1rem;line-height:1.45}
 .mr-estado{margin:0;min-height:1.4em;font-size:.95rem;opacity:.75}

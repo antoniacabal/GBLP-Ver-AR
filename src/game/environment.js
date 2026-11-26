@@ -645,6 +645,11 @@ const PAREDES = ['Pared 1', 'Edificio1', 'Cadera clara']
                 const m = new THREE.Mesh(p.g, Array.isArray(p.mats) ? p.mats.map(paint) : paint(p.mats))
                 m.scale.setScalar(k); m.rotation.y = -Math.PI / 2; m.position.set(dx, 0, frente - e.fondo * k / 2); m.visible = clave === 'normal'
                 g.add(m); pair[clave] = m
+                // corte sólido: en las gafas la plataforma recorta los edificios en su borde (clippingPlanes, xr/maqueta.js) y por el corte se
+                // veía el interior hueco. Esta copia dibuja solo las caras de adentro, de un color plano oscuro de su pared: el corte se ve macizo
+                // (recibe los mismos planos de corte, que xr/maqueta.js pone a todos los materiales del juego)
+                const corte = new THREE.Mesh(p.g, new THREE.MeshBasicMaterial({ color: new THREE.Color(MUROS[v % MUROS.length][0]).multiplyScalar(0.45), side: THREE.BackSide }))
+                corte.visible = false; m.add(corte); rellenos.push(corte) // (solo en las gafas, como los rellenos: en la pantalla no se recorta)
                 if (cerca) (fa.mats ||= []).push(...[m.material].flat())
             })
             MODELS.push(pair)

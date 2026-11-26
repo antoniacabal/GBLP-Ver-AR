@@ -107,6 +107,27 @@ function dibujarControles() {
 const BW = 2048, BH = 1342
 const libroL = lienzo(BW, BH)
 const libro = plano(0.58, 0.38, libroL.t); libro.soporte.position.set(LADO_X, 0.03, 0.02); libro.m.name = 'bitacora'
+// 3.0 La barra de progreso de los minijuegos de panel (conteo, gravedad, foco), justo debajo de la bitácora: 40 × 2,2 cm, en el
+//     hueco entre el libro y la mesa. Antes era la barra del medidor en la interfaz y flotaba vacía detrás del panel
+const BAW = 1024, BAH = 56
+const barraL = lienzo(BAW, BAH)
+const barra = new THREE.Mesh(new THREE.PlaneGeometry(0.4, 0.4 * BAH / BAW), new THREE.MeshBasicMaterial({ map: barraL.t, transparent: true, toneMapped: false }))
+barra.name = 'barra-progreso'; barra.position.set(0, -0.013, 0.004); barra.visible = false; libro.soporte.add(barra)
+let barraF = 0, barraDibujo = ''
+function dibujarBarra(f, rotulo) {
+    const g = barraL.g; g.clearRect(0, 0, BAW, BAH)
+    redondo(g, 3, 3, BAW - 6, BAH - 6, (BAH - 6) / 2); g.fillStyle = 'rgba(32,24,38,0.9)'; g.fill(); g.lineWidth = 3; g.strokeStyle = COL.oro; g.stroke()
+    if (f > 0.005) { const w = Math.max(BAH - 16, (BAW - 16) * f); redondo(g, 8, 8, w, BAH - 16, (BAH - 16) / 2); g.fillStyle = '#8FC980'; g.fill() }
+    if (rotulo) { g.font = '600 36px ' + LETRA;g.textAlign = 'center'; g.textBaseline = 'middle'; g.lineWidth = 6; g.strokeStyle = COL.tinta; g.strokeText(rotulo, BAW / 2, BAH / 2 + 1); g.fillStyle = '#F4EAD8'; g.fillText(rotulo, BAW / 2, BAH / 2 + 1) }
+    barraL.t.needsUpdate = true
+}
+function actualizarBarra(dt) {
+    const ve = !!breathing.active && ['conteo', 'gravedad', 'foco'].includes(runtime.techId)
+    barra.visible = ve; if (!ve) { barraF = 0; barraDibujo = ''; return }
+    barraF += (Math.min(1, runtime.stepFill || 0) - barraF) * Math.min(1, dt * 6) // (se llena suave)
+    const rotulo = runtime.label && runtime.label.length <= 24 ? runtime.label : '', clave = Math.round(barraF * 200) + '|' + rotulo
+    if (clave !== barraDibujo) { barraDibujo = clave; dibujarBarra(barraF, rotulo) }
+}
 export const superficies = [libro.m, panelCtrl.m] // (xr/panel.js: la línea de luz llega hasta aquí)
 const PAG = [{ x: 60, y: 130, w: 940, h: 1150 }, { x: 1048, y: 130, w: 940, h: 1150 }]
 // tres pestañas; cada sección tiene sus páginas (se pasan con las esquinas): la técnica y, después, los tutoriales de sus minijuegos.
@@ -392,6 +413,7 @@ export class SistemaBitacora extends createSystem({}) {
         if (!activo) return
         // la bitácora aparece después del sismo (antes, la mañana de Gabriela va sin ella); el panel de controles está siempre
         libro.soporte.visible = !!runtime.postQuake
+        actualizarBarra(delta) // (la barra de progreso de los minijuegos, debajo del libro)
         // un minijuego empieza: la bitácora se abre en su página (para consultarla mientras se juega). La primera vez además se escribe
         // (y la pestaña lo avisa). Antes solo cambiaba de página la primera vez y podía quedarse en otra página en blanco
         // (también apenas se abre su "Cómo se juega": la bitácora ya muestra la página mientras se lee el aviso)

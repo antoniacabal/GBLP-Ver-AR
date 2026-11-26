@@ -193,50 +193,12 @@ export const ui = {
         document.body.classList.toggle('gx-negro', gsap.getProperty(fadeEl, 'opacity') > 0.5) // pantalla en negro: la línea de tiempo no se queda flotando (se veía gris y rota antes de la tarjeta del sismo)
     },
     showBreath(v) { $('.gx-breath').hidden = !v },
-    // Terremoto (en el MIO, antes de "Todo se movió"): la línea de tiempo tiembla y se apaga (1: solo "Ir a la Universidad", 2: toda la barra)
-    // y al final se rompe en pedazos que caen. lineaRestaurar la deja como antes
+    // Terremoto (en el MIO, antes de "Todo se movió"): la línea de tiempo tiembla y se apaga (1: solo "Ir a la Universidad", 2: toda la barra).
+    // Al final "Ir a la Universidad" desaparece de la barra sin dejar hueco (antes se soltaba, caía y se rompía en pedazos: en las gafas la ficha
+    // que caía se veía como una barrita oscura flotando detrás del panel). lineaRestaurar la deja como antes
     lineaSismo(n) { linea.classList.toggle('gx-linea--sismo1', n >= 1); linea.classList.toggle('gx-linea--sismo2', n >= 2) },
-    // "Ir a la Universidad" se suelta de la barra, cae hasta abajo de la pantalla y ahí se rompe en pedazos (el resto de la barra se queda temblando)
-    lineaRompe() {
-        const li = linea.querySelector('.gx-linea--ahora') || linea.lastElementChild; if (!li || li.classList.contains('gx-linea-cae')) return
-        const r = li.getBoundingClientRect(); if (!r.width) return
-        const rnd = (a, b) => a + Math.random() * (b - a), caja = document.createElement('div'); caja.className = 'gx-linea-pedazos'; root.append(caja)
-        // la ficha que cae: una copia del paso, con su fondo de barra (para que se lea sola)
-        const ficha = document.createElement('div'); ficha.className = 'gx-linea-ficha'
-        Object.assign(ficha.style, { left: (r.left - 8) + 'px', top: (r.top - 4) + 'px', width: (r.width + 16) + 'px', height: (r.height + 8) + 'px' })
-        ficha.append(li.cloneNode(true)); caja.append(ficha); li.classList.add('gx-linea-cae')
-        const piso = innerHeight - r.height - 14, giro = rnd(-30, 30)
-        gsap.timeline({ onComplete: () => romper(ficha) })
-            .to(ficha, { rotation: rnd(-10, 10), y: 6, duration: 0.25, ease: 'power1.out' })        // se despega
-            .to(ficha, { y: piso - r.top, rotation: giro, duration: 0.95, ease: 'power2.in' })      // cae
-        // al llegar abajo se parte: pedazos (triángulos de la ficha) que saltan hacia los lados y se desvanecen
-        function romper(el) {
-            const fr = el.getBoundingClientRect(), w = r.width + 16, h = r.height + 8, cols = 6, filas = 2, cw = w / cols, ch = h / filas
-            const P = Array.from({ length: filas + 1 }, (_, i) => Array.from({ length: cols + 1 }, (_, j) => [
-                j * cw + (j > 0 && j < cols ? rnd(-0.3, 0.3) * cw : 0), i * ch + (i > 0 && i < filas ? rnd(-0.3, 0.3) * ch : 0)]))
-            const tri = []
-            for (let i = 0; i < filas; i++) for (let j = 0; j < cols; j++) {
-                const a = P[i][j], b = P[i][j + 1], c = P[i + 1][j + 1], d = P[i + 1][j]
-                Math.random() < 0.5 ? tri.push([a, b, c], [a, c, d]) : tri.push([a, b, d], [b, c, d])
-            }
-            const x0 = fr.left + fr.width / 2 - w / 2, y0 = fr.top + fr.height / 2 - h / 2
-            tri.forEach(t => {
-                const p = el.cloneNode(true); p.className = 'gx-linea-ficha gx-linea-pedazo'
-                Object.assign(p.style, { left: x0 + 'px', top: y0 + 'px', transform: `rotate(${giro}deg)`, clipPath: `polygon(${t.map(([x, y]) => `${x.toFixed(1)}px ${y.toFixed(1)}px`).join(',')})` })
-                const cx = t.reduce((s2, q) => s2 + q[0], 0) / 3, cy = t.reduce((s2, q) => s2 + q[1], 0) / 3
-                p.style.transformOrigin = `${cx.toFixed(0)}px ${cy.toFixed(0)}px`
-                caja.append(p)
-                const lado = (cx - w / 2) / w
-                gsap.timeline()
-                    .to(p, { x: lado * rnd(60, 180) + rnd(-20, 20), y: rnd(-70, -20), rotation: giro + rnd(-140, 140), duration: rnd(0.35, 0.5), ease: 'power2.out' }) // salta al romperse
-                    .to(p, { y: `+=${rnd(40, 90)}`, opacity: 0, duration: rnd(0.4, 0.7), ease: 'power2.in' })
-            })
-            el.remove()
-            li.classList.add('gx-linea-fuera') // el pedazo roto ya no ocupa su lugar en la barra
-            gsap.delayedCall(1.6, () => caja.remove())
-        }
-    },
-    lineaRestaurar() { linea.classList.remove('gx-linea--sismo1', 'gx-linea--sismo2', 'gx-linea--rota'); linea.querySelectorAll('.gx-linea-cae').forEach(li => li.classList.remove('gx-linea-cae', 'gx-linea-fuera')); root.querySelectorAll('.gx-linea-pedazos').forEach(c => c.remove()) },
+    lineaRompe() { linea.lastElementChild?.classList.add('gx-linea-fuera') }, // (el último paso: Ir a la Universidad)
+    lineaRestaurar() { linea.classList.remove('gx-linea--sismo1', 'gx-linea--sismo2', 'gx-linea--rota'); linea.querySelectorAll('.gx-linea-fuera').forEach(li => li.classList.remove('gx-linea-fuera')) },
     progress(p) { // barra de abajo (después del sismo): p de 0 a 1, o null para esconderla
         progEl.hidden = p === null; if (p === null) return
         const pct = Math.round(p * 100); if (pct === lastPct) return; lastPct = pct

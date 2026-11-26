@@ -251,13 +251,7 @@ body.gx-touch-on.gx-vibra-ok .gx-modal{padding-top:7.4rem} /* en celular hay una
 .gx-linea--sismo2 li{filter:saturate(.4) brightness(.75)}
 .gx-linea--rota{visibility:hidden}
 @keyframes gx-linea-tiembla{0%{transform:translate(0,0)}25%{transform:translate(-3px,1px) rotate(-.6deg)}50%{transform:translate(2px,-1px)}75%{transform:translate(-1px,2px) rotate(.5deg)}}
-.gx-linea-pedazos{inset:0;z-index:13;pointer-events:none;overflow:hidden}
-.gx-linea-pedazo{position:absolute;will-change:transform,opacity}
-.gx-linea-cae{visibility:hidden}
-.gx-linea-fuera{display:none} /* después de romperse ya no deja el hueco */ /* "Ir a la Universidad" se soltó: la que cae es una copia */
-.gx-linea-ficha{position:absolute;display:flex;align-items:center;justify-content:center;background:rgba(32,24,38,.72);border:1px solid rgba(228,255,255,.2);border-radius:999px;list-style:none;will-change:transform;opacity:.7} /* igual de transparente que la barra temblando (gx-linea--sismo2) */
-.gx-linea-ficha li{display:flex;align-items:center;gap:.35rem;font-size:.78rem;white-space:nowrap;color:var(--color-principal,#F2C063);font-weight:700;filter:saturate(.4) brightness(.75)}
-.gx-linea-ficha li::before{content:"";width:.6rem;height:.6rem;border-radius:50%;background:var(--color-principal,#F2C063);flex:none}
+.gx-linea li.gx-linea-fuera{display:none} /* "Ir a la Universidad" se va de la barra en el sismo, sin dejar hueco */
 @media (prefers-reduced-motion:reduce){.gx-linea--sismo1 .gx-linea--ahora,.gx-linea--sismo2{animation:none}}
 
 /* Salida rápida: botón para volver a ver los controles, debajo de Parar / Seguir */

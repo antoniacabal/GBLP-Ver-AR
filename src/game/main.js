@@ -376,7 +376,7 @@ sm.on('QUAKE', () => {
         quakeSnd?.stop(); quakeSnd = audio.playFile('audios/sonido-terremoto.mp3', { volume: 0.22 }) // sonido grabado del terremoto
         rumble = setInterval(() => { if (runtime.paused) return; haptics.buzz(Math.round(60 + 160 * runtime.quake)) }, 220) // la vibración crece con el sismo
         // la línea de tiempo también lo vive: tiembla "Ir a la Universidad", después toda la barra, y al final se parte en pedazos
-        gsap.delayedCall(1.4, () => ui.lineaSismo(1)); gsap.delayedCall(3.8, () => ui.lineaSismo(2)); gsap.delayedCall(5.2, () => ui.lineaRompe()) // cae y se rompe antes del destello
+        gsap.delayedCall(1.4, () => ui.lineaSismo(1)); gsap.delayedCall(3.8, () => ui.lineaSismo(2)); gsap.delayedCall(5.2, () => ui.lineaRompe()) // "Ir a la Universidad" se va de la barra antes del destello
         gsap.to(runtime, { quake: 0.55, anxiety: 0.8, duration: 7.5, ease: 'power1.in', onComplete: () => { // 7.5 s (antes 5): se escucha más del audio del sismo · hasta 0.55 (antes 1: temblaba demasiado)
             clearInterval(rumble)
             quakeSnd?.fade(1.2); if (runtime.sandbox) return void gsap.to(runtime, { quake: 0, anxiety: 0.1, duration: 1.5, onComplete: () => { ui.lineaRestaurar(); sm.go('EXPLORATION') } }) // debug: el sismo se puede repetir sin seguir la historia

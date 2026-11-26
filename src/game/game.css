@@ -434,6 +434,8 @@ html.gx-en-xr .gx-tutorial .gx-dialog{width:min(94vw,46rem)}
 html.gx-en-xr .gx-gravedad-ayuda{font-size:1.35rem;line-height:1.35}
 /* en las gafas: sin la salida rápida ni el "Saltar" del panel (la salida rápida es el botón de la mesa; el botón rojo avanza) */
 html.gx-en-xr .gx-exit,html.gx-en-xr .gx-saltar,html.gx-en-xr .gx-progreso{display:none!important} /* (y sin la barra de progreso: flotaba vacía sobre la maqueta) */
+/* en las gafas, en los minijuegos de panel (conteo, gravedad, foco): sin la barra del medidor; empezaba vacía y se veía como una barrita oscura flotando detrás del panel (el rótulo ya dice cómo vas) */
+html.gx-en-xr .gx-mini-panel .gx-bar{display:none!important}
 /* la salida rápida en las gafas: el título y las dos opciones, grandes */
 html.gx-en-xr .gx-pause .gx-dialog>p,html.gx-en-xr .gx-pause .gx-sub,html.gx-en-xr .gx-pause .gx-audio,html.gx-en-xr .gx-pause .gx-ver-controles{display:none!important}
 html.gx-en-xr .gx-pause .gx-dialog{width:min(94vw,44rem);max-width:none}
